@@ -70,6 +70,15 @@ Maven的pom文件详解
 		
 		比较坑的一点是，项目的maven依赖视图能找到某依赖，但是在其pom文件找不到。这样编译时总是找不到某程序包，还以为出了什么鬼的bug，结果万万没想到，居然是没写依赖。。。
 		
+		HttpClient分两个阶段版本，有些时候下错了就悲剧了
+		目前最新阶段的最新版本的依赖
+			<dependency>
+  		 <groupId>org.apache.httpcomponents</groupId>
+    <artifactId>httpclient</artifactId>
+    <version>4.5.2</version>
+		</dependency>
+		其HttpPost对象可以设置实体内容。而get不行！
+		其HttpClient对象这么创建：CloseableHttpClient httpclient = HttpClients.createDefault(); 
 		
 		
 		
