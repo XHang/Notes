@@ -80,5 +80,51 @@ Maven的pom文件详解
 		其HttpPost对象可以设置实体内容。而get不行！
 		其HttpClient对象这么创建：CloseableHttpClient httpclient = HttpClients.createDefault(); 
 		
+--------------------------------------------------------------------------NOSQL--------------------------------------------------------------
+NOSQL意为非关系型数据库，分为几种
+1：基于键值对的-redis最强
+2：列存储，Hbase、Cassandra这种
+3：文档存储：MongoDB
+4：图片存储：Neo4j、Versant
+5：xml存储：Berkeley DB Xml还有XBASE，ORACLE很早已经支持这种存储方式了
+--------------------1：redis的基础运用场景------------------
+1：多web项目中共享一个session
+2：分布式缓存，由于redis提供了几大语言的接口，比如java，.net,c等语言。
+		因此对于异质平台间进行数据交换起到了作用，因此它可以用作大型系统的分布式缓存，
+		并且其setnx的锁常被用于”秒杀“，”抢红包“这种电商活动场景中。
+		
+在Eclipse运行Maven命令没反应或者爆这个错：-Dmaven.multiModuleProjectDirectory system property is not set. Check $M2_HOME environment variable and mvn script match.
+理由。安装的Maven太高级了，Eclipse不认识他，安装个旧版本的。
+或者进入eclipse的Window->Preference->Java->Installed JREs->Edit，在Default VM arguments中设置-Dmaven.multiModuleProjectDirectory=$M2_HOME
+告诉Eclipse去哪里找这个高版本的Maven..前提一定要设置M2_HOME这个环节变量啊，别告诉我你不会设置。
+
+有时候下载依赖失败后再次下载就不行了。你得手动去删除依赖的那个文件夹的_maven.repositories和_lastUpdate....这两个文件，然后重新update项目。
+还有，仓库有时候依赖是个pom文件，建议不要引用该依赖，要下那些有jar包的该依赖
+
+2017-5-30日值6月1日bug
+
+写接口时切记沟通发送报文和接受报文的编码！
+接口一定要用HTTPClient测试一下！
+Springmvc控制器方法上的produces 要注意一下，仅当Accept请求头和produces指明的媒体类型一致时，
+比如说produces=text/plain   发来请求的请求头中Accept=text/plain  ，该请求才会被接受！，否则报错！、
+坑爹的网上教程说该注解可以指定respode的返回数据类型。。。。
+
+@ResponseBody  其返回的数据类型主要看你的classpath有没有相关的第三方jar包，比如说jackson.jar
+这样的话返回的数据就会转成json格式输出
+一般情况下开发的框架都是加了json相关的jar包，也就是说@ResponseBody返回的都是json数据。
+所以要返回一个xml格式的。。。你还是老老实实的用响应流来输出吧。。
+注：就算@ResponseBody返回一个字符串，就平台来说，也会给你字符串加上两个隐形的翅膀（字符串首尾加括号）
+什么，你想setContentType("text/plain; charset=utf-8");
+@ResponseBody到最后还是会变成application/javascript;charset=utf-8的。。。
+
+
+
+
+
+		
+		
+		
+		
+		
 		
 		
