@@ -118,8 +118,64 @@ Springmvc控制器方法上的produces 要注意一下，仅当Accept请求头�
 @ResponseBody到最后还是会变成application/javascript;charset=utf-8的。。。
 
 
+openssh安装后如何启动？
+命令：/etc/init.d/ssh start  必须在su权限下运行
+
+怎么用主机访问VirtualBox呢？
+见图。用PuTTY即可访问
+
+vin编辑器怎么使用？
+用vi  文件路径  即可打开一个文本文件
+初次进入是以命令行模式打开的，要编辑此文件，敲入i即可进入编辑模式。
+编辑模式下按esc回退到命令行模式
+将光标移动到某处，按dd即可删除该行
+ 「x」：每按一次，删除光标所在位置的“后面”一个字符。
+「#x」：例如，「6x」表示删除光标所在位置的“后面”6个字符。
+「X」：大写的X，每按一次，删除光标所在位置的“前面”一个字符。
+「#X」：例如，「20X」表示删除光标所在位置的“前面”20个字符。
+按下：号
+输入wq!强制保存并退出。。
 
 
+利用putt传文件到远程服务器
+putt客户端下载下来一般都有那个pscp.exe文件。进入该文件对应的文件夹，敲入cmd命令
+pscp 发送的源文件   服务器用户名@服务器地址:home 敲入后输入密码，即可发送！
+eg:pscp jdk-8u131-linux-x64.rpm cxh@192.168.21.253:/home
+注意：有时候发送过去但是找不到文件或者发送时提示permission denied
+就是访问被拒绝了，这时候你得手动更改远程服务器的文件夹为可读可写  chmod 777 xxxx
+
+
+dpkg -l 可以查看安装的软件列表
+apt-get remove --purge 名字    可以删除软件
+
+mv [选项] 源文件或目录 目标文件或目录
+
+rm -rf  文件夹路径
+
+tar -xzvf file.tar.gz
+
+vi  /etc/proifle 在其末尾添加这几句
+export JAVA_HOME="xxx"
+export PATH="$PATH:$JAVA_HOME/bin"
+export JRE_HOME="$JAVA_HOME/jre"
+export CLASSPATH=".:$JAVA_HOME/lib:$JRE_HOME/lib"
+即可设置jdk的环境变量。
+
+source /etc/profile更新一下。。
+
+经测试可以成功的本地依赖。。。
+ <dependency>
+            <groupId>jdk.tools</groupId>
+            <artifactId>jdk.tools</artifactId>
+            <version>1.7</version>
+            <scope>system</scope>
+            <systemPath>${JAVA_HOME}/lib/tools.jar</systemPath>
+</dependency>
+
+
+@RequestParam(value = "custom", required = false)可以非必传参数。
+多个Springmvc参数，字符串形式，必须加@RequestParam("factoryCode")标注参数名
+一个参数就不需要
 
 		
 		
