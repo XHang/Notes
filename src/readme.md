@@ -235,6 +235,28 @@ source /etc/profile更新一下。。
 14:如果一个对象已经是注入的了，就不要用程序来再次修改它的状态
 	比如说有一个对象通过ioc注入，在使用时为了方便还在程序设置了几个对象属性。这是不合理的。
 	
+***
+*git的readme.md的编写*
+1. 3个*号作为一行即可创建一个分割线
+2. 数字加英语句点即可创建一个有序列表
+*EGIT的全局忽略文件*
+只要在你在eclispe有安装EGIT，就可以在用户文件夹里面发现一个.gitconfig文件，里面就是关于git的全局配置，配置全局忽略的文件也在这里配，那么怎么配呢？  
+1.  在用户文件夹里面再创建一个文件，就叫.gitignore 
+2.  在新建的文件写上要过滤的文件，eg：
+	`.setting
+	.project
+	target
+	bin`  
+一行一个。#表示注释
+3. 在.gitconfig文件写上
+ `[user]
+	name = XiaoHang
+	email = 1083594261@1-PC
+	[core]
+	excludesfile = .gitignore
+	`
+***	
+
 		
 		
 		
