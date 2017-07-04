@@ -239,6 +239,7 @@ source /etc/profile更新一下。。
 *git的readme.md的编写*
 1. 3个*号作为一行即可创建一个分割线
 2. 数字加英语句点即可创建一个有序列表
+3. 虽然 *``*可以写入代码，但是结构上是不换行的，还是pre标签里面写代码比较好
 *EGIT的全局忽略文件*
 只要在你在eclispe有安装EGIT，就可以在用户文件夹里面发现一个.gitconfig文件，里面就是关于git的全局配置，配置全局忽略的文件也在这里配，那么怎么配呢？  
 1.  在用户文件夹里面再创建一个文件，就叫.gitignore 
@@ -255,8 +256,42 @@ source /etc/profile更新一下。。
 	[core]
 	excludesfile = .gitignore
 	`
+	
 ***	
-
+15.   JSON数据其实也有数据格式。别看它是js对象还是字符串。
+		什么意思呢？
+16:修改maven全局配置的jdk版本，setting.xml添加
+ <profile>   
+    <id>jdk1.6</id>    
+    <activation>   
+        <activeByDefault>true</activeByDefault>    
+        <jdk>1.6</jdk>   
+    </activation>    
+    <properties>   
+        <maven.compiler.source>1.6</maven.compiler.source>    
+        <maven.compiler.target>1.6</maven.compiler.target>    
+        <maven.compiler.compilerVersion>1.6</maven.compiler.compilerVersion>   
+    </properties>   
+</profile> 
+17. 局部配置jdk版本的做法，在项目的pom文件加上
+ <build>  
+    <plugins>  
+        <plugin>  
+            <groupId>org.apache.maven.plugins</groupId>  
+            <artifactId>maven-compiler-plugin</artifactId>  
+            <configuration>  
+                <source>1.6</source>  
+                <target>1.6</target>  
+            </configuration>  
+        </plugin>  
+    </plugins>  
+</build>  
+18:看来最新版本的SpringMVC不是默认为你添加Json支持，只是说，你在mvc的配置文件加上	<mvc:annotation-driven />
+	自动为你配置
+	DefaultAnnotationHandlerMapping和AnnotationMethodHandlerAdapter两个bean，配置一些messageconverter。
+	当然也包括Json支持
+	
+	
 		
 		
 		
