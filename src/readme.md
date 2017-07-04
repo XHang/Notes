@@ -290,7 +290,13 @@ source /etc/profile更新一下。。
 	自动为你配置
 	DefaultAnnotationHandlerMapping和AnnotationMethodHandlerAdapter两个bean，配置一些messageconverter。
 	当然也包括Json支持
-	
+19. 为什么一般情况下，服务器都不允许接受跨域请求呢？
+		这其实是为了安全
+		设想一下。你在xx银行登录了个人信息，然后xx银行服务器保存了你的Cookie
+		接着你被骗子引诱到了一个山寨网站。你进入这个网站的那一刻，这个山寨网站就向xx银行发送了一个ajax请求。
+		这就是跨域请求。这种请求不被阻止的话，银行就会发回你的个人信息。你的个人信息就泄漏了。
+		怎么泄漏，
+		
 	
 		
 		
