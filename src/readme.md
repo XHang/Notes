@@ -297,7 +297,11 @@ source /etc/profile更新一下。。
 		这就是跨域请求。这种请求不被阻止的话，银行就会发回你的个人信息。你的个人信息就泄漏了。
 20 :接下来的学习步骤  ：Eclipse插件的开发-能方便修改jar包源码   Lambda表达式的学习
 21. 用cglib作为代理类的生成，生成Controller代理类。如果原来的	Controller的requestMapping方法有private的话，那么cglib无法代理这个方法，造成的结果就是当前端访问到这个接口时，无法读取到IOC注入的变量。其他public方法就可以造成访问。其中缘由，
-	
+22:
+Arrays.asList的方法返回的不是我们常见的java.util.ArrayList，而是java.util.Arrays.ArrayList。两种名字一样实际可大不同。后者仅仅是对数组的一种封装而不能进行修改操作，执行修改操作都报UnsupportedOperationException异常		
+然后Arrays.asList方法里面参数只能放引用类型，不能放基本类型，否则都会解析成数组类型。
+例如Arrays.asList(1,2,4);会把1，2，4当做整体，即数组。长度为1.
+两个坑记住了
 		
 		
 		
