@@ -301,7 +301,23 @@ source /etc/profile更新一下。。
 Arrays.asList的方法返回的不是我们常见的java.util.ArrayList，而是java.util.Arrays.ArrayList。两种名字一样实际可大不同。后者仅仅是对数组的一种封装而不能进行修改操作，执行修改操作都报UnsupportedOperationException异常		
 然后Arrays.asList方法里面参数只能放引用类型，不能放基本类型，否则都会解析成数组类型。
 例如Arrays.asList(1,2,4);会把1，2，4当做整体，即数组。长度为1.
-两个坑记住了
+两个坑记住了  
+23. 今日坑，如果要传一个数组给后端，ajax请求要加一个参数，traditional: true
+RT:
+<pre>
+	$.ajax({
+						url: 'xxxx',  
+						traditional: true,
+						type: "get",  
+						dataType: "json",
+						data:{
+							parameter_1 : id,
+							parameter_2 : arr_1,
+							parameter_2 : arr_2 
+						}
+</pre>
+这样才能传到后端，当然了，arr_1和arr_2都是js的数组对象。
+原因：阻止jquery对参数的深度序列化
 		
 		
 		
