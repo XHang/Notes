@@ -335,5 +335,9 @@ RT:
         					},
         ......
 		就酱
+ 25.
+ eclipse的构建路径中的order and export 作用是 <br/>
+ 	order就是使用class的顺序(因为可能出现class同名的情况)<br/>
+	export就是把用到的一些的lib和project同时发布.<br/>
 		
 		
