@@ -318,7 +318,22 @@ RT:
 </pre>
 这样才能传到后端，当然了，arr_1和arr_2都是js的数组对象。
 原因：阻止jquery对参数的深度序列化
-		
-		
+24.  如何传一个复杂对象到Springmvc的控制器中？
+	其实这部分应该是Spring知识，下次有空将其补上
+	回到正题，如何传呢？
+	url地址 用对象的属性.内部属性来传，ajax 如下	
+		$.ajax({
+        			type:"get",
+        			url:"xxxx",
+        			data : {
+        				    "requestBody.user ": "admin:10000",
+        					"requestBody.requestType" :"01100061",
+        					"requestBody.password" : "10086",
+        					"requestBody.serverVersion" : "00000000",
+        					"requestBody.uuid" : "UUID" ,
+        					"requestBody.flowintime" : "2017/6/7 22:22:22",
+        					},
+        ......
+		就酱
 		
 		
