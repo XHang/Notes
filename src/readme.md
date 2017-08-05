@@ -380,7 +380,7 @@ RT:
 地址本身就是一个值，java把地址拷贝了一份发给方法，所以也就是说为什么java只有值传递的原因了。
 要是引用传递，还拷贝个毛。
 偷来的一个截图为例<br/>
-![Image text](https://raw.githubusercontent.com/hongmaju/light7Local/master/img/productShow/20170518152848.png)
+![Image text](https://github.com/XHang/Node/blob/master/java%E5%BC%95%E7%94%A8%E4%BC%A0%E9%80%92%E7%A4%BA%E4%BE%8B.png)
 
 第五章：Eclipse的坑
 ---------------------------
