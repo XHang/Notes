@@ -339,5 +339,44 @@ RT:
  eclipse的构建路径中的order and export 作用是 <br/>
  	order就是使用class的顺序(因为可能出现class同名的情况)<br/>
 	export就是把用到的一些的lib和project同时发布.<br/>
-		
+	
+第三章：Springmvc
+--------------------------
+1.给Springmvc的控制器传对象我想大家都知道了吧，不就是对象.属性=xxx传键值对嘛....<br/>
+	要换个说法，传个json字符串让控制器接受并自觉实例化成对象，怎么做？
+	别瞎比比了，亮代码
+<pre>@RequestMapping("/xxxx")
+ 		     public String  action (@RequestBody DsspRequestVo vo,
+ 		 																		HttpServletRequest request,
+ 		 																		HttpServletResponse response,
+ 		 																		ModelMap model) throws IOException{return null}  </pre>
+ 		 后台代码酱紫，重要的是那个@RequestBody  
+ 		后台代码很简单，重要的是前台代码
+<pre> 	
+			$.ajax({
+    		type:"post",
+    		url:"xxxx",
+    		traditional: true,
+    		contentType: 'application/json',
+    		data :JSON.stringify(obj),
+    			success:function(data){
+    				 xxxx
+    			},
+    			error : function(data){
+    				xxxx
+    			}
+    		}); 
+ </pre>  
+ 		关键点：  
+ 		contentType: 'application/json' 没加，报类型不匹配，毕竟加了@RequestBody   
+ 		mvc就很智能的帮你找这部分请求了，不合请求的 当然就踢走了
+ 		traditional: true,阻止jquery将你的字符串序列化成键值对。
+ 		JSON.stringify(obj)  毕竟真正在网络传输的其实是字符串，传个对象是不科学的。
+ 		js的对象组合也是很重要的，不过说白了也就是对象.属性.属性=xxxx  酱紫。。。
+施工完毕
+
+ 		
+	
+	
+	
 		
