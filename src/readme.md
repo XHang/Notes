@@ -380,13 +380,36 @@ RT:
 地址本身就是一个值，java把地址拷贝了一份发给方法，所以也就是说为什么java只有值传递的原因了。
 要是引用传递，还拷贝个毛。
 偷来的一个截图为例<br/>
-![Image text](https://github.com/XHang/Node/blob/master/java%E5%BC%95%E7%94%A8%E4%BC%A0%E9%80%92%E7%A4%BA%E4%BE%8B.png)
+![吔屎啦，图片显示不出来](https://github.com/XHang/Node/blob/master/java%E5%BC%95%E7%94%A8%E4%BC%A0%E9%80%92%E7%A4%BA%E4%BE%8B.png)
 
 第五章：Eclipse的坑
 ---------------------------
 1. eclipse的构建路径中的order and export 作用是 <br/>
  	order就是使用class的顺序(因为可能出现class同名的情况)<br/>
 	export就是把用到的一些的lib和project同时发布.<br/>
+2. 问题描述 ：改了项目的jre和编译jdk版本，但是一执行maven update 全都打回解放前了。  
+     经查，settting.xml配置了jre版本，pom文件也设置了jre版本，仍是不见效。
+     已知：本人用的Eclipse不支持jdk1.8.所以pom文件即使追加了jre版本，也依然无效		
+     最后改了jdk版本为1.7.重新update。版本恢复为1.7了。。		
+     付代码
+`     <plugin>    
+            <groupId>org.apache.maven.plugins</groupId>    
+            <artifactId>maven-compiler-plugin</artifactId>    
+            <configuration>    
+                <source>1.7</source>    
+                <target>1.7</target>    
+            </configuration>    
+        </plugin>   
+        <plugin>    
+            <groupId>org.apache.maven.plugins</groupId>    
+            <artifactId>maven-compiler-plugin</artifactId>    
+            <configuration>    
+                <source>1.7</source>    
+                <target>1.7</target>    
+            </configuration>    
+        </plugin>   </pre>`
+  未知：setting文件改jdk版本为1.7仍然无效。这个小妖精。。。。
+     
  		
 	
 	
