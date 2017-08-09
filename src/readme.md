@@ -1,26 +1,27 @@
-##第一章：Maven的奇技淫巧
+## 第一章：Maven的奇技淫巧
 Maven的pom文件详解
-	1：<modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求  
-	2：Maven项目聚合做法  
-		假设现在有项目A,项目A1,项目A2，要求项目A是负责聚合项目A1和A2，实现多个模块联合编译，实现起来很简单  
-		只需要在A的pom文件中，添加这么一段配置
+	1：<modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求<br/>
+	2：Maven项目聚合做法  <br/>
+		假设现在有项目A,项目A1,项目A2，要求项目A是负责聚合项目A1和A2，实现多个模块联合编译，实现起来很简单  <br/>
+		只需要在A的pom文件中，添加这么一段配置<br/>
 
 			<modules>
    				<module>A1</module>
    				<module>A2</module>
 			</modules>
-
-注：A1通过A项目的pom文档的artifactId而确定
-		这样，编译A项目，就会把A1和A2项目一起编译
-		接下来有个需求，项目A1和A2使用同一个依赖，难道要各自使用各自的依赖包吗？
-		以上叫做模块聚合，接下来就是模块间的继承，这继承，第一个就是能子项目继承父项目引用的依赖包
-		假设父项目的pom文件是这样的
-		<modelVersion>4.0.0</modelVersion>  
-		<groupId>com.Example.main</groupId>              
-		<artifactId>Parent-Moduel</artifactId>       
-		<version>1.0.2</version>            
-		<packaging>pom</packaging>  
-		<name>Simple-main</name>
+  
+	注：A1通过A项目的pom文档的artifactId而确定<br/>
+		这样，编译A项目，就会把A1和A2项目一起编译  <br/>
+		接下来有个需求，项目A1和A2使用同一个依赖，难道要各自使用各自的依赖包吗？  <br/>
+		以上叫做模块聚合，接下来就是模块间的继承，这继承，第一个就是能子项目继承父项目引用的依赖包  <br/>
+		假设父项目的pom文件是这样的  <br/>
+		
+			<modelVersion>4.0.0</modelVersion>  
+			<groupId>com.Example.main</groupId>              
+			<artifactId>Parent-Moduel</artifactId>       
+			<version>1.0.2</version>            
+			<packaging>pom</packaging>  
+			<name>Simple-main</name>
 		那么子项目就可以这么写：
 		<parent>
    			<groupId>com.Example.main</groupId>
