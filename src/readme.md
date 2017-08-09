@@ -1,13 +1,15 @@
-
+##第一章：Maven的奇技淫巧
 Maven的pom文件详解
-	1：<modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求
-	2：Maven项目聚合做法
-		假设现在有项目A,项目A1,项目A2，要求项目A是负责聚合项目A1和A2，实现多个模块联合编译，实现起来很简单
-		只需要在A的pom文件中，添加这么一段配置
-		<modules>
+	1：<modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求  
+	2：Maven项目聚合做法  
+		假设现在有项目A,项目A1,项目A2，要求项目A是负责聚合项目A1和A2，实现多个模块联合编译，实现起来很简单  
+		只需要在A的pom文件中，添加这么一段配置  
+		<pre>
+			<modules>
    				<module>A1</module>
    				<module>A2</module>
-		</modules>
+			</modules>
+		</pre>
 		注：A1通过A项目的pom文档的artifactId而确定
 		这样，编译A项目，就会把A1和A2项目一起编译
 		接下来有个需求，项目A1和A2使用同一个依赖，难道要各自使用各自的依赖包吗？
@@ -336,8 +338,7 @@ RT:
         ......
 		就酱
 	
-第三章：Springmvc
---------------------------
+##第三章：Springmvc
 1.给Springmvc的控制器传对象我想大家都知道了吧，不就是对象.属性=xxx传键值对嘛....<br/>
 	要换个说法，传个json字符串让控制器接受并自觉实例化成对象，怎么做？
 	别瞎比比了，亮代码
@@ -371,8 +372,7 @@ RT:
  		js的对象组合也是很重要的，不过说白了也就是对象.属性.属性=xxxx  酱紫。。。
 施工完毕
 
-第四章：基础不扎实篇
-----------------------------
+##第四章：基础不扎实篇
 1. java传对象给方法时，传的是对象的地址，方法体内用另一个参数来接受这个地址，若是方法体内操作这个地址
 亦即操作对象，set一个属性什么的。方法体外仍可以得知这个改动。。<br/>
 但是，如果方法体内另一个参数接受到传进来的对象的地址后，擅自把该参数指向另一个地址，也就是new。<br/>
@@ -382,8 +382,7 @@ RT:
 偷来的一个截图为例<br/>
 ![吔屎啦，图片显示不出来](https://github.com/XHang/Node/blob/master/java%E5%BC%95%E7%94%A8%E4%BC%A0%E9%80%92%E7%A4%BA%E4%BE%8B.png)
 
-第五章：Eclipse的坑
----------------------------
+##第五章：Eclipse的坑
 1. eclipse的构建路径中的order and export 作用是 <br/>
  	order就是使用class的顺序(因为可能出现class同名的情况)<br/>
 	export就是把用到的一些的lib和project同时发布.<br/>
@@ -409,6 +408,13 @@ RT:
             </configuration>    
         </plugin>   </pre>`
   未知：setting文件改jdk版本为1.7仍然无效。这个小妖精。。。。
+  
+ 
+##第六章：正则表达式和java的坑
+1.  目前测试得知，java1.7 不支持捕获组里面写无限匹配量词，也就是'+'和'{2,}' 不能用
+		eg:(?<=package\\s{1,})  or  (?<=package\\s+)  貌似可以匹配'package   '后面的位置，但是java不支持这种写法
+		考虑可以换成(?<=package\\s{1,10000})
+		顺便贴上msg：Look-behind group does not have an obvious maximum length near index {num}
      
  		
 	
