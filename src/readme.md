@@ -3,14 +3,14 @@ Maven的pom文件详解
 	1：<modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求  
 	2：Maven项目聚合做法  
 		假设现在有项目A,项目A1,项目A2，要求项目A是负责聚合项目A1和A2，实现多个模块联合编译，实现起来很简单  
-		只需要在A的pom文件中，添加这么一段配置  
-		<pre>
+		只需要在A的pom文件中，添加这么一段配置
+
 			<modules>
    				<module>A1</module>
    				<module>A2</module>
 			</modules>
-		</pre>
-		注：A1通过A项目的pom文档的artifactId而确定
+
+注：A1通过A项目的pom文档的artifactId而确定
 		这样，编译A项目，就会把A1和A2项目一起编译
 		接下来有个需求，项目A1和A2使用同一个依赖，难道要各自使用各自的依赖包吗？
 		以上叫做模块聚合，接下来就是模块间的继承，这继承，第一个就是能子项目继承父项目引用的依赖包
