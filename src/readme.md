@@ -1,10 +1,10 @@
 ##第一章：Maven的奇技淫巧（坑）
 Maven的pom文件详解
-	1：<modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求
+	1：<modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求  
 	2：Maven项目聚合做法 
 		假设现在有项目A,项目A1,项目A2，要求项目A是负责聚合项目A1和A2，实现多个模块联合编译，实现起来很简单
 		只需要在A的pom文件中，添加这么一段配置
-
+	
 			<modules>
    				<module>A1</module>
    				<module>A2</module>
@@ -15,8 +15,8 @@ Maven的pom文件详解
 	
 注：A1通过A项目的pom文档的artifactId而确定
 		这样，编译A项目，就会把A1和A2项目一起编译
-		接下来有个需求，项目A1和A2使用同一个依赖，难道要各自使用各自的依赖包吗？
-		以上叫做模块聚合，接下来就是模块间的继承，这继承，第一个就是能子项目继承父项目引用的依赖包
+		接下来有个需求，项目A1和A2使用同一个依赖，难道要各自使用各自的依赖包吗？  
+		以上叫做模块聚合，接下来就是模块间的继承，这继承，第一个就是能子项目继承父项目引用的依赖包  
 		假设父项目的pom文件是这样的
 		
 		<modelVersion>4.0.0</modelVersion>  
@@ -37,7 +37,7 @@ Maven的pom文件详解
 	   
 值得注意的是`<relativePath>`标签，如果pom的层次关系就像本例中的那样只隔一层，则可以省略这个。  
 maven同样可以找到子pom。  
-子pom中引入<parent>标签后，就会从父pom继承<version>等属性了
+子pom中引入<parent>标签后，就会从父pom继承<version>等属性了  
 父类添加这样的依赖：
  
  
@@ -81,23 +81,23 @@ maven同样可以找到子pom。
 不用加version了，便于管理。
 ## 第二章：杂项
 
-1.BigDecimal的学习
-		构造函数
-		BigDecimal(double val);
-		BigDecimal(int val);
-		BigDecimal(String val);
-		分别可以将double，int，String代表的数字转成BigDecimal对象
-		
-		
-		HttpClient分两个阶段版本，有些时候下错了就悲剧了
-		目前最新阶段的最新版本的依赖
-			<dependency>
-  		 <groupId>org.apache.httpcomponents</groupId>
-    <artifactId>httpclient</artifactId>
-    <version>4.5.2</version>
+1.BigDecimal的学习  
+		构造函数  
+		BigDecimal(double val);  
+		BigDecimal(int val);  
+		BigDecimal(String val);  
+		分别可以将double，int，String代表的数字转成BigDecimal对象  
+		HttpClient分两个阶段版本，有些时候下错了就悲剧了  
+		目前最新阶段的最新版本的依赖  
+			
+		<dependency>
+  		 	<groupId>org.apache.httpcomponents</groupId>
+    		<artifactId>httpclient</artifactId>
+    		<version>4.5.2</version>
 		</dependency>
-		其HttpPost对象可以设置实体内容。而get不行！
-		其HttpClient对象这么创建：CloseableHttpClient httpclient = HttpClients.createDefault(); 
+		
+其HttpPost对象可以设置实体内容。而get不行！  
+其HttpClient对象这么创建：CloseableHttpClient httpclient = HttpClients.createDefault();   
 		
 --------------------------------------------------------------------------NOSQL--------------------------------------------------------------
 NOSQL意为非关系型数据库，分为几种
@@ -428,9 +428,12 @@ RT:
  
 ##第六章：正则表达式和java的坑
 1.  目前测试得知，java1.7 不支持捕获组里面写无限匹配量词，也就是'+'和'{2,}' 不能用
-		eg:(?<=package\\s{1,})  or  (?<=package\\s+)  貌似可以匹配'package   '后面的位置，但是java不支持这种写法
+		eg:(?<=package\\s{1,})  or  (?<=package\\s+)  可以匹配'package   '后面的位置，但是java不支持这种写法
 		考虑可以换成(?<=package\\s{1,10000})
 		顺便贴上msg：Look-behind group does not have an obvious maximum length near index {num}
+		
+## 第七章：消息队列
+待定！
      
  		
 	
