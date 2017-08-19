@@ -1,4 +1,4 @@
-##第一章：Maven的奇技淫巧（坑）
+## 第一章：Maven的奇技淫巧（坑）
 Maven的pom文件详解
 	1：<modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求  
 	2：Maven项目聚合做法 
@@ -78,16 +78,27 @@ maven同样可以找到子pom。
 		   </plugins>
 		</build>
 	
-不用加version了，便于管理。
+不用加version了，便于管理。  
+### 2017-5-30日6月1日bug:
+1:在Eclipse运行Maven命令没反应或者爆这个错:  
+`-Dmaven.multiModuleProjectDirectory system property is not set. Check $M2_HOME environment variable and mvn script match.`
+理由。安装的Maven太高级了，Eclipse不认识他，安装个旧版本的  
+或者进入eclipse的Window->Preference->Java->Installed JREs->Edit，在Default VM arguments中设置-Dmaven.multiModuleProjectDirectory=$M2_HOME  
+告诉Eclipse去哪里找这个高版本的Maven..前提一定要设置M2_HOME这个环节变量啊，别告诉我你不会设置。  
+
+2:有时候下载依赖失败后再次下载就不行了。你得手动去删除依赖的那个文件夹的_maven.repositories和_lastUpdate....这两个文件，然后重新update项目。  
+还有，仓库有时候依赖是个pom文件，建议不要引用该依赖，要下那些有jar包的该依赖
+
+
 ## 第二章：杂项
 
-1.BigDecimal的学习  
+### 1.BigDecimal的学习  
 		构造函数  
 		BigDecimal(double val);  
 		BigDecimal(int val);  
 		BigDecimal(String val);  
 		分别可以将double，int，String代表的数字转成BigDecimal对象  
-		HttpClient分两个阶段版本，有些时候下错了就悲剧了  
+### 2:HttpClient分两个阶段版本，有些时候下错了就悲剧了  
 		目前最新阶段的最新版本的依赖  
 			
 		<dependency>
@@ -98,80 +109,75 @@ maven同样可以找到子pom。
 		
 其HttpPost对象可以设置实体内容。而get不行！  
 其HttpClient对象这么创建：CloseableHttpClient httpclient = HttpClients.createDefault();   
-		
---------------------------------------------------------------------------NOSQL--------------------------------------------------------------
-NOSQL意为非关系型数据库，分为几种
-1：基于键值对的-redis最强
-2：列存储，Hbase、Cassandra这种
-3：文档存储：MongoDB
-4：图片存储：Neo4j、Versant
-5：xml存储：Berkeley DB Xml还有XBASE，ORACLE很早已经支持这种存储方式了
---------------------1：redis的基础运用场景------------------
-1：多web项目中共享一个session
-2：分布式缓存，由于redis提供了几大语言的接口，比如java，.net,c等语言。
-		因此对于异质平台间进行数据交换起到了作用，因此它可以用作大型系统的分布式缓存，
-		并且其setnx的锁常被用于”秒杀“，”抢红包“这种电商活动场景中。
-		
-在Eclipse运行Maven命令没反应或者爆这个错：-Dmaven.multiModuleProjectDirectory system property is not set. Check $M2_HOME environment variable and mvn script match.
-理由。安装的Maven太高级了，Eclipse不认识他，安装个旧版本的。
-或者进入eclipse的Window->Preference->Java->Installed JREs->Edit，在Default VM arguments中设置-Dmaven.multiModuleProjectDirectory=$M2_HOME
-告诉Eclipse去哪里找这个高版本的Maven..前提一定要设置M2_HOME这个环节变量啊，别告诉我你不会设置。
 
-有时候下载依赖失败后再次下载就不行了。你得手动去删除依赖的那个文件夹的_maven.repositories和_lastUpdate....这两个文件，然后重新update项目。
-还有，仓库有时候依赖是个pom文件，建议不要引用该依赖，要下那些有jar包的该依赖
-
-2017-5-30日值6月1日bug
-
+### 写接口注意事项
 写接口时切记沟通发送报文和接受报文的编码！
 接口一定要用HTTPClient测试一下！
-Springmvc控制器方法上的produces 要注意一下，仅当Accept请求头和produces指明的媒体类型一致时，
-比如说produces=text/plain   发来请求的请求头中Accept=text/plain  ，该请求才会被接受！，否则报错！、
-坑爹的网上教程说该注解可以指定respode的返回数据类型。。。。
 
-@ResponseBody  其返回的数据类型主要看你的classpath有没有相关的第三方jar包，比如说jackson.jar
-这样的话返回的数据就会转成json格式输出
-一般情况下开发的框架都是加了json相关的jar包，也就是说@ResponseBody返回的都是json数据。
-所以要返回一个xml格式的。。。你还是老老实实的用响应流来输出吧。。
+## 第三章：NOSQL
+NOSQL意为非关系型数据库，分为几种  
+1：基于键值对的-redis最强  
+2：列存储，Hbase、Cassandra这种  
+3：文档存储：MongoDB  
+4：图片存储：Neo4j、Versant  
+5：xml存储：Berkeley DB Xml还有XBASE，ORACLE很早已经支持这种存储方式了  
+### redis的基础运用场景 
+1：多web项目中共享一个session  
+2：分布式缓存，由于redis提供了几大语言的接口，比如java，.net,c等语言。  
+		因此对于异质平台间进行数据交换起到了作用，因此它可以用作大型系统的分布式缓存，  
+		并且其setnx的锁常被用于”秒杀“，”抢红包“这种电商活动场景中。  
+		
+
+
+### 第四章：SPring的奇技淫巧
+1：Springmvc控制器方法上的produces 要注意一下，仅当Accept请求头和produces注解指明的媒体类型一致时，
+比如说produces=text/plain   发来请求的请求头中Accept=text/plain  ，该请求才会被接受！否则报错！  
+
+2：@ResponseBody  其返回的数据类型主要看你的classpath有没有相关的第三方jar包，比如说jackson.jar  
+这样的话返回的数据就会转成json格式输出  
+一般情况下开发的框架都是加了json相关的jar包，也就是说@ResponseBody返回的都是json数据。  
+所以要返回一个xml格式的。。。你还是老老实实的用响应流来输出吧。。  
 注：就算@ResponseBody返回一个字符串，就平台来说，也会给你字符串加上两个隐形的翅膀（字符串首尾加括号）
-什么，你想setContentType("text/plain; charset=utf-8");
+什么，你想setContentType("text/plain; charset=utf-8");  
 @ResponseBody到最后还是会变成application/javascript;charset=utf-8的。。。
 
-
-openssh安装后如何启动？
+### 第五章：linux的技能
+1. openssh安装后如何启动？  
 命令：/etc/init.d/ssh start  必须在su权限下运行
 
-怎么用主机访问VirtualBox呢？
+2. 怎么用主机访问VirtualBox呢？
 见图。用PuTTY即可访问
 
-vin编辑器怎么使用？
-用vi  文件路径  即可打开一个文本文件
-初次进入是以命令行模式打开的，要编辑此文件，敲入i即可进入编辑模式。
-编辑模式下按esc回退到命令行模式
-将光标移动到某处，按dd即可删除该行
- 「x」：每按一次，删除光标所在位置的“后面”一个字符。
-「#x」：例如，「6x」表示删除光标所在位置的“后面”6个字符。
-「X」：大写的X，每按一次，删除光标所在位置的“前面”一个字符。
-「#X」：例如，「20X」表示删除光标所在位置的“前面”20个字符。
-按下：号
-输入wq!强制保存并退出。。
+3. vin编辑器怎么使用？  
+用vi  文件路径  即可打开一个文本文件  
+初次进入是以命令行模式打开的，要编辑此文件，敲入i即可进入编辑模式。  
+编辑模式下按esc回退到命令行模式  
+将光标移动到某处，按dd即可删除该行  
+ 「x」：每按一次，删除光标所在位置的“后面”一个字符。  
+「#x」：例如，「6x」表示删除光标所在位置的“后面”6个字符。  
+「X」：大写的X，每按一次，删除光标所在位置的“前面”一个字符。  
+「#X」：例如，「20X」表示删除光标所在位置的“前面”20个字符。  
+按下：号  
+输入wq!强制保存并退出。。    
+  
+4. 利用putt传文件到远程服务器  
 
-
-利用putt传文件到远程服务器
-putt客户端下载下来一般都有那个pscp.exe文件。进入该文件对应的文件夹，敲入cmd命令
-pscp 发送的源文件   服务器用户名@服务器地址:home 敲入后输入密码，即可发送！
-eg:pscp jdk-8u131-linux-x64.rpm cxh@192.168.21.253:/home
-注意：有时候发送过去但是找不到文件或者发送时提示permission denied
-就是访问被拒绝了，这时候你得手动更改远程服务器的文件夹为可读可写  chmod 777 xxxx
+putt客户端下载下来一般都有那个pscp.exe文件。进入该文件对应的文件夹，敲入cmd命令  
+pscp 发送的源文件   服务器用户名@服务器地址:home 敲入后输入密码，即可发送！  
+eg:pscp jdk-8u131-linux-x64.rpm cxh@192.168.21.253:/home  
+注意：有时候发送过去但是找不到文件或者发送时提示permission denied  
+就是访问被拒绝了，这时候你得手动更改远程服务器的文件夹为可读可写  chmod 777 xxxx  
 注：pscp -r 后面指定文件夹名可以远程传输文件夹
+5. 其他命令  
 
-dpkg -l 可以查看安装的软件列表
-apt-get remove --purge 名字    可以删除软件
+dpkg -l 可以查看安装的软件列表  
+apt-get remove --purge 名字    可以删除软件  
 
-mv [选项] 源文件或目录 目标文件或目录
+mv [选项] 源文件或目录 目标文件或目录  
 
-rm -rf  文件夹路径
+rm -rf  文件夹路径  
 
-tar -xzvf file.tar.gz
+tar -xzvf file.tar.gz  
 
 vi  /etc/proifle 在其末尾添加这几句
 export JAVA_HOME="xxx"
@@ -397,6 +403,48 @@ RT:
 要是引用传递，还拷贝个毛。
 偷来的一个截图为例<br/>
 ![吔屎啦，图片显示不出来](https://github.com/XHang/Node/blob/master/java%E5%BC%95%E7%94%A8%E4%BC%A0%E9%80%92%E7%A4%BA%E4%BE%8B.png)
+
+2. 泛型篇---上界通配符和下界通配符详解
+	Plate<？ extends Fruit>  上界通配符，?表示Fruit类以及Fruit的派生类（子类）  
+	代码示例
+	
+	public class Plate<T>{
+		private T item;
+		public Plate(T item){
+			this.item = item;
+		}
+		public void set(T item){
+			this.item = item;
+		}
+		public T get(){
+			return this.item;
+		}
+	}
+
+这样的话，Plate<? extends Fruit> p 这个引用变量就可以接受所有Fruit以及Fruit的子类对象了  
+如: `Plate<? extends Fruit> p = new Plate<Apple>(new Apple())`   水果盘子可以放苹果，很科学  
+不过，这个水果盘子只能放一次水果，就是在它new的时候，你再执行set方法就不行了。  
+虽然编译器知道水果盘子里面放的是水果，可是它并不知道是什么水果，所以你放什么水果进去它都不知道能不能匹配，当然就不让你放了。
+取水果是有效的，因为编译器虽然不知道你放的是什么水果，可它至少是水果，并且还是对象。
+只要用这两种类型来接受就OK了
+  
+Plate<？ super Fruit> 下界通配符，'？'表示水果以及水果类的父类。
+换句话说，这个盘子可以放水果和食物。。
+	
+	`PS：虽然说可以放食物，你可不能往里面放猪肉。它可以放的是食物的实例，因为食物是水果的父类。
+	        猪肉是水果的父类吗?显然不对`
+下界通配符 可以这么使用： `Plate<？ super Fruit> plate = new Plate<Food>(new Food())`
+这样的话编译器知道你搞了一个盘子，里面可以放水果或者水果以上的食物，但具体是什么它也不清楚。  
+所以放苹果是合适的，苹果既是水果，又是食物。  
+但是你不能放水果的父类，因为可能这个盘子一开始new的时候只允许放水果。  
+说的再直白一点就是编译器虽然不知道你葫芦里卖的什么药，可它起码是药，放药进去就行了。  
+其实不太科学的说，我new了一个放食物的盘子，居然只能放水果，够憋屈的。  
+更憋屈的还有，你取出来的话，只能用Object来接受...还是那句话，编译器不知道你放进去的是什么东西。  
+所以只能推断为最顶层的基类：Object。你再怎么放东西，它最终都是一个对象  
+以上。
+	
+
+	
 
 ##第五章：Eclipse的坑
 1. eclipse的构建路径中的order and export 作用是 <br/>
