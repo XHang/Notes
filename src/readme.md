@@ -461,7 +461,7 @@ Plate<？ super Fruit> 下界通配符，'？'表示水果以及水果类的父�
 
 putt客户端下载下来一般都有那个pscp.exe文件。进入该文件对应的文件夹，敲入cmd命令  
 pscp 发送的源文件   服务器用户名@服务器地址:home 敲入后输入密码，即可发送！  
-eg:pscp jdk-8u131-linux-x64.rpm cxh@192.168.21.253:/home  
+eg:pscp jdk-8u131-linux-x64.rpm cxh@192.168.21.248:/home  
 注意：有时候发送过去但是找不到文件或者发送时提示permission denied  
 就是访问被拒绝了，这时候你得手动更改远程服务器的文件夹为可读可写  chmod 777 xxxx  
 注：pscp -r 后面指定文件夹名可以远程传输文件夹
