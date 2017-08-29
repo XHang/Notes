@@ -89,6 +89,10 @@ maven同样可以找到子pom。
 2:有时候下载依赖失败后再次下载就不行了。你得手动去删除依赖的那个文件夹的_maven.repositories和_lastUpdate....这两个文件，然后重新update项目。  
 还有，仓库有时候依赖是个pom文件，建议不要引用该依赖，要下那些有jar包的该依赖
 
+### 2017-8-28 晚BUg：
+无论clean install多少次，resource文件夹里面的配置文件都没有发布到war包中。
+最后发现是resource写错了，应该是resources
+
 
 ## 第二章：杂项
 
