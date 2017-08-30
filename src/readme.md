@@ -93,6 +93,32 @@ maven同样可以找到子pom。
 无论clean install多少次，resource文件夹里面的配置文件都没有发布到war包中。
 最后发现是resource写错了，应该是resources
 
+### 2017-8-29 晚BUg：
+老实说，这个BUG早知道了，也有应对之策。  
+可是应对之策忘了，所以特此补充  
+具体BUg的描述就是用Maven打包的项目后，包里面没有Mybatis的实体类映射文件  
+众所周知，这个映射文件一般是跟着实体类放在一起的，也就是`src/main/java`文件夹里面，  
+但是Maven打包只打包`src/main/java`文件夹里面的java文件，xml配置文件不会打包。  
+所以我们需要这个配置  
+
+	<resource>
+              <directory>src/main/java</directory>
+              <includes>
+                  <include>**/*.properties</include>  
+                    <include>**/*.xml</include>  
+              </includes>
+              <filtering>false</filtering>
+          </resource>
+          <resource>  
+            <directory>src/main/resources</directory>  
+                <includes>  
+                    <include>**/*.properties</include>  
+                    <include>**/*.xml</include>  
+                </includes>  
+                <filtering>false</filtering>  
+            </resource>   
+ 这下就可以把实体类的映射文件一起打包了，爽不？ 
+
 
 ## 第二章：杂项
 
