@@ -513,7 +513,16 @@ export JRE_HOME="$JAVA_HOME/jre"
 export CLASSPATH=".:$JAVA_HOME/lib:$JRE_HOME/lib"
 即可设置jdk的环境变量。
 
-source /etc/profile更新一下。。
+source /etc/profile更新一下。。  
+
+6. centos开启网络（oracle VM下）
+	要弄一个开启网络的命令，并设置为开机执行
+
+7：没有java的环境变量无法执行# echo $JAVA_HOME 来获取java安装路径咋办（执行结果是空的)  
+	利用which java得到路径1  which java是打印出java命令文件的路径  
+	ls -lrt+路径1得到 箭头后的路径2  
+	ls -lrt+路径2就ok了  
+	默认情况下，用rpm安装后的java在/usr/java/jdk1.8.0_144/
  		
 ## 第⑨章：前端技能
 1. bootstrap的弹窗功能怎么关闭？官方有个示例性文档，在创建窗口过程中预定义几个按钮，可以实现关闭功能。
