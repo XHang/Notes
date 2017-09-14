@@ -440,6 +440,45 @@ Plate<？ super Fruit> 下界通配符，'？'表示水果以及水果类的父�
 所以只能推断为最顶层的基类：Object。你再怎么放东西，它最终都是一个对象  
 以上。
 	
+4. Error会回滚吗？
+此问题将重定向到Error错误类可会捕捉到？
+因为回滚依赖的是catch子句，如果错误不能被catch子句捕捉到，那就不用谈了  
+答案：能捕捉到
+所以：
+1. Error的异常能捕捉到
+2. Error的异常能使事务回滚，前提是设置好回滚异常
+
+5. 类的静态变量和静态代码块什么时候执行？  
+初始化。。。那么什么时候进行初始化呢？    
+可不是类加载时，比如说，Class class= A.Class  
+这个时候类加载了，但却没有初始化  
+类的初始化主要由下面几个因素触发  
+
+    当创建某个类的新实例时（如通过new或者反射，克隆，反序列化等）
+    当调用某个类的静态方法时
+    当使用某个类或接口的静态字段时
+    当调用Java API中的某些反射方法时，比如类Class中的方法，或者java.lang.reflect中的类的方法时
+    当初始化某个子类时
+    当虚拟机启动某个被标明为启动类的类（即包含main方法的那个类）
+    
+这是一般的情况，但是从web环境下运行，类的静态成员也是由以上的因素触发初始化吗？    
+某人认为：调用前就初始化了，因为静态成员是作为一个类变量存在，在这个类被加载到虚拟机里面时(或者tomcat运行容器)就已经被初始化了    
+实验下。。。  
+实验条件：标准的SSM项目，三个测试  
+1. 仅写好类  
+2. 调用一下类.class  
+3.调用类的静态属性  
+结果只有调用类的静态属性才会触发类的初始化，结论，百度都是骗人的  
+
+但是，比较特殊的是，一旦类初始化失败，在下面的web应用中，将不能再使用这个类了。  
+除非重启并正确地初始化该类  
+
+6. 演示下可能会发生数据库锁的情况
+第一种情况：  
+方法加了事务，操作了两个表。但是某种原因卡住了，然后另一个方法要访问
+
+7. 定义接口的错误信息时，不要总是想自定义错误信息。一旦你的程序需要事务管理的话，你返  回错误信息，相当于程序不报错，不抛异常。事务管理自然失效。。  
+正确的做法是既能抛异常，又能把错误传递给对方。。  
 
 	
 
@@ -541,6 +580,15 @@ source /etc/profile更新一下。。
  开启或者关闭firewalld（centos7的防火墙）
 	systemctl start firewalld
 	systemctl stop firewalld
+
+9：centos修改主机名
+hostnamectl set-hostname 主机名
+hostnamectl --static 可以查看主机名
+
+10：centos关机命令
+reboot  重启
+poweroff 立刻关机
+
  		
 ## 第⑨章：前端技能
 1. bootstrap的弹窗功能怎么关闭？官方有个示例性文档，在创建窗口过程中预定义几个按钮，可以实现关闭功能。
@@ -551,5 +599,153 @@ source /etc/profile更新一下。。
 ## 第十章 windows的命令
 netstat -ano|findstr "8080"  查看占用该端口的piD
 taskkill /pid 2472 -t -f; 
+
+## 第十一章 PostgreSQL数据库的知识
+以下命令在PostgreSQL 9.6.2 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.4.7 20120313 (Red Hat 4.4.7-3), 64-bit  测试通过  
+1. 如何查看pg数据库的版本  
+`select version();`   
+2. 如何查看pg数据的连接资源  
+`SELECT * FROM pg_stat_activity WHERE datname='postgres';`
+几个字段说下  
+state:运行状态，可以为几种值：  
+active:正在执行；  
+idle:等待新的命令    
+idle in transaction:后端是一个事务，但是尚未执行查询；  
+idle in transaction(aborted):和idle in transaction类似，除了事务执行出错。
+
+
+
+3. 连接资源太多，怎么kill
+`SELECT pg_terminate_backend(PID);`  
+pid的值需要从第二项的sql语句查询结果来寻找  
+
+
+条件的postgres指的数据库名  
+另注：你没看错，就是datname，而不是dataname  
+
+4.  死锁了怎么搞？
+	什么情况下会死锁？当你发现一个DML语句总是卡住时，一个简单的select一次性通过的话，你就得考虑死锁的可能性了
+	用这个sql语句可以看到死锁的进程
+	
+	WITH t_wait AS (
+	SELECT
+		A .locktype,
+		A . DATABASE,
+		A .relation,
+		A .page,
+		A .tuple,
+		A .classid,
+		A .objid,
+		A .objsubid,
+		A .pid,
+		A .virtualtransaction,
+		A .virtualxid,
+		A,
+		transactionid,
+		b.query,
+		b.xact_start,
+		b.query_start,
+		b.usename,
+		b.datname
+	FROM
+		pg_locks A,
+		pg_stat_activity b
+	WHERE
+		A .pid = b.pid
+	AND NOT A . GRANTED
+	),t_run AS (
+	SELECT
+		A . MODE,
+		A .locktype,
+		A . DATABASE,
+		A .relation,
+		A .page,
+		A .tuple,
+		A .classid,
+		A .objid,
+		A .objsubid,
+		A .pid,
+		A .virtualtransaction,
+		A .virtualxid,
+		A,
+		transactionid,
+		b.query,
+		b.xact_start,
+		b.query_start,
+		b.usename,
+		b.datname
+	FROM
+		pg_locks A,
+		pg_stat_activity b
+	WHERE
+		A .pid = b.pid
+	AND A . GRANTED
+	) SELECT
+	r.locktype,
+	r. MODE,
+	r.usename r_user,
+	r.datname r_db,
+	r.relation :: regclass,
+	r.pid r_pid,
+	r.xact_start r_xact_start,
+	r.query_start r_query_start,
+	r.query r_query,
+	w.usename w_user,
+	w.datname w_db,
+	w.pid w_pid,
+	w.xact_start w_xact_start,
+	w.query_start w_query_start,
+	w.query w_query
+	FROM
+	t_wait w,
+	t_run r
+	WHERE
+	r.locktype IS NOT DISTINCT
+	FROM
+	w.locktype
+	AND r. DATABASE IS NOT DISTINCT
+	FROM
+	w. DATABASE
+	AND r.relation IS NOT DISTINCT
+	FROM
+	w.relation
+	AND r.page IS NOT DISTINCT
+	FROM
+	w.page
+	AND r.tuple IS NOT DISTINCT
+	FROM
+	w.tuple
+	AND r.classid IS NOT DISTINCT
+	FROM
+	w.classid
+	AND r.objid IS NOT DISTINCT
+	FROM
+	w.objid
+	AND r.objsubid IS NOT DISTINCT
+	FROM
+	w.objsubid
+	ORDER BY
+	r.xact_start
+
+看到r_pid没，kill it！
+
+其实吧，最重要的是建立死锁超时机制，死锁的线程一旦超时，就强制关闭，释放锁。
+死锁并发数高的话，很容易发生。
+
+5. 什么情况下会死锁
+A线程拿着表A的锁，要访问表B.  
+B线程拿着表B的锁，要访问表A  
+这是标准的情况    
+有一个特别容易犯的情况是：    
+在事务里，你update了两次表A，这个方法直接就死锁了，执行不下去了。  
+理由是：  
+第一次update，你拿到了表A的锁。  
+第二次update，你想拿到表A的锁，没门。得等第一次update完成。  
+可是问题来了，表Aupdate要完成，必须是事务结束。而同一个事务下的第二次update就怎么能拿到事务结束的锁？穿越时空？tan90  不可棱。。  
+
+
+3. 教训
+1. 不要太依赖工具，比如说Navicat 。这货会把太大的数据变成科学计数法。实测，用pg数据库的shell工具查出来的数据是正常的。。
+	但是，比较坑的是，pg数据库支持用科学计数法表示的数字来作为查询语句的条件来查询数据。。
 	
 		
