@@ -5,7 +5,7 @@ Maven的pom文件详解
 		假设现在有项目A,项目A1,项目A2，要求项目A是负责聚合项目A1和A2，实现多个模块联合编译，实现起来很简单
 		只需要在A的pom文件中，添加这么一段配置
 	
-			<modules>
+			<modules> 
    				<module>A1</module>
    				<module>A2</module>
 			</modules>
@@ -481,6 +481,10 @@ Plate<？ super Fruit> 下界通配符，'？'表示水果以及水果类的父�
 用这个代码  `类名.class.getResourceAsStream("/文件名");`
 具体原理不是很清楚。大概就是从classpath路径下搜索所有符合条件的文件吧
 
+9.
+jdk7引入了一个工具类，专门是Object的工具类：Objects
+原有的equals方法都可以使用Objects类
+
 	
 
 ##第五章：Eclipse的坑
@@ -596,6 +600,8 @@ source /etc/profile更新一下。。
  开启或者关闭firewalld（centos7的防火墙）
 	systemctl start firewalld
 	systemctl stop firewalld
+	永远禁用centos防火墙
+	systemctl disable firewalld.service 
 
 9：centos修改主机名
 hostnamectl set-hostname 主机名
@@ -768,3 +774,7 @@ B线程拿着表B的锁，要访问表A
 	
 	
 		
+## 读某规范手册有感
+1：
+实体类属性中基本数据类型最好设置为包装数据类型，这样如果这些数据缺失的情况下，不会设置为默认值。而是报空指针。
+避免设置为默认值后掩盖了原有的错误。
