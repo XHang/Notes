@@ -119,6 +119,35 @@ maven同样可以找到子pom。
             </resource>   
  这下就可以把实体类的映射文件一起打包了，爽不？ 
 
+### maven全局或者局部设置java编译版本
+在setting文件中，补上这份代码  
+	
+	<profile>   
+	    <id>jdk1.6</id>
+	    <activation>   
+	    <activeByDefault>true</activeByDefault>
+	    <jdk>1.6</jdk>   
+	    </activation>
+	    <properties>   
+	        <maven.compiler.source>1.6</maven.compiler.source>
+	        <maven.compiler.target>1.6</maven.compiler.target>
+	        <maven.compiler.compilerVersion>1.6</maven.compiler.compilerVersion>   
+	    </properties>   
+	</profile>  
+保存即可  
+如果全局设置失败，试下局部设置  
+在pom 文件中补上这个代码  
+
+	<plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+	    <artifactId>maven-compiler-plugin</artifactId>
+	    <configuration>
+	        <source>1.6</source>
+	        <target>1.6</target>
+	        <encoding>${project.build.sourceEncoding}</encoding>
+	    </configuration>
+	</plugin>
+
 
 ## 第二章：杂项
 
@@ -582,6 +611,8 @@ export CLASSPATH=".:$JAVA_HOME/lib:$JRE_HOME/lib"
 
 source /etc/profile更新一下。。  
 
+pwd命令可以查看当前所在的路径（centos）
+
 6. centos开启网络（oracle VM下）
 	要弄一个开启网络的命令，并设置为开机执行
 
@@ -604,6 +635,23 @@ hostnamectl --static 可以查看主机名
 10：centos关机命令
 reboot  重启
 poweroff 立刻关机
+
+11. 
+在linux文件系统路径中
+~代表用户目录
+如：~/就是/home/make/
+
+12. wget是一个在控制台可以从各个协议上下载东西的工具
+如这条命令
+`wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
+直接在控制台执行，就可以从镜像网站下载hadoop压缩包
+
+13：看下在环境变量配置这里
+`export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin`
+这种配法有什么用？
+
+
+
 
  		
 ## 第⑨章：前端技能
