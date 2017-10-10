@@ -607,6 +607,9 @@ eg:pscp jdk-8u131-linux-x64.rpm cxh@192.168.21.248:/home
 dpkg -l 可以查看安装的软件列表  
 apt-get remove --purge 名字    可以删除软件  
 
+yum list installed
+yum remove 软件名
+
 mv [选项] 源文件或目录 目标文件或目录  
 
 rm -rf  文件夹路径  
@@ -663,6 +666,13 @@ poweroff 立刻关机
 `export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin`
 这种配法有什么用？
 
+14. 更新yum源
+有时候自带的yum版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了
+首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
+然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名为：`CentOS-Base.repo`
+`yum clean all`
+`yum makecache`
+运行以上两个命令生成yum的缓存
 
 
 
