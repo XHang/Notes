@@ -1,5 +1,5 @@
 ## 第一章：Maven的奇技淫巧（坑）
-Maven的pom文件详解
+Maven的pom文件详解  
 	1：<modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求  
 	2：Maven项目聚合做法 
 		假设现在有项目A,项目A1,项目A2，要求项目A是负责聚合项目A1和A2，实现多个模块联合编译，实现起来很简单
@@ -520,6 +520,13 @@ jdk7引入了一个工具类，专门是Object的工具类：Objects
 说来也挺简单的  
 `new String(URLDecoder.decode(要转换的字符串, "utf-8")`  
 
+11.
+绝大多数dao框架，都不允许写这种sql语句  
+`select * from user where userName like '%?%'`  
+然后setString。  
+这样会报错说栏目数不对，实际栏目数1，预期栏目数0   
+这估计是因为占位符`?`写到了字符串里面  
+
 
 	
 
@@ -550,6 +557,11 @@ jdk7引入了一个工具类，专门是Object的工具类：Objects
         </plugin>   </pre>`
   未知：setting文件改jdk版本为1.7仍然无效。这个小妖精。。。。
   
+3. 这个问题也不是Eclipse的坑，但却是Eclipse的svn插件，所以也一并放到这里。
+在svn，如果你想恢复的文件夹的父文件夹不存在那么复原是失败的。
+比如说你想复原/web/server 的server文件夹，但是本地系统中web文件夹已经消失了。
+那么复原是失败的，你得先复原web文件夹，才能往下继续复原。。  
+这个特性真糟糕。  
  
 ##第六章：正则表达式和java的坑
 1.  目前测试得知，java1.7 不支持捕获组里面写无限匹配量词，也就是'+'和'{2,}' 不能用
@@ -601,78 +613,80 @@ pscp 发送的源文件   服务器用户名@服务器地址:home 敲入后输�
 eg:pscp jdk-8u131-linux-x64.rpm cxh@192.168.21.248:/home  
 注意：有时候发送过去但是找不到文件或者发送时提示permission denied  
 就是访问被拒绝了，这时候你得手动更改远程服务器的文件夹为可读可写  chmod 777 xxxx  
-注：pscp -r 后面指定文件夹名可以远程传输文件夹
-5. 其他命令  
+注：pscp -r 后面指定文件夹名可以远程传输文件夹  
+5. 安装，删除命令：  
+Ubuntu版：  
+dpkg -l 可以查看安装的软件列表    
+apt-get remove --purge 名字    可以删除软件    
 
-dpkg -l 可以查看安装的软件列表  
-apt-get remove --purge 名字    可以删除软件  
-
+centos版：
 yum list installed
 yum remove 软件名
 
 mv [选项] 源文件或目录 目标文件或目录  
-
+6. 删除文件夹命令
 rm -rf  文件夹路径  
 
+7. 解压命令
 tar -xzvf file.tar.gz  
 
-vi  /etc/proifle 在其末尾添加这几句
+8. 设置linux的环境变量  
+vi  /etc/proifle 在其末尾添加这几句  
 export JAVA_HOME="xxx"
 export PATH="$PATH:$JAVA_HOME/bin"
 export JRE_HOME="$JAVA_HOME/jre"
 export CLASSPATH=".:$JAVA_HOME/lib:$JRE_HOME/lib"
-即可设置jdk的环境变量。
+即可设置jdk的环境变量。  
 
 source /etc/profile更新一下。。  
 
-pwd命令可以查看当前所在的路径（centos）
+9. pwd命令    
+pwd命令可以查看当前所在的路径（centos）  
 
-6. centos开启网络（oracle VM下）
-	要弄一个开启网络的命令，并设置为开机执行
 
-7：没有java的环境变量无法执行# echo $JAVA_HOME 来获取java安装路径咋办（执行结果是空的)  
-	利用which java得到路径1  which java是打印出java命令文件的路径  
-	ls -lrt+路径1得到 箭头后的路径2  
-	ls -lrt+路径2就ok了  
-	默认情况下，用rpm安装后的java在/usr/java/jdk1.8.0_144/
+10. 获取java安装目录  
+	利用`which java`得到路径1  which java是打印出java命令文件的路径    
+	`ls -lrt+路径1`得到 箭头后的路径2  
+	`ls -lrt+路径2`就ok了  
+	默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
 	
-8：centos查看网络端口占用。
- firewall-cmd --zone=public --list-ports
- 开启或者关闭firewalld（centos7的防火墙）
-	systemctl start firewalld
-	systemctl stop firewalld
-	永远禁用centos防火墙
-	systemctl disable firewalld.service 
+11. 
+centos查看网络端口占用:` firewall-cmd --zone=public --list-ports`  
+ 开启或者关闭firewalld（centos7的防火墙）:`systemctl start firewalld`and	`systemctl stop firewalld`    
+永远禁用centos防火墙:`systemctl disable firewalld.service `  
 
-9：centos修改主机名
-hostnamectl set-hostname 主机名
+12. 
+centos修改主机名:`hostnamectl set-hostname 主机名`
 hostnamectl --static 可以查看主机名
 
-10：centos关机命令
+13.
+centos关机命令
 reboot  重启
 poweroff 立刻关机
 
-11. 
+14.
 在linux文件系统路径中
 ~代表用户目录
 如：~/就是/home/make/
 
-12. wget是一个在控制台可以从各个协议上下载东西的工具
+15. 
+wget是一个在控制台可以从各个协议上下载东西的工具
 如这条命令
 `wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
 直接在控制台执行，就可以从镜像网站下载hadoop压缩包
 
-13：看下在环境变量配置这里
+16：
+看下在环境变量配置这里
 `export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin`
 这种配法有什么用？
 
-14. 更新yum源
-有时候自带的yum版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了
+17. 更新yum源  
+有时候自带的yum版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了  
 首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
-然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名为：`CentOS-Base.repo`
-`yum clean all`
+然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
+`yum clean all`  
 `yum makecache`
-运行以上两个命令生成yum的缓存
+运行以上两个命令生成yum的缓存  
 
 
 
@@ -830,7 +844,19 @@ B线程拿着表B的锁，要访问表A
 2. 机器永远是对的，**未测试代码永远是错的**，别人写的代码不要轻易相信
 	写接口的调用者也要清楚对方的接口的业务逻辑是怎么跑的。这样才能磨炼自己的接口更健壮
 	
+
+## oracle 数据库知识
+一般如果在执行DML语句出现这个错误：ora-00054:resource busy and acquire with nowait specified  
+简而言之，就是数据库正在忙，待会再试吧。。
+..... 开玩笑，怎么可能待会再试，这种情况一般是数据库正在执行事务甚至死锁，这时候就要查询哪里正在执行事务了
 	
+	select t2.username,t2.sid,t2.serial#,t2.logon_time
+	from v$locked_object t1,v$session t2
+	where t1.session_id=t2.sid order by t2.logon_time;
+	
+这个语句可以查出数据库有哪些锁
+
+
 		
 ## 读某规范手册有感
 1：
