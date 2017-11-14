@@ -688,7 +688,7 @@ wget是一个在控制台可以从各个协议上下载东西的工具
 `yum makecache`
 运行以上两个命令生成yum的缓存  
 
-
+18. 为wget设置代理，其实很简单
 
  		
 ## 第⑨章：前端技能
@@ -888,7 +888,10 @@ ELK由三个组件组成
  修改成
  
 	-Xms512m
-	-Xmx512m  
+	-Xmx512m
+
+2. 运行时报org.elasticsearch.bootstrap.StartupException: java.lang.RuntimeException: can not run elasticsearch as root  
+意思就是说，不能用root用户来运行elasticsearch服务器。所以我们要为其创建一个用户和用户组。关于这个内容，请参考上面的linux部分
 
 
 
