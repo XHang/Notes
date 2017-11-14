@@ -527,7 +527,9 @@ jdk7引入了一个工具类，专门是Object的工具类：Objects
 这样会报错说栏目数不对，实际栏目数1，预期栏目数0   
 这估计是因为占位符`?`写到了字符串里面  
 
-
+### 反射
+1. 反射中，`class.getFields()`方法只能获取public的字段，`private`方法的字段获取不到，这个方法才可以 `clazz.getDeclaredFields();`
+2. 
 	
 
 ##第五章：Eclipse的坑
