@@ -691,7 +691,24 @@ wget是一个在控制台可以从各个协议上下载东西的工具
 运行以上两个命令生成yum的缓存  
 
 18. 为wget设置代理，其实很简单
+修改其配置文件` vi /etc/wgetrc  `  里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
+当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
 
+19. centos添加用户
+1. 首先登录 root 账号
+2. 执行： `useradd 用户名`命令创建一个新用户
+3. 执行`passwd username` 为新用户设置新密码并激活
+
+20. centos删除用户 ：`userdel -rf grid` 删除用户的所有信息，不加参数的仅仅只是删除用户，用户的信息没有被删除。  
+
+21. 切换用户登录，centos：login -f username 
+注：	1. 加f参数不用输入密码  
+2. 在ssh客户端切换登录会退出哦
+
+22. 查看用户所在的组`groups username` 一般说来
+23. 添加组 `groupadd name`
+24. 将某文件或者文件夹的所有权归属到某一个组中
+`chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
  		
 ## 第⑨章：前端技能
 1. bootstrap的弹窗功能怎么关闭？官方有个示例性文档，在创建窗口过程中预定义几个按钮，可以实现关闭功能。
@@ -895,6 +912,9 @@ ELK由三个组件组成
 2. 运行时报org.elasticsearch.bootstrap.StartupException: java.lang.RuntimeException: can not run elasticsearch as root  
 意思就是说，不能用root用户来运行elasticsearch服务器。所以我们要为其创建一个用户和用户组。关于这个内容，请参考上面的linux部分
 
+3. 切换了用户运行报：
+`Could not register mbeans java.security.AccessControlException: access denied ("javax.management.MBeanTrustPermission" "register")`
+这大概是因为你现在执行的时候用的用户对这个文件没有所有权，所以挂了，怎么办，诶，递归操作一下，把这个文件夹里面的文档的所有权全交给你当前登录用户的组就行了。
 
 
 
