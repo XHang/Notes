@@ -875,7 +875,24 @@ ELK由三个组件组成
 2. L表示Logstash 是日志搜集器，负责搜集服务器上面的日志，备选的其他搜集器还有Beats
 3. K表示Kibana 就是负责web页面展示的一款组件，支持扩展
 ### 怎么开始
-1. 下载ELK组件并安装
+1. 下载ELK组件
+2. 解压
+3.运行
+4. 下班
+### 问题
+1. 运行时报`failed error='Cannot allocate memory' (errno=12)`,可能的原因是elasticsearch运行要分配的内存太大，java虚拟机扛不住  
+解决办法： 修改elasticsearch的`jvm.options`,将
+
+	-Xms2g
+	-Xmx2g
+ 修改成
+ 
+	-Xms512m
+	-Xmx512m  
+
+
+
+
 
 
 
