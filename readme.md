@@ -690,7 +690,7 @@ wget是一个在控制台可以从各个协议上下载东西的工具
 `yum makecache`
 运行以上两个命令生成yum的缓存  
 
-
+18. 为wget设置代理，其实很简单
 
  		
 ## 第⑨章：前端技能
@@ -869,4 +869,35 @@ B线程拿着表B的锁，要访问表A
 2.  方法名可以类名一致，和构造方法唯一区别是，构造方法没有返回值
 3. 实例方法不单单指public方法，private方法亦是  
 4. long d = 2 是正确的，虽然单单写一个2，其实是int。这个应该用了隐式类型提升
+
+##  ELK日志收集系统
+ELK日志收集系统是一个分布式的，收集服务器上面的日志，并将其展示的一款服务器软件  
+ELK由三个组件组成  
+1. E表示Elasticsearch，是日志分析引擎
+2. L表示Logstash 是日志搜集器，负责搜集服务器上面的日志，备选的其他搜集器还有Beats
+3. K表示Kibana 就是负责web页面展示的一款组件，支持扩展
+### 怎么开始
+1. 下载ELK组件
+2. 解压
+3.运行
+4. 下班
+### 问题
+1. 运行时报`failed error='Cannot allocate memory' (errno=12)`,可能的原因是elasticsearch运行要分配的内存太大，java虚拟机扛不住  
+解决办法： 修改elasticsearch的`jvm.options`,将
+
+	-Xms2g
+	-Xmx2g
+ 修改成
+ 
+	-Xms512m
+	-Xmx512m
+
+2. 运行时报org.elasticsearch.bootstrap.StartupException: java.lang.RuntimeException: can not run elasticsearch as root  
+意思就是说，不能用root用户来运行elasticsearch服务器。所以我们要为其创建一个用户和用户组。关于这个内容，请参考上面的linux部分
+
+
+
+
+
+
 
