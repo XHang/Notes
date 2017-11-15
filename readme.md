@@ -191,7 +191,8 @@ NOSQL意为非关系型数据库，分为几种
 2：列存储，Hbase、Cassandra这种  
 3：文档存储：MongoDB  
 4：图片存储：Neo4j、Versant  
-5：xml存储：Berkeley DB Xml还有XBASE，ORACLE很早已经支持这种存储方式了  
+5：xml存储：Berkeley DB Xml还有XBASE，
+很早已经支持这种存储方式了  
 ### redis的基础运用场景 
 1：多web项目中共享一个session  
 2：分布式缓存，由于redis提供了几大语言的接口，比如java，.net,c等语言。  
@@ -857,7 +858,8 @@ B线程拿着表B的锁，要访问表A
 	where t1.session_id=t2.sid order by t2.logon_time;
 	
 这个语句可以查出数据库有哪些锁
-
+kill session sql：`alter system kill session 'sid, serial#'`  
+其参数可以通过上面的查锁语句获知  
 
 		
 ## 读某规范手册有感
