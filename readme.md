@@ -191,7 +191,8 @@ NOSQL意为非关系型数据库，分为几种
 2：列存储，Hbase、Cassandra这种  
 3：文档存储：MongoDB  
 4：图片存储：Neo4j、Versant  
-5：xml存储：Berkeley DB Xml还有XBASE，ORACLE很早已经支持这种存储方式了  
+5：xml存储：Berkeley DB Xml还有XBASE， 
+很早已经支持这种存储方式了  
 ### redis的基础运用场景 
 1：多web项目中共享一个session  
 2：分布式缓存，由于redis提供了几大语言的接口，比如java，.net,c等语言。  
@@ -527,7 +528,9 @@ jdk7引入了一个工具类，专门是Object的工具类：Objects
 这样会报错说栏目数不对，实际栏目数1，预期栏目数0   
 这估计是因为占位符`?`写到了字符串里面  
 
-
+### 反射
+1. 反射中，`class.getFields()`方法只能获取public的字段，`private`方法的字段获取不到，这个方法才可以 `clazz.getDeclaredFields();`
+2. 
 	
 
 ##第五章：Eclipse的坑
@@ -688,8 +691,25 @@ wget是一个在控制台可以从各个协议上下载东西的工具
 `yum makecache`
 运行以上两个命令生成yum的缓存  
 
+18. 为wget设置代理，其实很简单
+修改其配置文件` vi /etc/wgetrc  `  里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
+当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
 
+19. centos添加用户
+1. 首先登录 root 账号
+2. 执行： `useradd 用户名`命令创建一个新用户
+3. 执行`passwd username` 为新用户设置新密码并激活
 
+20. centos删除用户 ：`userdel -rf grid` 删除用户的所有信息，不加参数的仅仅只是删除用户，用户的信息没有被删除。  
+
+21. 切换用户登录，centos：login -f username 
+注：	1. 加f参数不用输入密码  
+2. 在ssh客户端切换登录会退出哦
+
+22. 查看用户所在的组`groups username` 一般说来
+23. 添加组 `groupadd name`
+24. 将某文件或者文件夹的所有权归属到某一个组中
+`chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
  		
 ## 第⑨章：前端技能
 1. bootstrap的弹窗功能怎么关闭？官方有个示例性文档，在创建窗口过程中预定义几个按钮，可以实现关闭功能。
@@ -867,4 +887,38 @@ B线程拿着表B的锁，要访问表A
 2.  方法名可以类名一致，和构造方法唯一区别是，构造方法没有返回值
 3. 实例方法不单单指public方法，private方法亦是  
 4. long d = 2 是正确的，虽然单单写一个2，其实是int。这个应该用了隐式类型提升
+
+##  ELK日志收集系统
+ELK日志收集系统是一个分布式的，收集服务器上面的日志，并将其展示的一款服务器软件  
+ELK由三个组件组成  
+1. E表示Elasticsearch，是日志分析引擎
+2. L表示Logstash 是日志搜集器，负责搜集服务器上面的日志，备选的其他搜集器还有Beats
+3. K表示Kibana 就是负责web页面展示的一款组件，支持扩展
+### 怎么开始
+1. 下载ELK组件
+2. 解压
+3.运行
+4. 下班
+### 问题
+1. 运行时报`failed error='Cannot allocate memory' (errno=12)`,可能的原因是elasticsearch运行要分配的内存太大，java虚拟机扛不住  
+解决办法： 修改elasticsearch的`jvm.options`,将
+
+	-Xms2g
+	-Xmx2g
+ 修改成
+ 
+	-Xms512m
+	-Xmx512m
+
+2. 运行时报org.elasticsearch.bootstrap.StartupException: java.lang.RuntimeException: can not run elasticsearch as root  
+意思就是说，不能用root用户来运行elasticsearch服务器。所以我们要为其创建一个用户和用户组。关于这个内容，请参考上面的linux部分
+
+3. 切换了用户运行报：
+`Could not register mbeans java.security.AccessControlException: access denied ("javax.management.MBeanTrustPermission" "register")`
+这大概是因为你现在执行的时候用的用户对这个文件没有所有权，所以挂了，怎么办，诶，递归操作一下，把这个文件夹里面的文档的所有权全交给你当前登录用户的组就行了。
+
+
+
+
+
 
