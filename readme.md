@@ -710,6 +710,39 @@ wget是一个在控制台可以从各个协议上下载东西的工具
 23. 添加组 `groupadd name`
 24. 将某文件或者文件夹的所有权归属到某一个组中
 `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
+
+### 文件描述符
+含义：在linux中，文件描述符是linux为了高效管理已打开的文件而创建的索引，其值是一个非负整数，用于指代被打开的文件。  
+虽说系统有多少内存就可以打开多少个文件，但是实际运行最大文件打开数是系统内存的10%，此外，系统还会为单一线程能打开的文件数做限制，（用户级限制），查看该用户级限制命令：`ulimit -a`  PS：`-aH`  是查看硬的限制  
+怎么增加系统的文件描述符
+执行`vi /etc/security/limits.conf `
+输入内容
+
+	* soft nofile 65536
+	
+	* hard nofile 131072
+	
+	* soft nproc 2048
+	
+	* hard nproc 4096
+	
+解释：* 代表所有用户  
+            soft或者hard代表为其限制的是硬配置还是软配置（软配置超过警告，硬配置超过会fail）
+            nofile(可打开的文件描述符的最大数)  
+            nproc(单个用户可用的最大进程数量)
+            
+            
+            
+### sysctl命令
+这个命令可以修改内核的运行参数
+参数 -a 可以查看所有可读的变量
+参数 key  可以查看这个key的值  eg:`sysctl vm.max_map_count`。 
+参数  key=value  可以为运行参数设置值
+
+
+### Linux线程
+技能1： 查看端口占用的线程
+
  		
 ## 第⑨章：前端技能
 1. bootstrap的弹窗功能怎么关闭？官方有个示例性文档，在创建窗口过程中预定义几个按钮，可以实现关闭功能。
@@ -894,12 +927,26 @@ ELK由三个组件组成
 1. E表示Elasticsearch，是日志分析引擎
 2. L表示Logstash 是日志搜集器，负责搜集服务器上面的日志，备选的其他搜集器还有Beats
 3. K表示Kibana 就是负责web页面展示的一款组件，支持扩展
-### 怎么开始
-1. 下载ELK组件
+建议安装顺序为Elasticsearch，kibana，Logstash
+
+### Elasticsearch快速入门
+1. 下载Elasticsearch组件
 2. 解压
 3.运行
-4. 下班
-### 问题
+	注意点1：
+	Elasticsearch开启过程中，你可以看到这个日志重复出现`][INFO ][o.e.e.NodeEnvironment    ] [1xBUNqo]`
+	告诉你，`1xBUNqo`就是自动生成的Elasticsearch节点名，嘛，你当然自定义一个节点名
+	用这个命令启动`./elasticsearch -Ecluster.name=my_cluster_name -Enode.name=my_node_name`  
+	注意点2：
+	后台运行Elasticsearch后，可以键入`curl http://localhost:9200/` 查看运行结果  
+	注意3：  
+	Elasticsearch启动后，默认开启的是9200来提供服务  
+	注意点4：
+	开启Elasticsearch过程中，注意这一行
+	`publish_address {127.0.0.1:9300}`它告诉你哪个ip地址和端口可以访问到Elasticsearch的服务。  
+	后面还有一个bound address。没设置的情况不能从其他主机访问Elasticsearch的服务（经验之谈）  
+ 
+#### 问题
 1. 运行时报`failed error='Cannot allocate memory' (errno=12)`,可能的原因是elasticsearch运行要分配的内存太大，java虚拟机扛不住  
 解决办法： 修改elasticsearch的`jvm.options`,将
 
@@ -915,10 +962,25 @@ ELK由三个组件组成
 
 3. 切换了用户运行报：
 `Could not register mbeans java.security.AccessControlException: access denied ("javax.management.MBeanTrustPermission" "register")`
-这大概是因为你现在执行的时候用的用户对这个文件没有所有权，所以挂了，怎么办，诶，递归操作一下，把这个文件夹里面的文档的所有权全交给你当前登录用户的组就行了。
+这大概是因为你现在执行的时候用的用户对这个文件没有所有权，所以挂了，怎么办，诶，递归操作一下，把这个文件夹里面的文档的所有权全交给你当前登录用户的组就行了。  
+
+4. 改了elasticsearch配置文件后报错了  
+	1 . `max file descriptors [4096] for elasticsearch process is too low, increase to at least [65536]`  
+	这个的意思是说用于elasticsearch的文件描述符过低，现在是4096，要求增加到65536.
+	文件描述符的意思和含义请参照上面linux的知识
+	2. `max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]`
+		这个是虚拟内存的`vm.max_map_count [65530]`太低了，至少设置到262144
+		用`sysctl`命令即可实现
 
 
+### kibana快速入门
+1. 解压
+2. 修改config里面的kibana配置文件，将
+`elasticsearch.url: "http://192.168.21.254:9200/`修改为elasticsearch的服务器地址。
+3. 如果远程主机要访问kibana的服务，请把`#server.host: "localhost"`此行取消注释，并设置为非回环地址
+4. 运行
 
+  
 
 
 
