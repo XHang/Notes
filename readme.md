@@ -910,7 +910,13 @@ B线程拿着表B的锁，要访问表A
 这个语句可以查出数据库有哪些锁
 
 
-		
+## 通用sql知识
+### Exists的特点
+使用exists的sql子句只会返回true或者false。例如  `select * from user where id=? and exists (select * from vip where user_id=?)`      
+这样的话，会先查找vip表里面是否有指定的用户id,如果有的话，把该用户从user表查出来.    
+所以exists是子查询如果包含行，返回true，否则返回false  
+注:值的一提的是，如果sql子句是:`where exists (null)` 那么这个子句会返回true。  
+
 ## 读某规范手册有感
 1：
 实体类属性中基本数据类型最好设置为包装数据类型，这样如果这些数据缺失的情况下，不会设置为默认值。而是报空指针。
@@ -920,6 +926,7 @@ B线程拿着表B的锁，要访问表A
 2.  方法名可以类名一致，和构造方法唯一区别是，构造方法没有返回值
 3. 实例方法不单单指public方法，private方法亦是  
 4. long d = 2 是正确的，虽然单单写一个2，其实是int。这个应该用了隐式类型提升
+5. 原生类就是java的基本数据类型  。  玩文字游戏啊。。
 
 ##  ELK日志收集系统
 ELK日志收集系统是一个分布式的，收集服务器上面的日志，并将其展示的一款服务器软件  
@@ -978,9 +985,71 @@ ELK由三个组件组成
 2. 修改config里面的kibana配置文件，将
 `elasticsearch.url: "http://192.168.21.254:9200/`修改为elasticsearch的服务器地址。
 3. 如果远程主机要访问kibana的服务，请把`#server.host: "localhost"`此行取消注释，并设置为非回环地址
-4. 运行
+4. 运行bin里面的可执行文件  
+5. 如果一切正常的话，访问浏览器的`   `地址，可以看到kibana为你展现的前端页面，不过，在食用之前，你需要在页面设置一个模式。。
 
-  
+### Logstash 快速入门
+1. 解压  
+2. 准备logstash.conf文件  
+3. 运行 `bin/logstash -f logstash.conf` 命令  
+
+####  logstash.conf文件格式
+这个文件其实就是logstash的配置文件
+作用：  
+1. 指定要使用的插件以及插件的配置
+2. 可以引用配置的事件字段，处理符合条件的事件。  
+注： 运行logstash可执行文件时 用 -f参数来指定配置文件。
+logstash配置文件的格式大概如下所示，这个配置主要是配置logstash的每一个插件。。   
+包括：输入插件，输出插件，筛选器插件
+
+	input {
+	  ...
+	}
+	
+	filter {
+	  ...
+	}
+	
+	output {
+	  ...
+	}
+	
+3. 输入插件的配置格式
+
+	input {
+	  file {
+	    path => "/var/log/messages"
+	    type => "syslog"
+	  }
+	
+	  file {
+	    path => "/var/log/apache/access.log"
+	    type => "apache"
+	  }
+	}
+	
+RT 酱紫的话，就为这个输入插件配置了两个文件输入
+每一个文件输入都有路径和类型信息。
+4. 插件的值
+插件的值，指的就是类似于上文的`type => "apache"`的值，这种值的支持一下几种类型
+1. 数组
+2. Lists
+3. Boolean 
+4. Bytes 
+5. Codec  
+.....   
+要看更多的话，请点击[plugin-value-types](https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#plugin-value-types)
+	
+## YAML文件格式
+###  what is YAML?
+YAML是新一代的配置文件，其文件名的后缀是`yml`  
+### 格式特点  
+1. 大小写敏感  
+2. 使用缩进表示层级关系  
+3. 缩进时不允许使用Tab键，只允许使用空格。  
+4. 缩进的空格数目不重要，只要相同层级的元素左侧对齐即可  
+5. 不允许莫名奇妙的空行  
+6. 用# 号表示注释
 
 
 
