@@ -708,7 +708,8 @@ wget是一个在控制台可以从各个协议上下载东西的工具
 
 22. 查看用户所在的组`groups username` 一般说来
 23. 添加组 `groupadd name`
-24. 将某文件或者文件夹的所有权归属到某一个组中
+24. 将某文件或者文件夹的
+25. 归属到某一个组中
 `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
 
 ### 文件描述符
@@ -993,6 +994,38 @@ ELK由三个组件组成
 2. 准备logstash.conf文件  
 3. 运行 `bin/logstash -f logstash.conf` 命令  
 
+
+#### Logstash日志存储管道
+先不管`管道`是什么鬼，总之，它是Logstash存储日志的一个过程。这个过程需要二个必须的元素，还有一个可选的元素
+1. input：这个其实是一个插件，负责从源收集，消费数据  
+2. filter：这个可以根据你自己的指定来修改数据  
+3. output：将数据写到目的地，一般是Elasticsearch  
+
+#### hello world
+首先要看下你的logstash是否安装成功了，简单的话，执行这个命令  
+`bin/logstash -e 'input { stdin { } } output { stdout {} }'`  
+可以发现控制台先打印一串鬼画符，然后出现光标了。这时候，你输入什么，敲回车，就回显什么  
+SUCCESS！这表示你的logstash已经能正常工作了  
+解释：  
+1. -e 可以让你以命令行的方式给logstash指定配置。  
+2. 该示例的管道是从标准输入获取数据，并以结构化的数据输出到标准输出  
+
+> PS： 小贴士，按ctrl-d 可以断开shell哦  
+> ps:  如果执行以上命令抛了一个异常，说找不到这个文件`logstash-plain.log`请尝试用超级管理员执行命令  
+#### 在logstash中分析日志
+在现代社会中，日志的处理可不是上面的简单hello world,现实的日志的处理可能有更多的input,filter,output插件
+在下面的教程中，将教你怎么从web项目中取出日志并送进管道，解析这些日志，用来创建指定的特点fields，并将这些已经解析好的数据传到Elasticsearch集群中。当然，你不用在从控制台输入配置了，多累啊，现在开启配置文件时代
+步骤
+1. 下载一个日志文件[https://download.elastic.co/demos/logstash/gettingstarted/logstash-tutorial.log.gz](https://download.elastic.co/demos/logstash/gettingstarted/logstash-tutorial.log.gz "下载")，把它解压  
+2. 配置Filebeat以将日志每行的发送到Logstash
+> 简单介绍下Filebeat，这个是一个轻量的，资源友好的工具，它从服务器上面搜集日志，并将日志转发给Logstash实例进行处理
+  占用资源极少，`Beats input plugin`最大限度的减少了logstash实例的资源需求。  
+> logstash在安装时就默认集成了Beats input plugin了
+> Beats input plugin 使logstash能从Elastic Beats框架接受事件  
+PS：对于 Filebeat在另一个章节讲述，这里不说了
+
+
+
 ####  logstash.conf文件格式
 这个文件其实就是logstash的配置文件
 作用：  
@@ -1040,6 +1073,66 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
 .....   
 要看更多的话，请点击[plugin-value-types](https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#plugin-value-types)
 	
+### filebea
+
+#### filebeat快速入门
+1. 下载，解压，配置`filebeat.yml`
+  
+	配置代码如下
+	filebeat.prospectors:
+	 - type: log
+	  paths:
+	    - /home/logstash-5.6.4/testData/logstash-tutorial.log
+	output.logstash:
+	  hosts: ["localhost:5044"]    
+
+要求清空原来`filebeat.yml`的内容，然后把以上代码复制上去。
+
+解释： `- /home/logstash-5.6.4/testData/logstash-tutorial.log`要根据具体平台而定，指向实际的日志文件路径。  
+2. 运行`sudo ./filebeat -e -c filebeat.yml -d "publish"` 
+> 第一次运行时可能会出现两个问题  
+> 1. 抛出错误，只能用所有权用户来登陆系统，执行命令  
+> 2. 抛出`more then one namespace configured accessing 'output' (source:'filebeat.yml')`
+叫你Y的清空`filebeat.yml`的内容，你没清空吧，不清空也行，这个错误大概是说只能配置一个output的配置，把其他多余的配置注释掉即可  
+> 运行过程中，你可能会看到filebeat在试图连接5043这个端口，直到logstash开启一个Beats plugin之前，这个端口都不会有任何反馈。
+> 所以你看到任何关于这个端口连接失败的信息都是正常的。  
+> 笔者记：我怎么没看到呢？ 诡异，真诡异
+#### 为  Filebeat Input 配置logstash
+接下来，我们要创建一个Logstash的pipeline配置，该pipeline可以从Beats input plugin接受来自Beats的事件
+以下文本就是配置pipeline的基本格式
+	
+	input {
+	}
+	# filter {
+	#
+	# }
+	output {
+	}
+以上代码其实没有实用性，因为输入输出都没有有效的选项定义
+接下来这个代码就给了输入输出几个选项定义
+
+	input {
+	    beats {
+	        port => "5043"
+	    }
+	}
+	# filter {
+	#
+	# }
+	output {
+	    stdout { codec => rubydebug }
+	}
+
+解释：input部分是配置了一个beats的输入插件，output部分是配置了一个输出，将输出打印到stdut  
+把以上的代码，创建一个`first-pipeline.conf`文件，并复制进去。  
+然后执行： `bin/logstash -f first-pipeline.conf --config.test_and_exit`  
+如果打出的日志没有带fail字样，恭喜你，配置是有效的。  顺便告诉你`--config.test_and_exit`是专门用来校验配置文件是否有效的  
+那么，真正运行Logstash的命令应该是下面那个
+`bin/logstash -f first-pipeline.conf --config.reload.automatic`
+> `--config.reload.automatic`是自动配置重新加载。改了配置文件，无需重启即可生效  
+> 在启动过程中，你可能会看到多个关于`pipelinelines.yml 被忽略的警告`，你可以大胆的无视它，因为这个文件其实是用于在单个Logstash实例中运行多个管道，在刚才的操作中，你只是在运行一个管道而已。  
+> 笔者注：这个警告我没碰上，真是太幸运了？
+
 ## YAML文件格式
 ###  what is YAML?
 YAML是新一代的配置文件，其文件名的后缀是`yml`  
