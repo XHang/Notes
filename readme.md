@@ -1093,10 +1093,12 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
 > 第一次运行时可能会出现两个问题  
 > 1. 抛出错误，只能用所有权用户来登陆系统，执行命令  
 > 2. 抛出`more then one namespace configured accessing 'output' (source:'filebeat.yml')`
+> 3. 运行是正常的，但是没有出现预想中的端口连接5044失败信息，一派祥和，风平浪静。  
 叫你Y的清空`filebeat.yml`的内容，你没清空吧，不清空也行，这个错误大概是说只能配置一个output的配置，把其他多余的配置注释掉即可  
-> 运行过程中，你可能会看到filebeat在试图连接5043这个端口，直到logstash开启一个Beats plugin之前，这个端口都不会有任何反馈。
+> 运行过程中，你可能会看到filebeat在试图连接5044这个端口，直到logstash开启一个Beats plugin之前，这个端口都不会有任何反馈。
 > 所以你看到任何关于这个端口连接失败的信息都是正常的。  
-> 笔者记：我怎么没看到呢？ 诡异，真诡异
+> 笔者记：我怎么没看到呢？ 诡异，真诡异  
+> 这其实是不正常的，你应该用将filebeat安装目录的所有权归于root用户，然后再执行以上命令。我猜你之前应该用的是非root用户执行这条命令对吧。。。。
 #### 为  Filebeat Input 配置logstash
 接下来，我们要创建一个Logstash的pipeline配置，该pipeline可以从Beats input plugin接受来自Beats的事件
 以下文本就是配置pipeline的基本格式
@@ -1113,7 +1115,7 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
 
 	input {
 	    beats {
-	        port => "5043"
+	        port => "5044"
 	    }
 	}
 	# filter {
@@ -1124,14 +1126,53 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
 	}
 
 解释：input部分是配置了一个beats的输入插件，output部分是配置了一个输出，将输出打印到stdut  
-把以上的代码，创建一个`first-pipeline.conf`文件，并复制进去。  
-然后执行： `bin/logstash -f first-pipeline.conf --config.test_and_exit`  
+3. 把以上的代码，创建一个`first-pipeline.conf`文件，并复制进去。  
+然后执行： `bin/logstash -f config/first-pipeline.conf --config.test_and_exit &`  
 如果打出的日志没有带fail字样，恭喜你，配置是有效的。  顺便告诉你`--config.test_and_exit`是专门用来校验配置文件是否有效的  
 那么，真正运行Logstash的命令应该是下面那个
-`bin/logstash -f first-pipeline.conf --config.reload.automatic`
+`bin/logstash -f config/first-pipeline.conf --config.reload.automatic &`
 > `--config.reload.automatic`是自动配置重新加载。改了配置文件，无需重启即可生效  
 > 在启动过程中，你可能会看到多个关于`pipelinelines.yml 被忽略的警告`，你可以大胆的无视它，因为这个文件其实是用于在单个Logstash实例中运行多个管道，在刚才的操作中，你只是在运行一个管道而已。  
 > 笔者注：这个警告我没碰上，真是太幸运了？
+
+**最后，当filebeat和logstash工作正常的时候，你应该能看到一系列事件写入控制台，恭喜你，本章节完成...才怪，还要优化下**
+	
+	"@timestamp" => 2017-11-09T01:44:20.071Z,
+	        "offset" => 325,
+	      "@version" => "1",
+	          "beat" => {
+	            "name" => "My-MacBook-Pro.local",
+	        "hostname" => "My-MacBook-Pro.local",
+	         "version" => "6.0.0"
+
+#### 使用Grok Filter Plugin来解析log日志
+以上的例子中，虽然我们成功的将日志信息事件打印到控制台了但是格式太乱了，我们有必要整治这货，怎么办呢？
+这时候就需要Grok Filter Plugin来帮忙过滤日志信息了  
+先推销下Grok Filter Plugin，它的特色如下  
+1. 能解析日志信息并从日志从创建指定的命名字段  
+2. Grok Filter Plugin是logstash默认可用的几个插件之一  
+3. 能使非结构化的日志信息解析成可结构化的，可查询的日志信息，听起来是不是很心动？  
+4. Grok Filter Plugin通过传过来的日志数据中查找模式，你需要决定哪种模式用来识别日志数据，以便取出你感兴趣的数据  
+**怎么使用Grok Filter Plugin？**   
+1. 分析日志数据，确定使用哪种模式  
+开始分析上次实验的日志，可以分析：开头的ip和括号的时间戳很容易识别，适合用`％{COMBINEDAPACHELOG}`模式。  
+如果你不知道怎么构建这个模式的话，可以使用`Grok Debugger.`可以免费安装使用哦  
+2. 在logstash的配置文件中，为你的管道写一个过滤器。上面的例子中，我们用的配置文件是first-pipeline.conf。  
+这次我们仍然来改它，只需要在过滤器部分补上。
+	
+	filter {
+	    grok {
+	        match => { "message" => "%{COMBINEDAPACHELOG}"}
+	    }
+	}
+保存你的改变，不用重启logstash，因为在上次启动时我们已经用了自动加载配置文件的方式来启动了  
+但是你还是需要强制让filebeat重头开始读取日志文件，要做到这一点    
+3. 关掉上次运行的filebeat，删除filebeat的注册表文件:`sudo rm data/registry`,这个注册表文件保存了filebeat收集的每一个文件的状态  删除这个文件将强制让filebeat从头开始读取它所搜集的所有文件  
+4. 接下来，重启filebeat吧.再等待几分钟等filebeat自动加载配置文件，就可以把新的日志结构体打印出来了，厉害吧。  
+然而我还是感觉像鬼画符  
+
+#### Geoip过滤器插件为你的数据补充细节
+
 
 ## YAML文件格式
 ###  what is YAML?
@@ -1143,6 +1184,4 @@ YAML是新一代的配置文件，其文件名的后缀是`yml`
 4. 缩进的空格数目不重要，只要相同层级的元素左侧对齐即可  
 5. 不允许莫名奇妙的空行  
 6. 用# 号表示注释
-
-
 
