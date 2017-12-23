@@ -635,12 +635,12 @@ mv [选项] 源文件或目录 目标文件或目录
   tar -xzvf file.tar.gz  
 
 8. 设置linux的环境变量  
-  vi  /etc/proifle 在其末尾添加这几句  
-  export JAVA_HOME="xxx"
-  export PATH="$PATH:$JAVA_HOME/bin"
-  export JRE_HOME="$JAVA_HOME/jre"
-  export CLASSPATH=".:$JAVA_HOME/lib:$JRE_HOME/lib"
-  即可设置jdk的环境变量。  
+    vi  /etc/proifle 在其末尾添加这几句  
+    export JAVA_HOME="xxx"
+    export PATH="$PATH:$JAVA_HOME/bin"
+    export JRE_HOME="$JAVA_HOME/jre"
+    export CLASSPATH=".:$JAVA_HOME/lib:$JRE_HOME/lib"
+      即可设置jdk的环境变量。  
 
 source /etc/profile更新一下。。  
 
@@ -991,8 +991,9 @@ ELK由三个组件组成
 5. 如果一切正常的话，访问kibana的ip地址+端口，可以看到kibana为你展现的前端页面，不过，在食用之前，你需要在页面设置一个模式。。
 
 
-
 这么简单的吗？当然不是，接下来让我们加载一些简单的数据集。。。。。
+
+####  加载一些简单的数据集
 
 **前提，kibana和elasticelasticsearch能互通有无**
 
@@ -1095,7 +1096,28 @@ yellow open   shakespeare           5   1     111396            0     17.6mb    
 yellow open   logstash-2015.05.18   5   1       4631            0     15.6mb         15.6mb
 yellow open   logstash-2015.05.19   5   1       4624            0     15.7mb         15.7mb
 yellow open   logstash-2015.05.20   5   1       4750            0     16.4mb  
+
 ```
+
+解释：
+
+为什么在加载数据之前，要为字段设置映射
+
+答： 
+
+Mapping divides the documents in the index into logical groups
+
+并且指定字段的特征，比如字段的可搜索性，是否被标记,哪些字段包含数字，日期，地理位置信息。。。
+
+#### 定义你的索引模式
+
+加载到Elasticsearch 的每一组数据都有索引模式
+
+> 索引模式是一串带有可选通配符的字符串，可以匹配多个索引
+>
+> 例如，在之前的例子中，有一些索引名称就包含YYYY.MM.DD格式的日期，比如说`logstash-2015.05 *`
+
+
 
 ### Logstash 快速入门
 
