@@ -697,21 +697,30 @@ poweroff 立刻关机
    当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
 
 19. centos添加用户
+
 20. 首先登录 root 账号
+
 21. 执行： `useradd 用户名`命令创建一个新用户
+
 22. 执行`passwd username` 为新用户设置新密码并激活
 
 23. centos删除用户 ：`userdel -rf grid` 删除用户的所有信息，不加参数的仅仅只是删除用户，用户的信息没有被删除。  
 
 24. 切换用户登录，centos：login -f username 
    注：1. 加f参数不用输入密码  
+
 25. 在ssh客户端切换登录会退出哦
 
 26. 查看用户所在的组`groups username` 一般说来
+
 27. 添加组 `groupadd name`
+
 28. 将某文件或者文件夹的
+
 29. 归属到某一个组中
    `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
+
+   -R可以递归整个目录的归属权
 
 ### 文件描述符
 含义：在linux中，文件描述符是linux为了高效管理已打开的文件而创建的索引，其值是一个非负整数，用于指代被打开的文件。  
@@ -741,8 +750,14 @@ poweroff 立刻关机
 参数 key  可以查看这个key的值  eg:`sysctl vm.max_map_count`。 
 参数  key=value  可以为运行参数设置值
 
+如果想永久设置值的话，可以编辑`/etc/sysctl.conf的vm.max_map_count`
+
+然后在文件的末尾追加`key=value` 保存，重启机器，就可以看到改变了
+
+
 
 ### Linux线程
+
 技能1： 查看端口占用的线程
 
 
@@ -980,6 +995,9 @@ ELK由三个组件组成
   2. `max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]`
     这个是虚拟内存的`vm.max_map_count [65530]`太低了，至少设置到262144
     用`sysctl`命令即可实现
+#### 元字段
+
+每一个文档都有与之关联的元字段，例如_index
 
 
 ### kibana快速入门
@@ -1076,7 +1094,9 @@ PUT /logstash-2015.05.20
 }
 ```
 
-在本机的linux控制台运行这三个命令
+在本机的linux控制台运行这三个命令来加载数据
+
+Ps：在执行这三条命令时，所处的目录必须有这三个文件
 
 ```
 curl -H 'Content-Type: application/x-ndjson' -XPOST 'localhost:9200/bank/account/_bulk?pretty' --data-binary @accounts.json
@@ -1096,6 +1116,28 @@ yellow open   logstash-2015.05.18   5   1       4631            0     15.6mb    
 yellow open   logstash-2015.05.19   5   1       4624            0     15.7mb         15.7mb
 yellow open   logstash-2015.05.20   5   1       4750            0     16.4mb  
 ```
+
+
+
+解释：为什么在加载数据之前要设置映射
+
+设置映射是定义如何存储和索引文档以及所包含字段的过程。例如，用映射来定义
+
+1. 哪些字符串字段应该被视为全文字段
+
+2. 哪些字段包含数字，日期或者地理信息
+
+3. 文档中所有字段的值是否应该被索引到_all字段中（_all字段是一个特殊的*catch-all* 字段，它将所有其他字段的值连接成一个大字符串，使用空格作分割符，但不存储）
+
+4. 日期值的格式
+
+5. 自定义规则来控制映射（动态添加的字段的映射）
+
+   映射有两种类型
+
+   1.元字段 Meta-fields，元字段的含义在Elasticsearch章节有讲到
+
+   2 字段或者属性，
 
 ### Logstash 快速入门
 
