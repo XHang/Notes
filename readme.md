@@ -321,7 +321,7 @@ Springmvc控制器方法上的produces 要注意一下，仅当Accept请求头�
 			}); 
 ```
  关键点：  
-  1. contentType: 'application/json' 没加，报类型不匹配，毕竟加了@RequestBody 
+    1. contentType: 'application/json' 没加，报类型不匹配，毕竟加了@RequestBody 
     mvc就很智能的帮你找这部分请求了，不合请求的 当然就踢走了
      traditional: true,阻止jquery将你的字符串序列化成键值对。
      JSON.stringify(obj)  毕竟真正在网络传输的其实是字符串，传个对象是不科学的。
@@ -537,177 +537,6 @@ jdk7引入了一个工具类，专门是Object的工具类：Objects
 ### 最后
 什么？这么轻易就结束了？那倒不是，只不过接下来的示例程序在这个文件无法开展，去看看messagequeue项目吧  
 什么?没有，那可能是作者挖坑又不填了       
-## 第十一章：linux的技能
-1. openssh安装后如何启动？  
-  命令：/etc/init.d/ssh start  必须在su权限下运行
-
-2. 怎么用主机访问VirtualBox呢？
-  见图。用PuTTY即可访问
-
-3. vin编辑器怎么使用？  
-  用vi  文件路径  即可打开一个文本文件  
-  初次进入是以命令行模式打开的，要编辑此文件，敲入i即可进入编辑模式。  
-  编辑模式下按esc回退到命令行模式  
-  将光标移动到某处，按dd即可删除该行  
-   「x」：每按一次，删除光标所在位置的“后面”一个字符。  
-  「#x」：例如，「6x」表示删除光标所在位置的“后面”6个字符。  
-  「X」：大写的X，每按一次，删除光标所在位置的“前面”一个字符。  
-  「#X」：例如，「20X」表示删除光标所在位置的“前面”20个字符。  
-  按下：号  
-  输入wq!强制保存并退出。。    
-
-4. 利用putt传文件到远程服务器  
-
-putt客户端下载下来一般都有那个pscp.exe文件。进入该文件对应的文件夹，敲入cmd命令  
-`pscp 发送的源文件   服务器用户名@服务器地址:home`
-
- 敲入后输入密码，即可发送！  
-`eg:pscp jdk-8u131-linux-x64.rpm cxh@192.168.21.248:/home`  
-注意：有时候发送过去但是找不到文件或者发送时提示`permission denied ` 
-就是访问被拒绝了，这时候你得手动更改远程服务器的文件夹为可读可写  chmod 777 xxxx  
-注：pscp -r 后面指定文件夹名可以远程传输文件夹  
-
-5. 安装，删除命令：  
-  Ubuntu版：  
-  dpkg -l 可以查看安装的软件列表    
-  apt-get remove --purge 名字    可以删除软件    
-
-centos版：
-yum list installed
-yum remove 软件名
-
-mv [选项] 源文件或目录 目标文件或目录  
-6. 删除文件夹命令
-  rm -rf  文件夹路径  
-
-7. 解压命令
-  tar -xzvf file.tar.gz  
-
-8. 设置linux的环境变量  
-    vi  /etc/proifle 在其末尾添加这几句  
-    export JAVA_HOME="xxx"
-    export PATH="$PATH:$JAVA_HOME/bin"
-    export JRE_HOME="$JAVA_HOME/jre"
-    export CLASSPATH=".:$JAVA_HOME/lib:$JRE_HOME/lib"
-      即可设置jdk的环境变量。  
-
-source /etc/profile更新一下。。  
-
-9. pwd命令    
-  pwd命令可以查看当前所在的路径（centos）  
-
-
-10. 获取java安装目录  
-  利用`which java`得到路径1  which java是打印出java命令文件的路径    
-  `ls -lrt+路径1`得到 箭头后的路径2  
-  `ls -lrt+路径2`就ok了  
-  默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
-
-11. 
-   centos查看网络端口占用:` firewall-cmd --zone=public --list-ports`  
-    开启或者关闭firewalld（centos7的防火墙）:`systemctl start firewalld`and`systemctl stop firewalld`    
-   永远禁用centos防火墙:`systemctl disable firewalld.service `  
-
-12. 
-   centos修改主机名:`hostnamectl set-hostname 主机名`
-   hostnamectl --static 可以查看主机名
-
-13.
-centos关机命令
-reboot  重启
-poweroff 立刻关机
-
-14.
-在linux文件系统路径中
-~代表用户目录
-如：~/就是/home/make/
-
-15. 
-   wget是一个在控制台可以从各个协议上下载东西的工具
-   如这条命令
-   `wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
-   直接在控制台执行，就可以从镜像网站下载hadoop压缩包
-
-16：
-看下在环境变量配置这里
-`export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin`
-这种配法有什么用？
-
-17. 更新yum源  
-   有时候自带的yum版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了  
-   首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
-   然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
-   `yum clean all`  
-   `yum makecache`
-   运行以上两个命令生成yum的缓存  
-
-18. 为wget设置代理，其实很简单
-   修改其配置文件` vi /etc/wgetrc  `  里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
-   当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
-
-19. centos添加用户
-
-20. 首先登录 root 账号
-
-21. 执行： `useradd 用户名`命令创建一个新用户
-
-22. 执行`passwd username` 为新用户设置新密码并激活
-
-23. centos删除用户 ：`userdel -rf grid` 删除用户的所有信息，不加参数的仅仅只是删除用户，用户的信息没有被删除。  
-
-24. 切换用户登录，centos：login -f username 
-   注：1. 加f参数不用输入密码  
-
-25. 在ssh客户端切换登录会退出哦
-
-26. 查看用户所在的组`groups username` 一般说来
-
-27. 添加组 `groupadd name`
-
-28. 将某文件或者文件夹的
-
-29. 归属到某一个组中
-   `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
-
-   -R可以递归整个目录的归属权
-
-### 文件描述符
-含义：在linux中，文件描述符是linux为了高效管理已打开的文件而创建的索引，其值是一个非负整数，用于指代被打开的文件。  
-虽说系统有多少内存就可以打开多少个文件，但是实际运行最大文件打开数是系统内存的10%，此外，系统还会为单一线程能打开的文件数做限制，（用户级限制），查看该用户级限制命令：`ulimit -a`  PS：`-aH`  是查看硬的限制  
-怎么增加系统的文件描述符
-执行`vi /etc/security/limits.conf `
-输入内容
-
-	* soft nofile 65536
-
-	* hard nofile 131072
-
-	* soft nproc 2048
-
-	* hard nproc 4096
-
-解释：* 代表所有用户  
-            soft或者hard代表为其限制的是硬配置还是软配置（软配置超过警告，硬配置超过会fail）
-            nofile(可打开的文件描述符的最大数)  
-            nproc(单个用户可用的最大进程数量)
-
-
-​            
-### sysctl命令
-这个命令可以修改内核的运行参数
-参数 -a 可以查看所有可读的变量
-参数 key  可以查看这个key的值  eg:`sysctl vm.max_map_count`。 
-参数  key=value  可以为运行参数设置值
-
-如果想永久设置值的话，可以编辑`/etc/sysctl.conf的vm.max_map_count`
-
-然后在文件的末尾追加`key=value` 保存，重启机器，就可以看到改变了
-
-
-
-### Linux线程
-
-技能1： 查看端口占用的线程
 
 
 ## 第十二章：前端技能
@@ -1598,3 +1427,41 @@ $.ajax({
 ```
 这样才能传到后端，当然了，arr_1和arr_2都是js的数组对象。
 原因：阻止jquery对参数的深度序列化
+
+
+
+## 第二十章：UML图的使用
+
+### 第一章：什么是UML
+
+UML是旨在使软件系统的设计可视化
+
+UML提供了一种在图表中可视化系统架构蓝图的方法，其中包含一下元素
+
+1. 任何动作，活动
+2. 系统的各个组件以及它们之间是如何交互的
+3. 系统是怎么运行的
+4. 外部的用户界面
+
+
+
+## 第二十一章 weblogic的安装和使用
+
+本教程适用oracle weblogic 12.2.1C版本
+
+第一步：下载到服务器中，并解压出jar文件,然后用java -jar xxxx.jar 运行安装软件
+
+第二步：安装过程中，如果系统检测一切都正常的话，执行安装。
+
+不正常的情况下可能有一下几种
+
+1. weblogic 不支持openjdk。所以如果你的服务器安装的是openjdk，需要卸载并安装一个oracle的jdk
+
+   > 可查看linux的jdk安装章节
+
+2. weblogic安装时要求系统必须有GUI窗口，所以你需要为你的服务器安装一个桌面
+
+   ​
+
+
+
