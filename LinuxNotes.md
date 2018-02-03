@@ -98,10 +98,10 @@ mv [选项] 源文件或目录 目标文件或目录
 如：`~/`就是`/home/make/`
 
 15. 
-wget是一个在控制台可以从各个协议上下载东西的工具
-如这条命令
-`wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
-直接在控制台执行，就可以从镜像网站下载hadoop压缩包
+   wget是一个在控制台可以从各个协议上下载东西的工具
+   如这条命令
+   `wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
+   直接在控制台执行，就可以从镜像网站下载hadoop压缩包
 
 16：
 看下在环境变量配置这里
@@ -109,38 +109,38 @@ wget是一个在控制台可以从各个协议上下载东西的工具
 这种配法有什么用？
 
 17. 
-更新`yum`源  
-有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
-首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
-然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
-   `yum clean all`  
-   `yum makecache`
-运行以上两个命令生成yum的缓存  
+   更新`yum`源  
+   有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
+   首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
+   然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
+    `yum clean all`  
+    `yum makecache`
+   运行以上两个命令生成yum的缓存  
 
 18. 
-为wget设置代理，其实很简单
-修改其配置文件` vi /etc/wgetrc  ` 
-里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
-   当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
+   为wget设置代理，其实很简单
+   修改其配置文件` vi /etc/wgetrc  ` 
+   里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
+    当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
 19. centos添加用户
     首先登录 root 账号
-	执行： `useradd 用户名`命令创建一个新用户
-	执行`passwd username` 为新用户设置新密码并激活
-	centos删除用户 ：`userdel -rf grid` 删除用户的所有信息.
-	不加参数的仅仅只是删除用户，用户的信息没有被删除。  
+    执行： `useradd 用户名`命令创建一个新用户
+    执行`passwd username` 为新用户设置新密码并激活
+    centos删除用户 ：`userdel -rf grid` 删除用户的所有信息.
+    不加参数的仅仅只是删除用户，用户的信息没有被删除。  
 
-24. 切换用户登录，centos：login -f username 
+20. 切换用户登录，centos：login -f username 
    注：1. 加f参数不用输入密码  
 
-25. 在ssh客户端切换登录会退出哦
+21. 在ssh客户端切换登录会退出哦
 
-26. 查看用户所在的组`groups username` 一般说来
+22. 查看用户所在的组`groups username` 一般说来
 
-27. 添加组 `groupadd name`
+23. 添加组 `groupadd name`
 
-28. 将某文件或者文件夹的
+24. 将某文件或者文件夹的
 
-29. 归属到某一个组中
+25. 归属到某一个组中
    `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
 
    -R可以递归整个目录的归属权
@@ -222,3 +222,6 @@ nproc(单个用户可用的最大进程数量)
    创建一个快捷方式引用到`/etc/systemd/system/default.target`
    这种快捷方式在linux被称为软连接（你们名词就不能统一一下吗？）
    为一个文件创建软连接，主要是通过ln命令来实现的
+
+   ​
+
