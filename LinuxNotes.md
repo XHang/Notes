@@ -217,6 +217,15 @@ nproc(单个用户可用的最大进程数量)
 
    所以这个坑，先挖着
 
+   填坑吧，因为我手贱把VM的磁盘文件全删了
+
+   怎么安装oracle jdk？
+
+   1. 不用我说了吧，去官网下载包，丢到linux服务器中
+   2. 执行这个命令`rpm -iv jdk-8u161-linux-x64.rpm `
+   3. 接下来就是等待安装完成了
+   4. ​
+
    ### 怎么恢复启动方式为命令行？
    很简单，就为`/lib/systemd/system/multi-user.target `
    创建一个快捷方式引用到`/etc/systemd/system/default.target`
