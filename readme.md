@@ -837,7 +837,7 @@ Arrays.asList的方法返回的不是我们常见的java.util.ArrayList，而是
 
 如果要传一个数组给后端，ajax请求要加一个参数，traditional: true
 RT
-```
+   ```
 
 $.ajax({
 				url: 'xxxx',  
@@ -853,71 +853,4 @@ $.ajax({
 ```
 这样才能传到后端，当然了，arr_1和arr_2都是js的数组对象。
 原因：阻止jquery对参数的深度序列化
-
-
-
-## 第二十章：UML图的使用
-
-### 第一章：什么是UML
-
-UML是旨在使软件系统的设计可视化
-
-UML提供了一种在图表中可视化系统架构蓝图的方法，其中包含一下元素
-
-1. 任何动作，活动
-2. 系统的各个组件以及它们之间是如何交互的
-3. 系统是怎么运行的
-4. 外部的用户界面
-
-
-
-## 第二十一章 weblogic的安装和使用
-
-本教程适用oracle weblogic 12.2.1C版本
-
-第一步：下载到服务器中，并解压出jar文件,然后用java -jar xxxx.jar 运行安装软件
-
-第二步：安装过程中，如果系统检测一切都正常的话，执行安装。
-
-不正常的情况下可能有一下几种
-
-1. weblogic 不支持openjdk。所以如果你的服务器安装的是openjdk，需要卸载并安装一个oracle的jdk
-
-   > 可查看linux的jdk安装章节
-
-2. weblogic安装时要求系统必须有GUI窗口，所以你需要为你的服务器安装一个桌面
-
-   > 详情请查看笔记（不存在的）
-
-   其实下面的都没什么难度了，一路next即可。所以可以直接跳过这个教程了，再见
-
-   注意一下：要把weblogic的安装目录记下来，不然下面建域的时候你就等着懵吧
-
-
-（诶，等等，怎么使用你还没说呢？这么快就想跑？）
-
-开玩笑的，现在假设我们已经安装好了weblogic了，接下来就是要建域了
-
-第一步：
-
-执行该命令：`export CONFIG_JVM_ARGS=-Djava.security.egd=file:/dev/./urandom`作用是
-
-设置`CONFIG_JVM_ARGS`环境变量，这将减少向导配置花费的世界
-
-第二步：
-
-进入该目录：`WLHOME/common/bin` 找到`config.sh`文件，然后执行此命令
-`sh config.sh`
-> 注：WLHOME就是weblogic的安装目录，所以如果你忘记了weblogic的安装目录，就等着哭吧
-> 顺带一提，本次实验的weblogic的安装目录是`/home/cxh/Oracle/Middleware/Oracle_Home/wlserver/common/bin`
-
-第三步：执行这个命令之后
-linux应该就弹出了一个GUI窗口
-`
-
-
-
-
-
-
-
+```

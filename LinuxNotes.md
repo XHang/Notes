@@ -31,7 +31,63 @@ putt客户端下载下来一般都有那个pscp.exe文件。进入该文件对�
 就是访问被拒绝了，这时候你得手动更改远程服务器的文件夹为可读可写  chmod 777 xxxx  
 注：pscp -r 后面指定文件夹名可以远程传输文件夹  
 
+## linux网络相关知识
 
+### 初次网络配置
+
+
+
+当你第一次安装完centos7系统后，并不能直接使用网络，这是因为，默认情况下，新安装的系统没有在启动系统的时候也启动网络
+
+这时候呢？我们需要改下配置文件
+
+首先，你应该用这个命令
+
+`nmcli d`
+
+查看当前主机中那个网络接口没有启动
+
+记下未启动的接口
+
+然后编辑文件
+
+`vi /etc/sysconfig/network-scripts/ifcfg-网络接口名`
+
+文件大致如下
+
+```
+TYPE=Ethernet
+BOOTPROTO=dhcp
+DEFROUTE=yes
+PEERDNS=yes
+PEERROUTES=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=yes
+IPV6_AUTOCONF=yes
+IPV6_DEFROUTE=yes
+IPV6_PEERDNS=yes
+IPV6_PEERROUTES=yes
+IPV6_FAILURE_FATAL=no
+IPV6_ADDR_GEN_MODE=stable-privacy
+NAME=enp0s3
+UUID=f57d075a-9c72-413e-bb25-646f5cf430cc
+DEVICE=enp0s3
+ONBOOT=yes
+```
+
+其中你需要改的是BOOTPROTO这个配置和ONBOOT这个配置
+
+BOOTPROTO：值有static和dhcp 分别代表本机ip地址的取得是静态的还是动态的（dhcp）
+
+ONBOOT：值有yes和no 分别代表系统启动是是否随之启动网络接口。 这种情况，当然是要选择yes
+
+改完后保存。
+
+然后键入此命令`systemctl restart network`
+
+即可重启网络
+
+完毕
 
 ## linux常用命令
 
@@ -231,6 +287,16 @@ nproc(单个用户可用的最大进程数量)
    这种快捷方式在linux被称为软连接（你们名词就不能统一一下吗？）
    为一个文件创建软连接，主要是通过ln命令来实现的
 
+   命令格式
+
+   `ln 参数 源文件路径 目标文路径`
+
+   其中-s 是为源文件创建软连接，-f是强制执行（慎用）
+
+   那么，最后的命令就是
+
+   `ln -s /lib/systemd/system/multi-user.target  /etc/systemd/system/default.target` 
+
 ## 怎么安装centos的桌面
 
 虽然说centos用命令行启动就挺好的，但是也难保有时候你需要用图形化界面来启动linux。
@@ -259,5 +325,113 @@ nproc(单个用户可用的最大进程数量)
 
    以上	
 
-   ​
+
+## weblogic的安装和使用
+
+### 安装
+
+   本教程适用oracle weblogic 12.2.1C版本
+
+   第一步：下载到服务器中，并解压出jar文件,然后用java -jar xxxx.jar 运行安装软件
+
+   第二步：安装过程中，如果系统检测一切都正常的话，执行安装。
+
+   不正常的情况下可能有一下几种
+
+   1. weblogic 不支持openjdk。所以如果你的服务器安装的是openjdk，需要卸载并安装一个oracle的jdk
+
+      > 可查看linux的jdk安装章节
+
+   2. weblogic安装时要求系统必须有GUI窗口，所以你需要为你的服务器安装一个桌面
+
+      > 详情请查看笔记（不存在的）
+
+      其实下面的都没什么难度了，一路next即可。所以可以直接跳过这个教程了，再见
+
+      注意一下：要把weblogic的安装目录记下来，不然下面建域的时候你就等着懵吧
+
+
+   （诶，等等，怎么使用你还没说呢？这么快就想跑？）
+
+   开玩笑的，现在假设我们已经安装好了weblogic了，接下来就是要建域了
+
+### weblogic的建域步骤
+
+   第一步：
+
+   执行该命令：`export CONFIG_JVM_ARGS=-Djava.security.egd=file:/dev/./urandom`作用是
+
+   设置`CONFIG_JVM_ARGS`环境变量，这将减少向导配置花费的世界
+
+   第二步：
+
+   进入该目录：`WLHOME/common/bin` 找到`config.sh`文件，然后执行此命令
+   `sh config.sh`
+   > 注：WLHOME就是weblogic的安装目录，所以如果你忘记了weblogic的安装目录，就等着哭吧
+   > 顺带一提，本次实验的weblogic的安装目录是`/home/cxh/Oracle/Middleware/Oracle_Home/wlserver/common/bin`
+
+   第三步：执行这个命令之后
+   linux应该就弹出了一个GUI窗口
+
+这个GUI会指引你一步一步配置域服务器。因为全都是中文，而且配置及其简单，这里就不多说了
+
+只讲几个要点
+
+1. 配置域服务器过程中会有一个选项，即要不要同时配置一个管理服务器。
+
+   如果勾选的话，配置的域会有一个管理服务器，可以用来发布，部署项目。
+
+   还是蛮方便的
+
+2. 配置域服务器的管理服务器的监听地址时，请务必要将监听地址配为外网的IP，而不是本地回环地址
+
+   不然的话，你这个管理服务器无法通过外网访问哦
+
+### weblogic 的域管理服务器启动和停止
+
+#### 启动
+
+进入该文件夹
+
+`{weblogic}/domains/base_domain/bin`
+
+创建一个用于输出的文本文件（这个不用我写出来了吧），起名叫server.out
+
+然后执行该命令
+
+`sh startWebLogic.sh > ./server.out &`
+
+这样的话就可以启动域管理器，并将控制台的输入，指向到server.out这个文件里面
+
+#### 关闭
+
+关闭的话只需要执行bin目录下面的
+
+`sh stopWebLogic.sh`
+
+第一次可能会比较慢
+
+或者你也可以通过杀进程的方式来使weblogic停止
+
+大概就是使用这个命令
+
+`ps-ef | grep weblogic`
+
+找到相关进程的pid 执行kill -9 pid 杀死该进程
+
+更简单的，可以用这个命令
+
+`lsof -i:端口` 输入端口即可看到这个端口被哪个进程占用了，其PID是多少。
+
+`kill -9 pid`即可杀死该进程
+
+
+
+
+
+
+
+
+
+
 
