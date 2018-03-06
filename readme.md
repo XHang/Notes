@@ -855,5 +855,33 @@ $.ajax({
 
 
 
+## 第二十章：Eclipse
+
+### 问题1：怎么改svn插件上的用户名密码
+
+假设你Eclipse用的svn插件是JavaHL。
+
+可以到这个目录下`C:\Users\用户\AppData\Roaming\Subversion\auth\svn.simple`
+
+> 一般来说，用户都是`Administrator`吧。
+
+然后你可以看到有很多是乱码文件，没错，那就是svn的用户密码文件。
+
+要不试试删几个文件试试？
+
+然后看看你想要的svn仓库有没有要求重新登录？
+
+目前来说，只能这么做了
+
+以上
+
+
+
+
+
+
+
+
+
 
 

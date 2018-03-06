@@ -145,13 +145,13 @@ centos版：
 ​
 mv [选项] 源文件或目录 目标文件或目录  
 2. 删除文件夹命令
-​
-`rm -rf  文件夹路径 ` 
-​
-1. 解压命令
+  ​
+  `rm -rf  文件夹路径 ` 
+  ​
+3. 解压命令
   `tar -xzvf file.tar.gz`  
-​
-2. 设置linux的环境变量  
+  ​
+4. 设置linux的环境变量  
     vi  /etc/proifle 在其末尾添加这几句 
 ```
     export JAVA_HOME="xxx"
@@ -165,14 +165,14 @@ mv [选项] 源文件或目录 目标文件或目录
 ​
 9. pwd命令    
   `pwd`命令可以查看当前所在的路径（centos）  
-​
-​
+  ​
+  ​
 10. 获取java安装目录  
   利用`which java`得到路径1  which java是打印出java命令文件的路径    
   `ls -lrt+路径1`得到 箭头后的路径2  
   `ls -lrt+路径2`就ok了  
   默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
-​
+  ​
 11. 
    centos查看网络端口占用:
    ` firewall-cmd --zone=public --list-ports`  
@@ -180,33 +180,33 @@ mv [选项] 源文件或目录 目标文件或目录
     `systemctl start firewalld`and`systemctl stop firewalld`    
    永远禁用centos防火墙:
    `systemctl disable firewalld.service `  
-​
+   ​
 12. 
    centos修改主机名:`hostnamectl set-hostname 主机名`
    `hostnamectl --static` 可以查看主机名
-​
-13.
-`centos`关机命令
-`reboot`  重启
-`poweroff` 立刻关机
-​
-14.
-在linux文件系统路径中
-~代表用户目录
-如：`~/`就是`/home/make/`
-​
-15. 
+   ​
+   13.
+   `centos`关机命令
+   `reboot`  重启
+   `poweroff` 立刻关机
+   ​
+   14.
+   在linux文件系统路径中
+   ~代表用户目录
+   如：`~/`就是`/home/make/`
+   ​
+13. 
    wget是一个在控制台可以从各个协议上下载东西的工具
    如这条命令
    `wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
    直接在控制台执行，就可以从镜像网站下载hadoop压缩包
-​
-16：
-看下在环境变量配置这里
-`export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin`
-这种配法有什么用？
-​
-17. 
+   ​
+   16：
+   看下在环境变量配置这里
+   `export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin`
+   这种配法有什么用？
+   ​
+14. 
    更新`yum`源  
    有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
    首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
@@ -214,35 +214,35 @@ mv [选项] 源文件或目录 目标文件或目录
     `yum clean all`  
     `yum makecache`
    运行以上两个命令生成yum的缓存  
-​
-18. 
+   ​
+15. 
    为wget设置代理，其实很简单
    修改其配置文件` vi /etc/wgetrc  ` 
    里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
     当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
-19. centos添加用户
+16. centos添加用户
     首先登录 root 账号
     执行： `useradd 用户名`命令创建一个新用户
     执行`passwd username` 为新用户设置新密码并激活
     centos删除用户 ：`userdel -rf grid` 删除用户的所有信息.
     不加参数的仅仅只是删除用户，用户的信息没有被删除。  
-​
-20. 切换用户登录，centos：login -f username 
+    ​
+17. 切换用户登录，centos：login -f username 
    注：1. 加f参数不用输入密码  
-​
-21. 在ssh客户端切换登录会退出哦
-​
-22. 查看用户所在的组`groups username` 一般说来
-​
-23. 添加组 `groupadd name`
-​
-24. 将某文件或者文件夹的
-​
-25. 归属到某一个组中
+   ​
+18. 在ssh客户端切换登录会退出哦
+   ​
+19. 查看用户所在的组`groups username` 一般说来
+   ​
+20. 添加组 `groupadd name`
+   ​
+21. 将某文件或者文件夹的
+   ​
+22. 归属到某一个组中
    `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
-​
+   ​
    -R可以递归整个目录的归属权
-​
+   ​
 ## 文件描述符
 
 含义：在linux中，文件描述符是linux为了高效管理已打开的文件而创建的索引，其值是一个非负整数，用于指代被打开的文件。  
@@ -283,6 +283,10 @@ nproc(单个用户可用的最大进程数量)
 技能1： 查看端口占用的线程
 
 命令`lsof -i:端口`
+
+技能2：如何查看进程pid的执行目录。
+
+命令`ll /proc/pid`
 
 ## 怎么恢复启动方式为命令行？
 
@@ -541,7 +545,7 @@ vi /etc/proifle 在其末尾添加这几句 ``` export JAVA_HOME="xxx" export PA
 
    1. 不用我说了吧，去官网下载包，丢到linux服务器中
    2. 执行这个命令`rpm -iv jdk-8u161-linux-x64.rpm `
-   其他待定，因为我删除后jdk又神奇的恢复到oracle jdk了
+     其他待定，因为我删除后jdk又神奇的恢复到oracle jdk了
 
    所以这个坑，先挖着
 
@@ -551,21 +555,21 @@ vi /etc/proifle 在其末尾添加这几句 ``` export JAVA_HOME="xxx" export PA
 
    1. 不用我说了吧，去官网下载包，丢到linux服务器中
    2. 执行这个命令`rpm -iv jdk-8u161-linux-x64.rpm `
-    `ls -lrt+路径1`得到 箭头后的路径2  
-    `ls -lrt+路径2`就ok了  
-    默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
+      `ls -lrt+路径1`得到 箭头后的路径2  
+       `ls -lrt+路径2`就ok了  
+       默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
 
-11. 
-   centos查看网络端口占用:
-   ` firewall-cmd --zone=public --list-ports`  
-   开启或者关闭firewalld（centos7的防火墙）:
-    `systemctl start firewalld`and`systemctl stop firewalld`    
-   永远禁用centos防火墙:
-   `systemctl disable firewalld.service `  
+3. 
+  centos查看网络端口占用:
+  ` firewall-cmd --zone=public --list-ports`  
+  开启或者关闭firewalld（centos7的防火墙）:
+   `systemctl start firewalld`and`systemctl stop firewalld`    
+  永远禁用centos防火墙:
+  `systemctl disable firewalld.service `  
 
-12. 
-   centos修改主机名:`hostnamectl set-hostname 主机名`
-   `hostnamectl --static` 可以查看主机名
+4. 
+  centos修改主机名:`hostnamectl set-hostname 主机名`
+  `hostnamectl --static` 可以查看主机名
 
 13.
 `centos`关机命令
@@ -781,10 +785,46 @@ linux上的分区就类似与windows上面的C盘，D盘。
 
 `kill -9 pid`即可杀死该进程
 
+### 如何删除weblogic上面的域
+
+步骤
+
+1. 停止与域相关的进程和服务器
+
+2. 找到这个文件`${Oracle_HOME}/domain-registry.xml`
+
+   删除相关域的配置
+
+   如这段配置：
+
+   ```
+   <domain location="/home/weblogic/Oracle/Middleware/Oracle_Home/user_projects/domains/base_domain"/>
+   ```
+
+   删除这段配置表示你准备删除名为`base_domain`的域
+
+3. 找到这个文件`$WLS_HOME/common/nodemanager/nodemanager.domains`
+
+   删除这段配置
+
+   ```
+   base_domain=/home/weblogic/Oracle/Middleware/Oracle_Home/user_projects/domains/base_domain
+   ```
+
+4. 删除域相关的应用程序和文件夹
+
+   eg：`$MW_HOME/user_projects/applications/testDomain`  
+
+   ​	and  `$MW_HOME/user_projects/domains/testDomain`
+
+5. OK ,删除完毕！
+
 ## linux 使用影梭
 影梭客户端sslocal，自行搜索下载配置
 http链接转socket连接 polipo 自行搜索配置
 两个运行即可OK
+
+
 
 
 
