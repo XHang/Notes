@@ -1,5 +1,5 @@
 # 第一章：Maven的奇技淫巧（坑）
-## Maven的pom文件详解  
+## 1.1 :Maven的pom文件详解  
 
 1. <modelVersion>4.0.0</modelVersion>描述这个项目遵从那个版本,最低是4.0.0,maven官方要求  
 2. Maven项目聚合做法 
@@ -78,7 +78,7 @@ maven同样可以找到子pom。
 
 不用加version了，便于管理。  
 
-## Maven怎么添加jar包的依赖？
+## 1.2:Maven怎么添加jar包的依赖？
 如下代码所示
 ```
  <dependency>
@@ -91,9 +91,9 @@ maven同样可以找到子pom。
 ```
 经测试可以成功
 
-## Maven 的Bug
+## 1.3 ：Maven 的Bug
 
-### 2017-5-30日6月1日bug:
+### 1.3.1 ：2017-5-30日6月1日bug:
 
 1:在Eclipse运行Maven命令没反应或者爆这个错:  
 `-Dmaven.multiModuleProjectDirectory system property is not set. Check $M2_HOME environment variable and mvn script match.`
@@ -104,11 +104,11 @@ maven同样可以找到子pom。
 2:有时候下载依赖失败后再次下载就不行了。你得手动去删除依赖的那个文件夹的_maven.repositories和_lastUpdate....这两个文件，然后重新update项目。  
 还有，仓库有时候依赖是个pom文件，建议不要引用该依赖，要下那些有jar包的该依赖
 
-### 2017-8-28 晚BUg：
+### 1.3.2 :2017-8-28 晚BUg：
 无论clean install多少次，resource文件夹里面的配置文件都没有发布到war包中。
 最后发现是resource写错了，应该是resources
 
-### 2017-8-29 晚BUg：
+### 1.3.3 :2017-8-29 晚BUg：
 老实说，这个BUG早知道了，也有应对之策。  
 可是应对之策忘了，所以特此补充  
 具体BUg的描述就是用Maven打包的项目后，包里面没有Mybatis的实体类映射文件  
@@ -134,14 +134,14 @@ maven同样可以找到子pom。
 	        </resource>   
  这下就可以把实体类的映射文件一起打包了，爽不？ 
 
-### 17/12/23BUG
+### 1.3.4:  17/12/23BUG
 
 项目的maven依赖视图能找到某依赖，但是在其pom文件找不到。  
  这样编译时总是找不到某程序包
 
 原因：pom文件没写依赖。。。
 
-### maven全局或者局部设置java编译版本
+### 1.3.5: maven全局或者局部设置java编译版本
 在setting文件中，补上这份代码  
 ​	
 	<profile>   
@@ -181,16 +181,16 @@ maven同样可以找到子pom。
 		`BigDecimal(String val);`  
 分别可以将double，int，String代表的数字转成BigDecimal对象  
 ### 2:HttpClient分两个阶段版本，有些时候下错了就悲剧了  
-		目前最新阶段的最新版本的依赖  
-
-		<dependency>
-  		 	<groupId>org.apache.httpcomponents</groupId>
-    		<artifactId>httpclient</artifactId>
-    		<version>4.5.2</version>
-    	</dependency>
-
+目前最新阶段的最新版本的依赖  
+```xml
+<dependency>
+	<groupId>org.apache.httpcomponents</groupId>
+	<artifactId>httpclient</artifactId>
+	<version>4.5.2</version>
+</dependency>
+```
 其HttpPost对象可以设置实体内容。而get不行！  
-其HttpClient对象这么创建：CloseableHttpClient httpclient = HttpClients.createDefault();   
+其HttpClient对象这么创建：`CloseableHttpClient httpclient = HttpClients.createDefault(); `  
 
 ### 写接口注意事项
 写接口时切记沟通发送报文和接受报文的编码！
@@ -207,17 +207,6 @@ maven同样可以找到子pom。
 最后一个小点不要去掉，这表示当前目录下（不包括该目录）下的所有目录都归档。  
 什么，最后一个小点你要换成path。你的想法很好，可惜，这样打成的包会把路径信息也保留下来。。。  
 什么玩意啊。。  
-
-### 为什么不允许跨域
-
-为什么一般情况下，服务器都不允许接受跨域请求呢？
-这其实是为了安全
-
-```
-设想一下。你在xx银行登录了个人信息，然后xx银行服务器保存了你的Cookie
-接着你被骗子引诱到了一个山寨网站。你进入这个网站的那一刻，这个山寨网站就向xx银行发送了一个ajax请求。
-这就是跨域请求。这种请求不被阻止的话，银行就会发回你的个人信息。你的个人信息就泄漏了。
-```
 
 ## 第三章：NOSQL
 NOSQL意为非关系型数据库，分为几种  
@@ -267,30 +256,37 @@ Springmvc控制器方法上的produces 要注意一下，仅当Accept请求头�
 `DefaultAnnotationHandlerMapping`和`AnnotationMethodHandlerAdapter`两个bean，配置一些`messageconverter`
 当然也包括Json支持
 
-## 第五章 git的readme.md的编写
+## 第五章 git
+
+### 5.1 ：readme.md文件的语法
+
 1. 3个*号作为一行即可创建一个分割线
+
 2. 数字加英语句点即可创建一个有序列表
+
 3. 虽然 *``*可以写入代码，但是结构上是不换行的，代码最好写在三个音引号括起来的行内
-  *EGIT的全局忽略文件*
-  只要在你在eclispe有安装EGIT，就可以在用户文件夹里面发现一个.gitconfig文件，里面就是关于git的全局配置，配置全局忽略的文件也在这里配，那么怎么配呢？  
-4.  在用户文件夹里面再创建一个文件，就叫.gitignore 
-5.  在新建的文件写上要过滤的文件，eg：
-  `.setting
-  .project
+
+### 5.2 Eclipse里面的EGIT的使用
+#### 5.3 *EGIT的全局忽略文件*
+ 只要在你在eclispe有安装EGIT，就可以在用户文件夹里面发现一个.gitconfig文件，里面就是关于git的全局配置，配置全局忽略的文件也在这里配，那么怎么配呢？  
+在用户文件夹里面再创建一个文件，就叫.gitignore 
+在新建的文件写上要过滤的文件，eg：
+ ```
+ .setting
+ .project
   target
-  bin`  
+  bin
+ ```
   一行一个。#表示注释
-6. 在.gitconfig文件写上
-   `[user]
-   name = XiaoHang
-   email = 1083594261@1-PC
-   [core]
-   excludesfile = .gitignore
-   `
 
-   ​
-
-
+在.gitconfig文件写上
+````
+[user]
+name = XiaoHang
+email = 1083594261@1-PC
+[core]
+excludesfile = .gitignore
+````
 ##第六章：Springmvc
 1.给Springmvc的控制器传对象我想大家都知道了吧，不就是对象.属性=xxx传键值对嘛...
   要换个说法，传个json字符串让控制器接受并自觉实例化成对象，怎么做？
@@ -856,3 +852,36 @@ $.ajax({
 今天突然发现的，用Junit测试框架测试多线程的并发问题会有造成线程运行运行着突然挂了。
 
 得在main函数的测试下才是正常的
+
+
+
+## 第二十章：Eclipse
+
+### 问题1：怎么改svn插件上的用户名密码
+
+假设你Eclipse用的svn插件是JavaHL。
+
+可以到这个目录下`C:\Users\用户\AppData\Roaming\Subversion\auth\svn.simple`
+
+> 一般来说，用户都是`Administrator`吧。
+
+然后你可以看到有很多是乱码文件，没错，那就是svn的用户密码文件。
+
+要不试试删几个文件试试？
+
+然后看看你想要的svn仓库有没有要求重新登录？
+
+目前来说，只能这么做了
+
+以上
+
+
+
+
+
+
+
+
+
+
+
