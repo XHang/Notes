@@ -170,17 +170,17 @@ maven同样可以找到子pom。
 	    </configuration>
 	</plugin>
 
+# 第二章：杂项
 
+## 2.1：BigDecimal的学习
 
-## 第二章：杂项
-
-### 1. BigDecimal的学习  
 构造函数  
 		`BigDecimal(double val); ` 
 		`BigDecimal(int val);`  
 		`BigDecimal(String val);`  
 分别可以将double，int，String代表的数字转成BigDecimal对象  
-### 2:HttpClient分两个阶段版本，有些时候下错了就悲剧了  
+## 2.2 :HttpClient分两个阶段版本，有些时候下错了就悲剧了
+
 目前最新阶段的最新版本的依赖  
 ```xml
 <dependency>
@@ -192,21 +192,32 @@ maven同样可以找到子pom。
 其HttpPost对象可以设置实体内容。而get不行！  
 其HttpClient对象这么创建：`CloseableHttpClient httpclient = HttpClients.createDefault(); `  
 
-### 写接口注意事项
+## 2.3: 写接口注意事项
+
 写接口时切记沟通发送报文和接受报文的编码！
 接口一定要用HTTPClient测试一下！
 
+## 2.4: 写方法或者整理前人的方法时：
 
-### 写方法或者整理前人的方法时：
 1. 注意把逻辑分为几部分，在方法里面分由其他几个私有方法来处理。程序看起来会更清晰
-2. 把主要的分支判断逻辑放在
 
-### 怎么把一个文件夹打包成war包  
+## 2.5 :怎么把一个文件夹打包成war包
+
 其实很简单，就跟打包成jar包一样  
 `jar -cvf  web.war  .  `
 最后一个小点不要去掉，这表示当前目录下（不包括该目录）下的所有目录都归档。  
 什么，最后一个小点你要换成path。你的想法很好，可惜，这样打成的包会把路径信息也保留下来。。。  
 什么玩意啊。。  
+
+### 2.6 进制转换
+
+这属于基础。。不过我忘了
+
+#### 2.6.1二进制转八进制
+
+
+
+
 
 ## 第三章：NOSQL
 NOSQL意为非关系型数据库，分为几种  
