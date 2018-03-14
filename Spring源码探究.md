@@ -15,3 +15,8 @@
 
 
 估计在948  `AnnotationMethodHandlerAdapter`这行是关键
+
+没错，最终到了`AnnotationMethodHandlerAdapter`类的`writeWithMessageConverters`方法
+
+然后是`AbstractJackson2HttpMessageConverter`的writeInternal方法
+
