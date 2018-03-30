@@ -19,4 +19,34 @@
 
    但是PG数据库要是大写了，查表的时候，表名就得大写加双引号。不然会报找不到相关的表
 
+3. Oracle中,update语句中,update的字段值你想通过其他表查询到,然后用查询到的值update.
+
+   做法很简单,就是
+
+   ```
+   UPDATE table1 t1
+   SET (name, desc) = (SELECT t2.name, t2.desc
+                            FROM table2 t2
+                           WHERE t1.id = t2.id)
+    WHERE t1.id='11'
+   ```
+
+
+   很好,看起来不错,但是pg数据库也想来这么一下,一运行,语法错误....
+
+   怎么办呢?只能用一个黑科技了,就是`update from`sql
+
+   ```
+   UPDATE table 
+   SET name = link.other_name,
+   FROM
+    (select * from list where id='11' ) as other_name
+   WHERE
+    id='11'
+   ```
+
+   大致就是这样了,唔~~~`update from`这种其实不是严格的sql语句规范哦
+
+4. PG数据库的update语句不支持用表的别名,一定要用,只能加表的全称
+
    ​
