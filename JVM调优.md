@@ -1,4 +1,4 @@
-# JVM 调优
+# 	JVM 调优
 
 # 第一章：概述
 
@@ -1046,7 +1046,7 @@ OutOfMemoryError是常见的vm致命错误
 
 那么Full GC又干了什么事呢?
 
-Full GC 收集整个堆,包括新生代,老年代,永久代
+Full GC 收集整个堆,包括新生代,老年代,永久代，关于详细的说明，下面会讲到
 
 #####　9.2.12 快速内存分配
 
@@ -1214,7 +1214,7 @@ G1的几个特性
    这个策略就是:优先回收垃圾对象最多的区域,这也就是这个垃圾收集器的由来
 ##### 9.2.17 应用程序对垃圾收集器的影响
 
-1. 内存分配
+1. 内存分配 
 
    应用内存分配的速率越快,垃圾收集触发的就越频繁.
 
@@ -1493,26 +1493,282 @@ Java6:重大改进.IR(中间代码)改成了SSA分格,简单局部寄存器分�
 
 另外，如果第二个`-`变成`+`号，就变成了开启自适应优化了
 
+# 第十章 JVM性能监控
 
+## 10.1概况
 
+本章讲述了JVM的性能监控，展示了JVM的监控工具，介绍了观察数据中的应该留意的数据模式。
 
+然后根据数据选择调优方式。
 
+JVM监控包括垃圾收集，JIT编译和类加载	
 
+## 10.2 定义
 
-   ​
+本章所讲的性能监控，在此之前应该有谈过了。
 
+它是一种非侵入式的，在生产环境，测试环境，或者开发环境中实施的一种带有预防性或者主动性的活动。
 
+当测试人员爆出性能问题时，首先会进行性能监控，然后就是性能分析，最后性能调优
 
+性能监控应该在生产环境中时时刻刻开着。
 
+## 10.3 JVM监控之-垃圾收集
 
+监控JVM的垃圾收集很重要，因为它对应用的吞吐量和延迟有着极大的影响 .
 
+那垃圾收集要收集的数据有哪些呢？
 
+1.  当前使用的垃圾收集器
+2. Java堆的大小
+3. 新生代和老年代的大小
+4. 永久代的大小
+5. Minor GC 的持续时间
+6. Minor GC 的频率
+7. Minor GC的空间回收量
+8. Full GC 的持续时间
+9. Full GC的频率
+10. 每个并发垃圾收集周期的空间回收量
+11. 垃圾收集前后Java堆的占用量
+12. 垃圾收集前后老年代和新生代的空间占用量
+13. 垃圾收集器前后永久代的占用量
+14. 是否老年代或者永久代的占用触发Full GC
+15. 应用是否显示调用了`System.gc()`
 
+这些数据可以由HotSpot报告，这个报告不需要什么开销，在生产环境也可以使用
 
+报告垃圾收集数据的命令行：`-XX:+PrintGCDetails`可以打印很多有价值的垃圾收集信息。
 
+### 10.3.1 Minor GC 数据详解
 
+在jdk1.8 版本的中,打印的Minor GC 信息如下
 
+```
+0.143: [GC (Allocation Failure) 
+[PSYoungGen: 31744K->5117K(36864K)] 
+31744K->16253K(121856K), 0.0328695 secs] 
+[Times: user=0.11 sys=0.01, real=0.03 secs] 
+```
 
+1. `0.143:`代表时间戳,实际上,你只是用`-XX:+PrintGCDetails`这个命令行的话不会输出这个.
 
+2. `GC (Allocation Failure)`  GC表示是Minor GC 本次Minor GC触发的原因是`Allocation Failure`
 
-uu
+   简而言之,就是内存分配失败(当然,新生代满了还怎么分配内存呐?)
+
+3. `PSYoungGen`表示新生代使用的是多线程垃圾收集器`Paraller Scavenge`
+
+   其他的新生代垃圾收集器就不叫这名了。
+
+   ParNew 是多线程垃圾收集器ParNew，一般配合CMS垃圾收集器
+
+   DefNew则是Serial垃圾收集器
+
+4. 第二行的`31744K->5117K(36864K)`中,箭头左面是新生代收集之前的占用量,右边自然就是新生代收集之后的占用量了
+
+   而且注意,Minor GC后Eden为空,所以箭头后的`5117K`也就是Survivor区的占用量
+
+   括号里面的`36864K`不是指新生代的占用量,而是Eden和一块被占用的Survivor的容量的和(即新生代的大小)
+
+   > 疑惑点:如果是这么说的话,括号里面的数字代表了Eden和其中的一块的Survivor的大小
+   >
+   > 那么这个值应该是不变的,但是日志GC中,这个值却经常改变?
+   >
+   > 猜测原因:
+   >
+   > 1. 每次Minor GC,被占用的Survivor区都会切换,所以造成值的变动
+   >
+   >
+   > 2. GC过程中,新生代的大小会经常微调,所以值会发生变动
+   >
+   > 加了`-XX:-UseAdaptiveSizePolicy`
+   >
+   > 后再次运行后发现括号里面的值就不变了,说明猜测2是正确的
+   >
+   > 疑惑点:
+   >
+   > 作者说Eden和一块被占用的Survivor的容量的和就是新生代的大小
+   >
+   > 咦，新生代的大小不是要计算两个Survivor+Eden的容量吗？
+
+5. 第三行的`31744K->16253K(121856K)`就是整个堆的信息,
+
+   箭头左边是垃圾收集前整个java堆占用量
+
+   箭头右边是垃圾收集后整个java堆的占用量
+
+   括号就是Java堆的总量(新生代+老年代)
+
+   > 总量减去上面的新生代大小，就可以计算老年代的大小了呢0
+
+6. `0.0328695 secs`就是垃圾收集花费的时间
+
+7. `Times: user=0.11 sys=0.01, real=0.03 secs`这一行就是CPU的使用时间
+
+   `user=0.01`代表用户态CPU使用了`0.11s`
+
+   `sys=0.01`代表系统态CPU使用了`0.01s`
+
+   合计是`real=0.03 secs`
+### 10.3.1 Full GC 数据详解
+
+Full GC的日志详情如下
+
+```
+2.016: [Full GC (Ergonomics) 
+[PSYoungGen: 5120K->0K(100864K)] 
+[ParOldGen: 150987K->139997K(302080K)] 
+156107K->139997K(402944K), 
+[Metaspace: 2652K->2652K(1056768K)], 1.5891538 secs] 
+[Times: user=3.87 sys=0.02, real=1.59 secs] 
+```
+
+1. 标签Full GC 代表这是一个Full  GC 收集  (Ergonomics暂时未知)
+
+2. `PSYoungGen: 5120K->0K(100864K)`和之前说的是完全一样
+
+3. `[ParOldGen: 150987K->139997K(302080K)] ` 是老年代信息
+
+   其中`ParOldGen`表示老年代使用的是xx垃圾收集器？
+
+   `150987K->139997K(302080K)`箭头左边表示垃圾收集前老年代的占用量，箭头右边就是收集后的占用量
+
+   括号里面是老年代的大小
+
+4. `156107K->139997K(402944K)`这个就是java堆的使用情况，是垃圾收集前后新生代和老年代占用量的累计
+
+5. [Metaspace: 2652K->2652K(1056768K)], 1.5891538 secs]
+
+   `Metaspace`这个在jdk8之前，应该是`PSPermGen`即永久代,现在jdk8去掉了永久代，继任者是`Metaspace`
+
+   箭头前后分别代表垃圾收集前`Metaspace`的占用量,括号自然就是总量了
+
+   > Metaspace这个内存区域使用的是本地内存，理论上，物理内存有多大，这个区的内存就有多大
+   >
+   > 但是实际还是要给它做一下容量限制的，可以有vm 自己决定，也可以你自己决定
+   >
+   > 一旦使用量超过了，就会诱导Full GC
+   >
+   > 这个区主要放类的加载数据，之前放在永久代的字符串已经放在Java堆了。
+
+6. Full GC中需要着重注意老年代和永久代(or Metaspace)在垃圾收集前后的占用量，如果占用量接近于容量
+
+   就说明本次GC是由于某代引起的。
+
+7. 最后一行就不用多说了，跟Minor GC 是一样的
+###  10.3.2 使用CMS垃圾收集器的GC日志
+
+之所以要单独把CMS垃圾收集器的日志拿出来讲，是因为这货的Full GC 日志长得跟上面的，不一样
+
+Minor GC还好说，只是收集器的型号变了而已。
+
+Full GC的话，看看下面的日志吧
+
+```
+6.390: [GC (CMS Initial Mark) 
+	[1 CMS-initial-mark: 148809K(183408K)] 153706K(221488K), 0.0030657 secs]
+    [Times: user=0.01 sys=0.00, real=0.00 secs] 
+6.393: [CMS-concurrent-mark-start]
+6.710: [CMS-concurrent-mark: 0.316/0.316 secs] 
+	[Times: user=0.62 sys=0.00, real=0.32 secs] 
+6.710: [CMS-concurrent-preclean-start]
+6.750: [CMS-concurrent-preclean: 0.040/0.040 secs]
+	[Times: user=0.08 sys=0.00, real=0.04 secs] 
+6.750: [CMS-concurrent-abortable-preclean-start]
+9.191: [CMS-concurrent-abortable-preclean: 2.441/2.441 secs] 
+	[Times: user=4.89 sys=0.00, real=2.44 secs] 
+9.191: [GC (CMS Final Remark)
+	[YG occupancy: 21728 K (38080 K)]9.191: [Rescan (parallel) , 0.0362882 secs]9.227: 		[weak refs processing, 0.0000158 secs]9.227: 
+	[class unloading, 0.0002186 secs]9.228: 
+	[scrub symbol table, 0.0003964 secs]9.228:
+    [scrub string table, 0.0001122 secs]
+    [1 CMS-remark: 148809K(183408K)] 170537K(221488K), 0.0371413 secs] 
+    [Times: user=0.12 sys=0.00, real=0.04 secs] 
+9.228: [CMS-concurrent-sweep-start]
+9.305: [CMS-concurrent-sweep: 0.076/0.076 secs] 
+	[Times: user=0.15 sys=0.00, real=0.07 secs] 
+9.305: [CMS-concurrent-reset-start]
+9.308: [CMS-concurrent-reset: 0.003/0.003 secs]
+	[Times: user=0.01 sys=0.00, real=0.01 secs] 
+
+```
+
+整个CMS垃圾收集周期从初始标记开始，到并发重置结束
+
+也就是上面日志的`CMS Initial Mark`和`CMS-concurrent-reset`
+
+中间的各个阶段也有相应的各个解释
+
+1. `CMS-concurrent-mark`表示并发标记阶段的结束
+
+2. `CMS-concurrent-preclean`和`CMS-concurrent-abortable-preclean`为重新标记做准备
+
+   也就是之前提到的`并发预清楚标记阶段`
+
+3. `CMS-remark`就是重新标记阶段结束
+
+4. `CMS-concurrent-sweep`这个就是清除阶段了
+
+> 截出来日志并没有包含Minor GC ，但实际上，我观察的其他CMS周期中间是有Minor GC的日志的
+>
+> 类似于
+>
+> ```
+> xxxx: [GC (Allocation Failure) 
+> xxxx: [ParNew: 29510K->4224K(38080K), 0.1203834 secs] 
+> 	73413K->80196K(122752K), 0.1206216 secs] 
+> 	[Times: user=0.37 sys=0.01, real=0.12 secs] 
+> ```
+>
+> 这些日志穿插在CMS周期，这说明，哪怕是在并发垃圾收集周期时仍然可以进行Minor GC
+
+日志中要着重注意CMS周期中Java堆占用的减少量，特别是并发清除开始和结束时的Java堆减少量，
+
+这可以在`CMS-concurrent-sweep-start`和`CMS-concurrent-sweep`的中间找MinorGC的日志看出来
+
+> 不过并不是每次CMS周期都会有Minor GC ，这事吧，得看人品
+>
+> 所以我觉得作者提出的这个思路并不好。但是看Java堆减少的量确实很重要
+
+如果在整个并发清除前后，Java堆的占用并没有任何改变。
+
+说明CMS的整个周期基本做了无用功，不过也有可能提升到老年代的对象太多，都超过了并发清除的速度了
+
+但是不管是哪两种，都说明JVM需要调优了，关于CMS的收集器调优，请继续看下去
+
+**CMS的另一个监控-晋升监控**
+
+关于CMS垃圾收集器的监控，还有一项需要注意，那就是晋升分布
+
+晋升分布是一项显示Survivor区对象年龄的直方图，当对象的年龄超过晋升阀值，就会提升到老年代
+
+晋升分布监控的重要性下面会讲解
+
+最后，聊一下什么是并发模式失败,这是在CMS收集器下会发生的一种不好的情况
+
+并发模式失败有两种情况,这两种情况也都是并发模式失败的定义
+
+情况1:当对象提升到老年代的速度过快,但是老年代空间告急
+
+情况2: 老年代的空间碎片化严重,以致没有空间存放从新生代提升到老年代的对象时
+
+并发模式失败时,GC日志会打印`concurrent model failure`
+
+当发生并发模式失败时,老年代会来一发Stop the World的GC,并压缩老年代空间.
+
+你就这么眼睁睁的看着并发模式失败?不,这个时候,你就要对JVM进行调优了
+
+>  请查看下面章节:特别是低延迟程序细调
+
+# 第十一章：JVM命令行命令以及解释
+
+1. -XX:+ScavengBeforeFullGC  该命令行可以在Full GC 之前，先来一发Minor GC ，减轻Full GC的工作
+
+   这个选项是布尔类型的，意味着，其实你可以`-XX:+ScavengBeforeFullGC` FullGC 之前不会Minor GC
+
+   Full GC之前来一次Minor GC 有什么用的
+
+   在两个GC执行间隙，应用可以继续运行，这样减少了最大停顿时间，但也使整体停顿时间拉长
+
+2. ​
+
