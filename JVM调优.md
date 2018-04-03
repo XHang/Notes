@@ -1722,7 +1722,9 @@ Full GC的话，看看下面的日志吧
 >
 > 这些日志穿插在CMS周期，这说明，哪怕是在并发垃圾收集周期时仍然可以进行Minor GC
 
-日志中要着重注意CMS周期中Java堆占用的减少量，特别是并发清除开始和结束时的Java堆减少量，
+*日志需要注意的地方*
+
+1. 着重注意CMS周期中Java堆占用的减少量，特别是并发清除开始和结束时的Java堆减少量，
 
 这可以在`CMS-concurrent-sweep-start`和`CMS-concurrent-sweep`的中间找MinorGC的日志看出来
 
@@ -1760,6 +1762,24 @@ Full GC的话，看看下面的日志吧
 
 >  请查看下面章节:特别是低延迟程序细调
 
+### 10.3.4 垃圾收集日志的其他要素
+
+1. 显式垃圾收集
+
+   意思就是本次GC是由于代码中存在`System.gc()`引起。这个在GC日志可以很清楚的看到
+
+   ```
+   3.216: [GC (System.gc()) [PSYoungGen: 7K->64K(36864K)] 637K->693K(121856K), 0.0006149 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+   ```
+
+   看见没，上面的`System.gc()`几个大字闪闪发亮(大雾～)
+
+   ​
+
+
+
+
+
 # 第十一章：JVM命令行命令以及解释
 
 1. -XX:+ScavengBeforeFullGC  该命令行可以在Full GC 之前，先来一发Minor GC ，减轻Full GC的工作
@@ -1770,5 +1790,198 @@ Full GC的话，看看下面的日志吧
 
    在两个GC执行间隙，应用可以继续运行，这样减少了最大停顿时间，但也使整体停顿时间拉长
 
-2. ​
+2. `-XX:+PrintGCTimeStamps`打印自JVM启动以来的秒数
+
+3. `-XX:+PrintGCDateStamps`打印符合ISO8601标准的时间戳
+
+   这些时间戳可以推断出Minor GC和Full GC的持续时间和频率
+
+4. `-Xloggc:<filename>`可以将垃圾收集的日志存储在文件中，以便离线分析
+
+   此日志结合`-XX:+PrintGCDetails`可以在输出的日志文件中，打印出时间戳(秒数)
+
+5. `-XX:+PrintGCApplicationConcurrentTime` 可以报告应用在安全点操作之间的运行时间
+
+   `-XX:+PrintGCApplicationStoppedTime` 这个是堵塞java线程的时间
+
+   使用了这两个选项后的GC日志
+
+   ```
+   1.248: Application time: 0.1672635 seconds
+   1.248: [GC (Allocation Failure) [PSYoungGen: 31128K->5118K(36864K)] 31128K->10950K(121856K), 0.0339035 secs] [Times: user=0.05 sys=0.00, real=0.03 secs] 
+
+   1.283: Total time for which application threads were stopped: 0.0341715 seconds, Stopping threads took: 0.0000153 seconds
+   ```
+
+   第一行表示Java应用运行大约0.1672635秒，Minor GC大约停顿0.0341715 秒
+
+   两个值比对一下，可以得出Minor GC 大约有2%的开销
+
+   关于这两个命令行参数还有需要了解的，之后再去查资料
+# 第十二章 工具
+
+   这章主要讲解的是关于性能优化的一些工具
+
+## 12.1 分析GC日志的工具
+
+### 12.1.1 GCHisto 工具 
+
+首先请出我们的一号选手：`GCHisto`,专攻文字方向
+
+这货太古老了，而且已经停止维护，所以pass
+
+### 12.1.2  JConsole
+
+这是我们的二号种子选手JConsole
+
+它是一个JMX兼容的GUI工具，可以连接运行中的jvm(jdk5或者更高版本)
+
+>  注意：用java 5 jvm 启动java程序时，命令行只有添加`-Dcom.sun.management.jmxremote`
+>
+> JConsole才连接然后监控这个jvm
+
+虽然书上说Java6 或者更高版本的JVM不需要此属性，但是我在运行的时候，还是需要加这个参数的
+
+当目标程序运行时，就可以在本机键入`jconsole`开启监控面板了
+
+1. 首先当然要连接到目标程序，我想都懂得怎么连接吧。。
+
+2. 连接上目标程序后，点开内存选项卡`Menory`可以监控JVM垃圾收集。
+
+   左上方的图表可以切换监控的堆分代区，根据不同的垃圾收集器，分代名显示可能有所不同
+
+   一般常见的就是
+
+   PS Old Gen 看名字就是我们的老伙计：老年代
+
+   PS Eden Gen 眼熟不，新生代的Eden区
+
+   PS Survivor Space 这个就是新生代的Survivor区了
+
+   Code cache   HotSpot VM用该内存存储经过JIT编译器编译好的代码
+
+   MetaSpace 元空间，存放类数据的
+
+   Compressed Class Space 未知，查网络
+
+   堆内存：Jconsole 把新生代和老年代合称为对你从
+
+   非堆内存：Code cache和MetaSpace  (也许Compressed Class Space也算一个？)合称为非堆内存
+
+   下方的详细信息显示了JVM内存的数据指标，包括
+
+   Used(已使用)：当前已使用的内存量
+
+   Commited(已分配)：保证可用jvm使用的内存量，这个内存量会随着时间发生变动，JVM会将内存释放回系统
+
+   ​	使已分配的内存少于启动时的初始量。
+
+   ​	已分配的内存总是等于或者大于内存的使用量
+
+   Max(最大值)：内存管理系统可用的最大内存存，如果内存使用量超过了该值，或者不超过该值，比如说
+
+   ​	虚拟内存低，也会导致内存分配失败
+
+   GC Time：Stop the world 垃圾收集的累计时间和包括并发回收周期的垃圾收集调用的总数
+
+   ​	可能显示多行，一行显示一个JVM使用的垃圾收集器
+
+   需要注意的
+
+   看`PS Survivor Space`是否长时间都是满的，如果是，说明`Survivor`已经溢出，对象在未老化之前就已经提升到老年代
+
+### 12.1.2 VisuaIVM 工具
+
+特性：继承了上面的Jconsole，采用了NetBeans的插件架构。很容易添加组件或者插件
+
+如何启动：如果你已经将JDK的安装目录设置为环境变量了，则只需要执行这个命令`jvisualvm`
+
+​	搞定
+
+*界面信息(以一开始启动为准)*
+
+左侧有Application面板，有四个可以展开的节点
+
+1.  Local 会列出VisuaIVM可以监控的本地应用
+
+2. Remote 会列出VisuaIVM可以监控的远程主机，以及远程主机上面的应用
+
+3. VMCoredumps
+
+4. Snapshots 快照，VisuaIVM可以为java应用拍摄状态快照,这些快照会存储在这个节点中
+
+   方便和其他快照进行比对
+
+*连接到java应用后，会打开一个新的面板*
+
+这个面板有什么东西要根据你的Java版本,本地还是远程,以及插件决定，但是一般来说，会有下面几个子选项窗口
+
+1. Overview  概述
+
+   显示程序的概要信息
+
+2. Monitor 监控
+
+   显示堆，永久代的使用情况，以及线程数和类加载信息
+
+3. Threads 线程
+
+   显示应用程序有哪些线程正在运行，还用颜色标注了正在运行，休眠，堵塞，等待或者锁竞争
+
+   在观察锁竞争时，这个窗口很有用
+
+   另外，在这个窗口还可以
+
+接下来，教你怎么在VisuaIVM下监控远程主机。
+1. 远程系统必须运行jstatd   jdk5 or jdk6 分发版有这个  jre没有
+
+   jstatd会启动Java RMI 服务器，监控Hotspot VM的停止，并为远程监控提供关联和接口
+
+   且由于RMI服务器会暴露监控接口，所以必须设置安全策略文件和安全管理器。
+
+   安全策略文件需要考虑授予的访问级别，避免对监控的jvm造成大影响
+
+   且策略文件必须符合java安全策略规范
+
+   策略文件示例如下
+
+   ```
+   grant codebase "file:${java.home}/../lib/tools.jar" {   
+       permission java.security.AllPermission;
+   };
+   ```
+
+   这个策略文件允许jstatd运行时不考虑任何异常
+
+   假设上面的策略文件命名为`jstatd.policy`
+
+   则运行以下命令使用该策略文件启动jstatd
+
+   `jstatd -J-Djava.security.policy=jstatd.policy`
+
+   启动完毕后，下一步
+
+1. 在本地系统运行jps+RemoteHostName，验证是否能关联到远程主机的jstatd
+
+   这个因为jps如果加了主机名参数，就会试图链接远程系统的jstatd
+
+   如果没加参数，就会返回本地能被监控的java应用
+
+1. com.sum.management.jmxremote.port=4433
+
+1. ​
+
+   ​
+
+
+
+
+
+
+
+
+
+   ​
+
+   ​
 

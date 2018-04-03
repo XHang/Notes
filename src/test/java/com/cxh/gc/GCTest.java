@@ -1,3 +1,4 @@
+
 package com.cxh.gc;
 
 import java.util.ArrayList;
@@ -30,12 +31,12 @@ public class GCTest {
 			new Object();	
 			Object o = new Object();	
 			list.add(o);	//对象添加进数组，使其有引用，可以提升到老年代，触发老年代Full GC
-			//Thread.sleep(10);
+			Thread.sleep(100);
  			count++;
 
 			//每隔100次去掉列表的一个对象，避免无节制的添加导致不断的Full GC
-			if(count%50 == 0) {
-				list.remove(point++);
+			if(count%500 == 0) {
+				list=new ArrayList<Object>();
 			}
 		}
 	}
