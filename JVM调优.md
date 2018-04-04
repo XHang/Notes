@@ -895,6 +895,13 @@ switch语句执行重复的比较操作,最差情况需要和所有的字节码�
       >
       > 所以Java的线程要映射到c++的线程,c++的线程要映射到操作系统的线程
 
+      大概是酱紫的
+
+      ```
+         Java层面     |     HotSpot VM层面     | 操作系统层面
+      java.lang.Thread | JavaThread -> OSThread | native thread
+      ```
+
       接下来讲一个Java线程的生命周期
 
       1. java线程启动,,同时也会创建JavaThread实例和OSThread的实例,以及一个本地线程
@@ -1469,9 +1476,9 @@ Java6:重大改进.IR(中间代码)改成了SSA分格,简单局部寄存器分�
 
    优化的内容是
 
-   1. 编译器：还是Client
-   2. 堆尺寸进行了优化
-   3. 调整了垃圾收集器的设置
+      1. 编译器：还是Client
+      2. 堆尺寸进行了优化
+      3. 调整了垃圾收集器的设置
 
 #### 9.3.9 自适应java堆调整
 
@@ -1520,20 +1527,20 @@ JVM监控包括垃圾收集，JIT编译和类加载
 那垃圾收集要收集的数据有哪些呢？
 
 1.  当前使用的垃圾收集器
-2. Java堆的大小
-3. 新生代和老年代的大小
-4. 永久代的大小
-5. Minor GC 的持续时间
-6. Minor GC 的频率
-7. Minor GC的空间回收量
-8. Full GC 的持续时间
-9. Full GC的频率
-10. 每个并发垃圾收集周期的空间回收量
-11. 垃圾收集前后Java堆的占用量
-12. 垃圾收集前后老年代和新生代的空间占用量
-13. 垃圾收集器前后永久代的占用量
-14. 是否老年代或者永久代的占用触发Full GC
-15. 应用是否显示调用了`System.gc()`
+2.  Java堆的大小
+3.  新生代和老年代的大小
+4.  永久代的大小
+5.  Minor GC 的持续时间
+6.  Minor GC 的频率
+7.  Minor GC的空间回收量
+8.  Full GC 的持续时间
+9.  Full GC的频率
+10.  每个并发垃圾收集周期的空间回收量
+11.  垃圾收集前后Java堆的占用量
+12.  垃圾收集前后老年代和新生代的空间占用量
+13.  垃圾收集器前后永久代的占用量
+14.  是否老年代或者永久代的占用触发Full GC
+15.  应用是否显示调用了`System.gc()`
 
 这些数据可以由HotSpot报告，这个报告不需要什么开销，在生产环境也可以使用
 
@@ -1590,6 +1597,10 @@ JVM监控包括垃圾收集，JIT编译和类加载
    > 作者说Eden和一块被占用的Survivor的容量的和就是新生代的大小
    >
    > 咦，新生代的大小不是要计算两个Survivor+Eden的容量吗？
+   >
+   > RednaxelaFX也有这个疑问，但是他把这个疑问当做是作者的BUG
+   > 他给出的修正方案是说括号里面的数值是指两个Survivor+Eden的容量
+   > ​
 
 5. 第三行的`31744K->16253K(121856K)`就是整个堆的信息,
 
@@ -1777,6 +1788,147 @@ Full GC的话，看看下面的日志吧
    ​
 
 
+### 10.4 JIT编译器监控
+
+JIT编译器虽然加快的运行速度，但它的计算也需要内存和CPU，所以有必要对JIT编译器进行监控
+
+监控的内容包括
+
+1. 那些方法被优化了(内联了)
+2. 某些情况被逆优化了，或者重新优先了
+
+怎么监控JIT编译器
+
+​	请出我们的命令行参数`-XX:+PrintCompilation`
+
+​	它输出了一下格式的编译日志(JDK8)
+
+```
+   9321   40  s    3       java.lang.StringBuffer::append (13 bytes)   made not entrant
+   9321 3159       4       java.lang.StringBuilder::toString (17 bytes)
+```
+
+第一列是时间戳，编译相对于JVM启动的时间戳
+
+第二列是编译ID
+
+第三列是类型，可以为空或者为下列值
+
+`&`以栈上替换的方式编译
+
+`*|n`编译的是本地方法
+
+`s`编译的是同步方法
+
+`!`编译的方法有异常处理器
+
+`b`解释器被堵塞直至编译结束
+
+`1`编译器没有做完整优化，只是第一层编译
+
+第三列是`tiered_level`当采用的是**tiered compilation**编译器时才会打印
+
+第四列是被编译的方法名称，格式是：`classname::method`
+
+第五列是被编译的代码大小，这里的大小是java字节码大小
+
+第六列是去优化的类型，可以为空或者以下值
+
+`made not entrant` 编译活动遇到罕见陷阱，需要处理已卸载类的引用，以及乐观优化的回退，这个JIT编译方法可能还有活动，但不允许有新的活动了
+
+` made zombie` 说明这个编译方法不再有更多的活动了，这通常是某个类被卸载，而引用这个类的其他方法都不再存活了，就会变成made zombie，一旦JIT编译器确信没有其他方法引用了这个zombie方法，这个zombie方法就会从代码缓存中释放
+
+
+
+### 10.5 类加载监控
+
+在jdk8之前，Hotspot将类的加载数据放到永久代中，当永久代空间不够，又发生类的加载活动时，就有一些不常用的类会从永久代中卸载，这个过程会触发Full GC 因此，对类加载活动进行监控是有必要的。
+
+> 类的加载和卸载都是由类加载器实现了
+>
+> jdk8之后，类的元数据信息放在了MetaSpace中
+
+示例日志没有找到，就说一点吧。
+
+如果在Full GC中发现类被卸载了，说明永久代大小需要调大点
+
+`-XX:PermSize=xxM 和 -XX:MaxPermSize=xxM`
+
+这两个命令行选项可以调整永久代的大小，为了避免Full GC会扩大永久代的可分配空间
+
+建议`-XX:PermSize 和 -XX:MaxPermSize`设置为同一个值?
+
+> 疑问，还是不懂呢
+
+另外，其实永久代的垃圾收集可以开启并发收集，但是只能和CMS收集器一起使用
+
+另，有一些工具可以图形化的监控类的加载，在下方的工具章会讲到
+
+### 10.6 快速监控锁竞争
+
+快速定位Java应用的锁竞争，常用的方式是用`jstack`抓取线程转储信息。
+
+> 使用方式`jstack -l 3776`  后面带java应用的pid
+>
+> 什么，不知道pid，jps了解一下？
+
+这种方法只是用于监控，对于分析嘛，没辙
+
+日志大概是酱紫的
+
+```
+
+"Thread-1" #10 prio=5 os_prio=0 tid=0x000000005871b000 nid=0x1f68 waiting for mo
+nitor entry [0x0000000058e7f000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+        at com.cxh.thread.DeadLock.run(DeadLock.java:45)
+        - waiting to lock <0x00000000d619bc28> (a java.lang.Object)
+        - locked <0x00000000d619bc38> (a java.lang.Object)
+        at java.lang.Thread.run(Thread.java:745)
+
+   Locked ownable synchronizers:
+        - None
+
+"Thread-0" #9 prio=5 os_prio=0 tid=0x000000005871a000 nid=0x1938 waiting for mon
+itor entry [0x00000000583ff000]
+   java.lang.Thread.State: BLOCKED (on object monitor)
+        at com.cxh.thread.DeadLock.run(DeadLock.java:34)
+        - waiting to lock <0x00000000d619bc38> (a java.lang.Object)
+        - locked <0x00000000d619bc28> (a java.lang.Object)
+        at java.lang.Thread.run(Thread.java:745)
+
+   Locked ownable synchronizers:
+        - None
+```
+
+这个日志说明线程`Thread-1`和`Thread-0`，都拿到锁了
+
+`Thread-1`拿到了这个地址的锁`0x00000000d619bc38`  正在等待`0x00000000d619bc28`锁的释放
+
+`Thread-0`拿到了这个地址的锁`0x00000000d619bc28`  正在等待`0x00000000d619bc38` 锁的释放
+
+看出什么问题了嘛？没错，这就是典型的死锁，而且线程转储文件还能知道是哪个源代码出现了死锁
+
+如：`Thread-1` ,遇到死锁的位置是：`com.cxh.thread.DeadLock.run(DeadLock.java:45)`
+
+可以说非常有用了。
+
+不过死锁毕竟比较少见，更多的情况是激烈的锁竞争
+
+可以在线程转储文件看到很多个线程都有这么一句话`waiting to lock <0x00000000d619bc28>`
+
+等待获取锁的地址都是一样的，也就是说，多个线程在竞争同一个锁。
+
+而这个锁现在估计被一个线程占用了`locked <0x00000000d619bc28> `
+
+然后，知道怎么做了吧，追踪到源代码吧骚年
+
+
+
+
+
+
+
 
 
 
@@ -1786,9 +1938,9 @@ Full GC的话，看看下面的日志吧
 
    这个选项是布尔类型的，意味着，其实你可以`-XX:+ScavengBeforeFullGC` FullGC 之前不会Minor GC
 
-   Full GC之前来一次Minor GC 有什么用的
+   Full GC之前来一次Minor GC 有什么用呢?
 
-   在两个GC执行间隙，应用可以继续运行，这样减少了最大停顿时间，但也使整体停顿时间拉长
+   答：在两个GC执行间隙，应用可以继续运行，这样减少了最大停顿时间，但也使整体停顿时间拉长
 
 2. `-XX:+PrintGCTimeStamps`打印自JVM启动以来的秒数
 
@@ -1838,7 +1990,7 @@ Full GC的话，看看下面的日志吧
 
 >  注意：用java 5 jvm 启动java程序时，命令行只有添加`-Dcom.sun.management.jmxremote`
 >
-> JConsole才连接然后监控这个jvm
+>  JConsole才连接然后监控这个jvm
 
 虽然书上说Java6 或者更高版本的JVM不需要此属性，但是我在运行的时候，还是需要加这个参数的
 
@@ -1862,9 +2014,9 @@ Full GC的话，看看下面的日志吧
 
    MetaSpace 元空间，存放类数据的
 
-   Compressed Class Space 未知，查网络
+   Compressed Class Space 压缩类空间
 
-   堆内存：Jconsole 把新生代和老年代合称为对你从
+   堆内存：Jconsole 把新生代和老年代合称为堆内存
 
    非堆内存：Code cache和MetaSpace  (也许Compressed Class Space也算一个？)合称为非堆内存
 
@@ -1886,7 +2038,7 @@ Full GC的话，看看下面的日志吧
 
    ​	可能显示多行，一行显示一个JVM使用的垃圾收集器
 
-   需要注意的
+   **需要注意的 **
 
    看`PS Survivor Space`是否长时间都是满的，如果是，说明`Survivor`已经溢出，对象在未老化之前就已经提升到老年代
 
@@ -1898,7 +2050,7 @@ Full GC的话，看看下面的日志吧
 
 ​	搞定
 
-*界面信息(以一开始启动为准)*
+#### 12.1.2.1 界面信息(以一开始启动为准)
 
 左侧有Application面板，有四个可以展开的节点
 
@@ -1930,9 +2082,20 @@ Full GC的话，看看下面的日志吧
 
    在观察锁竞争时，这个窗口很有用
 
-   另外，在这个窗口还可以
+   另外，这个窗口还可以执行线程转储，很简单，点击`线程dump`按钮即可
 
-接下来，教你怎么在VisuaIVM下监控远程主机。
+   注意：生成的线程转储如果不保存的话，关闭VisuaIVM就会删除这个线程转储信息
+
+   怎么保存，很简单，看见左侧的线程转储节点，右击它，有一个另存为，点亮它，就可以保存了。
+
+   打开转储文件也超简单，只要在菜单的File-OpenFile 选择转储文件即可
+
+   ​
+
+   ​
+
+#### 12.1.2.2 如何VisuaIVM下监控远程主机
+
 1. 远程系统必须运行jstatd   jdk5 or jdk6 分发版有这个  jre没有
 
    jstatd会启动Java RMI 服务器，监控Hotspot VM的停止，并为远程监控提供关联和接口
@@ -1961,15 +2124,110 @@ Full GC的话，看看下面的日志吧
 
    启动完毕后，下一步
 
-1. 在本地系统运行jps+RemoteHostName，验证是否能关联到远程主机的jstatd
+2. 在本地系统运行jps+RemoteHostName，验证是否能关联到远程主机的jstatd
 
    这个因为jps如果加了主机名参数，就会试图链接远程系统的jstatd
 
    如果没加参数，就会返回本地能被监控的java应用
 
-1. com.sum.management.jmxremote.port=4433
+3. 最后在VisuaIVM的Application面板上上找Remote，并add Remote 输入远程主机的主机名，就可以连接
 
-1. ​
+
+#### 12.1.2.3 如何在VisuaIVM对远程主机执行GC以及堆转储
+
+首先，远程主机上面运行的java程序需要在启动时，追加这几个参数
+
+`com.sum.management.jmxremote.prot=<port number>`
+
+`com.sum.management.jmxremote.ssl=<true |  false >`
+
+`com.sum.management.jmxremote.authenticate=<true |  false >`
+
+其次，在VisuaIVM的菜单File>add JMX Connection里面
+
+输入主机名和端口，例如：`localhost:8080`
+
+如果远程应用的authenticate设为true了，还需要在下面的勾选安全凭证，并输入用户名和口令
+
+到了这一步，相信你已经打开了新的面板了，里面包含线程，内存的几个子选项窗口，可以执行GC和线程转储了，这里就不用再多说了吧
+
+#### 12.1.2.3 VisuaIVM的性能分析
+
+VisuaIVM为远程应用和本地应用提供了性能分析，包括内存和cpu(远程进行不了内存分析)
+
+但是注意在生产环境中慎用，因为它会加大应用程序的负担。
+
+在`sample`(抽样器)还可以生成堆转储，线程转储，这对不能进行内存分析的远程应用来说很有效
+
+在抽样器运行中，还可以生成快照，快照里面可以显示所有线程的调用栈
+
+1. CPU分析
+
+   其实这个应该叫做CPU抽样分析，只需要在抽样器里面点击CPU即可开始分析
+
+   它能根据方法耗费的时间从大到小进行排序(当然反过来也行)
+
+   还可以生成快照，快照的功能有很多，像前面所讲的，有显示所有线程的调用栈。
+
+   还有显示热点(它是一个方法列表，按照方法消耗的自用时间进行排序)
+
+   以及组合，同时显示调用栈和热点
+
+#### 12.1.2.4 VisuaIVM的VisualGC插件
+
+挖坑，因为下载插件失败~~，网络太渣了
+
+
+
+
+
+### 12.1.3 JMC工具
+
+这个工具书里面没提到，但是相当知名了，有空需要看下
+
+
+
+
+
+# 第十三章：Java应用性能分析
+
+回顾一下性能分析的定义？
+
+嗯，就是一种在测试或者开发中，收集应用的一些性能数据的活动。
+
+该过程会对应用的吞吐性和响应性造成一定的影响，因此不建议在生产环境使用。
+
+本章将介绍内存分析(堆分析)和方法分析的基本概念
+
+1. 方法分析能提供在java应用中，java方法花费的时间信息
+2. 内存分析提供在java应用中，内存的使用信息，包括活跃对象，已分配对象的数目，以及大小，甚至分配对象时的栈追踪信息，也能提供
+
+## 13. 1 性能分析术语
+
+1. 性能分析器：是一个工具，将应用程序运行的行为呈现给用户，既包括jvm内部的行为，也包括应用程序的行为
+2. 性能文件：存储性能分析器分析应用时产生的性能数据
+3. 开销：指性能分析器收集数据时花费的时间，不同于执行应用程序的时间
+
+> 笔者的话，不写了，等待复制，写这些没用。。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
    ​
 
