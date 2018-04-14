@@ -2300,15 +2300,53 @@ Collect命令行参数
 
    除非应用是计算性密集型应用，否则还是先尽量分析其他要素吧
 
-6. ​
+### ​12.2.3 查看性能数据
 
-   ​
+   其实就是用Analyzer载入之前`Collect`命令生成的样本文件。
 
+   假设Collect命令生成的样本文件是test1.1er的话，
 
+   则使用`Analyzer`载入样本文件的命令如下
 
+   ` analyzer test.1.er/`  
 
+   执行该命令后，会打开一个GUI，首先显示的是概述.
 
+*函数部分* 
 
+![](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/GCPicture/Analyzer%E5%87%BD%E6%95%B0%E5%8C%BA.png)
+
+点击左侧的面板，可以跳到函数区域
+
+这里会同时报告独占和包含用户态CPU的利用率(被我关掉了)
+
+> 独占时间是指执行某方法的时间，不包含该方法调用其他方法的时间开销
+>
+> 包含时间是指执行某方法的时间，包含子调用方法的总和
+
+查看右侧，有摘要(详细信息)
+
+*上侧工具栏按钮*
+
+如图所示
+
+![](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/GCPicture/Analyzer%E5%B7%A5%E5%85%B7%E6%A0%8F.png)   
+
+第一个是收集性能测试数据，其实就是Collect的GUI版
+
+第二个是打开样本文件
+
+其他都懂得
+
+*调用树*
+
+一般而言，对性能分析最好的入手点就是调用树
+
+![](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/GCPicture/%E8%B0%83%E7%94%A8%E6%A0%91.png)
+
+它以层级的方式展示了方法的调用关系，以及这些调用关系在应用程序上花费的时间。
+
+可以让我们以	较高层次上了解应用程序在哪个用例上花费了较多的时间
 
 
 
@@ -2352,7 +2390,7 @@ Collect命令行参数
 
 
 
-   ​
+   
 
 
 
