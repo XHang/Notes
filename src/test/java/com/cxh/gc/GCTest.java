@@ -18,24 +18,16 @@ public class GCTest {
 	public static void main(String[] args) throws Exception {
 		List<Object> list = new ArrayList<Object>();
 		int count=0;
-		int point=0;
 		while(true) {
-			new Object();//建无引用的对象，触发Minor GC
-			new Object();	
-			new Object();	
-			new Object();	
-			new Object();	
-			new Object();	
-			new Object();	
-			new Object();	
-			new Object();	
-			Object o = new Object();	
-			list.add(o);	//对象添加进数组，使其有引用，可以提升到老年代，触发老年代Full GC
-			Thread.sleep(100);
+			//new Object();//建无引用的对象，触发Minor GC
+			//Thread.sleep(100);
  			count++;
-
+ 			if(count%1000 == 0) {
+ 				Object o = new Object();	
+ 				list.add(o);	//对象添加进数组，使其有引用，可以提升到老年代，
+			}	
 			//每隔100次去掉列表的一个对象，避免无节制的添加导致不断的Full GC
-			if(count%500 == 0) {
+			if(count%5000000 == 0) {
 				list=new ArrayList<Object>();
 			}
 		}

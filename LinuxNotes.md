@@ -42,7 +42,7 @@
 
    ​	如果想知道这个命令详细手册
 
-   ​	可以键入`man 命令` 来查看这个命令的手册,不过很长就是了
+   	可以键入`man 命令` 来查看这个命令的手册,不过很长就是了
 
    ​	特别注意的是,man这个命令执行后在左上角会出现`man 数字`
 
@@ -377,6 +377,10 @@ PATH="$PATH":/test
 
 那么,你懂得..
 
+> 有两个文件可以设置环境变量，分别是`/etc/profile`  and  `/etc/bash.bashrc`
+>
+> 经验证，后者可以生效，前者半死不活。不知道什么原因 
+
 
 
 ​	
@@ -557,7 +561,7 @@ mv [选项] 源文件或目录 目标文件或目录
 ```
 即可设置jdk的环境变量。 
 `source /etc/profile`更新一下。。  
-​
+
 9. pwd命令    
   `pwd`命令可以查看当前所在的路径（centos）  
   ​
@@ -821,8 +825,8 @@ rm -rf 文件夹路径
 
 设置linux的环境变量
 vi /etc/proifle 在其末尾添加这几句 ``` export JAVA_HOME="xxx" export PATH="PATH:PATH:JAVA_HOME/bin" export JRE_HOME="JAVA_HOME/jre" export CLASSPATH=".:JAVA
-​H
-​​ OME/jre"exportCLASSPATH=".:JAVA_HOME/lib:$JRE_HOME/lib"
+H
+​ OME/jre"exportCLASSPATH=".:JAVA_HOME/lib:$JRE_HOME/lib"
 
 即可设置jdk的环境变量。 
 `source /etc/profile`更新一下。。  
