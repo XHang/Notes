@@ -49,4 +49,17 @@
 
 4. PG数据库的update语句不支持用表的别名,一定要用,只能加表的全称
 
+5. Oracle和pg数据库的序列sql也不一样。
+假设序列名字叫
+pg的语法是：`SELECT nextval('seq_user_version')`  
+Oracle的语法是`select seq_user_version.nextval  from dual;`
+
+6：关于日期的区别  
+pg数据库日期函数为`now();`  
+使用示例`select now() from dual;`  
+Oracle数据库的日期函数为  `SYSDATE`
+使用示例`select SYSDATE from dual;`  
+
+
+
    ​
