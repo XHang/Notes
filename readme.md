@@ -910,6 +910,30 @@ $.ajax({
 
 得在main函数的测试下才是正常的
 
+5.
+
+cxf webService客户端运行时报异常：
+
+```
+Unmarshalling Error: Illegal character (NULL, unicode 0) encountered: not valid in any content
+```
+
+报的位置在执行请求，获取响应的地方。
+
+其原因是webService服务端返回的报文存在不规范的字符，基本都是Ascll码的控制字符，如退格键，或者铃声符，null之类的。
+
+一旦xml存在这些特殊字符，连解析都做不到。
+
+解决办法很简单
+
+1. 怼服务提供方，叫他提供正确的xml报文。
+
+2. 自己实现一个拦截器修改响应的报文，祛除特殊字符。
+
+   代码实现
+
+   ---查看附带原代码
+
 
 
 ## 第二十章：Eclipse

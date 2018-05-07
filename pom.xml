@@ -9,5 +9,22 @@
   <artifactId>junit</artifactId>
   <version>4.12</version>
 </dependency>
+<!-- cxf webService 客户端需要的依赖 -->
+<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-frontend-jaxws</artifactId>
+			<version>3.2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-transports-http</artifactId>
+			<version>3.2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-transports-http-jetty</artifactId>
+			<version>3.2.4</version>
+		</dependency>
+<!-- cxf webService 客户端需要的依赖 -->
   </dependencies>
 </project>   
