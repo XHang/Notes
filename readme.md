@@ -935,6 +935,20 @@ Unmarshalling Error: Illegal character (NULL, unicode 0) encountered: not valid 
    ---查看附带原代码
 
 
+6.
+
+```
+org.springframework.jdbc.UncategorizedSQLException: PreparedStatementCallback; uncategorized SQLException for SQL [{sql expression} ]; SQL state [0A000]; error code [0]; ERROR: cached plan must not change result type; nested exception is org.postgresql.util.PSQLException: ERROR: cached plan must not change result type
+```
+
+今天遇到这个报错信息了，意思很简单，就是缓存计划不得更改结果类型。
+
+引起的原因是因为数据库的某个表的表结构发生改动，但是应用程序里面的缓存还是老的。
+
+所以。。就挂了。
+
+解决办法很简单，没有什么BUG是一次重启解决不了的，如果有，清缓存吧。
+
 
 ## 第二十章：Eclipse
 

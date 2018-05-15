@@ -7,55 +7,478 @@ ELK由三个组件组成
 3. K表示Kibana 就是负责web页面展示的一款组件，支持扩展
   建议安装顺序为Elasticsearch，kibana，Logstash
 
-## 第一章：Elasticsearch快速入门
+# 第一章：Elasticsearch快速入门
+
+首先，我们为什么要使用Elasticsearch
+
+因为这货可以快速，近实时的存储，分析，搜索大数据。
+
+可以用在
+
+1. 大型的网上商城，可以用Elasticsearch来存储商品的目录和库存，并可以提供搜索和自动填充建议
+2. 收集，汇总，分析日志。以便挖掘你感兴趣的信息
+3. 分析/商业需求
+
+## 1 安装和配置
 
 1. 下载Elasticsearch组件
+
 2. 解压
-  3.运行
-  注意点1：
-  Elasticsearch开启过程中，你可以看到这个日志重复出现`][INFO ][o.e.e.NodeEnvironment    ] [1xBUNqo]`
+
+3. 运行
+
+4. 注意点1：
+  Elasticsearch开启过程中，你可以看到这个日志重复出现
+
+  `[INFO ][o.e.e.NodeEnvironment    ] [1xBUNqo]`
   告诉你，`1xBUNqo`就是自动生成的Elasticsearch节点名，嘛，你当然自定义一个节点名
   用这个命令启动`./elasticsearch -Ecluster.name=my_cluster_name -Enode.name=my_node_name`  
-  注意点2：
+
+5. 注意点2：
   后台运行Elasticsearch后，可以键入`curl http://localhost:9200/` 查看运行结果  
-  注意3：  
+
+6. 注意3：  
   Elasticsearch启动后，默认开启的是9200来提供服务  
-  注意点4：
+
+7. 注意点4：
   开启Elasticsearch过程中，注意这一行
   `publish_address {127.0.0.1:9300}`它告诉你哪个ip地址和端口可以访问到Elasticsearch的服务。  
   后面还有一个bound address。没设置的情况不能从其他主机访问Elasticsearch的服务（经验之谈）  
 
-### 问题
+  > 用./elasticsearch >> 1.log & 可以将启动过程的日志存在1.log文件下，不用再输出到控制台了
+
+## 2 映射
+
+为您的数据设置恰当的映射是非常有必要的，这可以让你的数据变得结构化，可视化，而不必看那么乱糟糟的数据结构。
+
+虽然Elastic会自动对你的数据进行自动映射，但有谁比你更了解数据的组成结构呢？
+
+总的来说，映射能做的事有
+
+1. 哪些字符串字段应该被看做是全局字段
+
+2. 哪些字段包含地理，数字，日期信息？
+
+3. 是否应该将文档所有字段的值编入`_all`字段中？
+
+   > 这个_all字段在elasticsearch 6.0.0 已经被弃用了
+
+4. 日期的格式化形式
+
+### 2.1 映射的类型
+
+要创建一个映射，先得确定你要创建什么类型的映射
+
+映射分为两类
+
+1. `Meat_Field`映射，TODO :这货不知道干嘛的
+
+2. Fields 或者properties 映射
+
+   这个就是文档中的字段映射了.
+
+   Elastic支持许多数据类型，可以在映射中为字段指定数据类型，主要有
+
+   字符串类：text和keyWord
+
+   数据类型：`long`, `integer`, `short`, `byte`, `double`, `float`, `half_float`, `scaled_float`
+
+   日期类型：`date`
+
+   布尔数据类型：`boolean`
+
+   二进制数据类型`binary`
+
+   范围式的数据类型：`integer_range`, `float_range`, `long_range`, `double_range`, `date_range`
+
+   以及还有复杂的数据类型，如对象，数组
+
+   GEO即地理数据类型：` Geo-point` 经纬度
+
+   还有特殊的数据类型，比如说IP之类的。。
+
+所以，这章，我们要学习如何手动创建映射。
+
+### 2.2 需要注意的点
+
+1. 小心映射爆炸，BOOB~,就是定义的映射太多了，服务器撑不住了。
+
+   你需要限制一下映射的数量
+
+   `index.mapping.total_fields.limit` 指定索引中最大映射的值
+
+   `index.mapping.depth.limit` 一个字段的最大深度，如果这个字段是在根对象级别定义的，则深度为1，如果  这个字段有一个对象映射，则深度为2.
+
+   TODO 雾里看花，不是很懂
+
+   `index.mapping.nested_fields.limit`  索引中嵌套字段的最大数量
+
+   TODO 不理解
+
+2. 更新索引的映射是不可能的，tan 90 只有删除映射才能过日子这样子。
+
+   因为修改映射也就意味着已经索引的文档全部失效。
+
+   所以，创建映射的时候要三思而后行
+
+### 2.3 创建映射的小栗子
+
+```
+PUT my_index    							//创建一个索引-名字叫my_index
+{
+  "mappings": {
+    "doc": { 								//添加一个名叫doc映射类型
+      "properties": { 						//指定映射类型为properties
+        "title":    { "type": "text"  }, 	//指定title的字段的数据类型为text
+        "name":     { "type": "text"  }, 	//指定name的字段的数据类型为text
+        "age":      { "type": "integer" },  //指定age的字段的数据类型为integer
+        "created":  {
+          "type":   "date", 
+          "format": "strict_date_optional_time||epoch_millis"
+        }
+      }
+    }
+  }
+}
+```
+
+这段代码完全可以复制到kibana网页的控制台上，执行之，就会将请求发送到Elastic
+
+## 3: 索引
+
+索引是一类相似文档的集合，类比于数据库。
+
+比如说，有客户数据的索引，有商品目录的索引。等等等等。
+
+索引由名称（必须全都是小写）来标识。
+
+在对文档执行索引，搜索，更新和删除操作时也会用到这个索引名称
+
+### 3.1 建立索引
+
+创建索引的方法很简单,只需要执行这个put命令
+
+`curl -X PUT "localhost:9200/customer?pretty`
+
+or  `PUT /customer`
+
+没错,这样就创建了一个名为customer的索引。后面的pretty的意思是漂亮的打印json格式的响应（如果有的话）
+
+```
+{
+  "acknowledged" : true,
+  "shards_acknowledged" : true,
+  "index" : "customer"
+}
+```
+
+上面的，就是响应数据了
+
+### 3.2 显示当前所有的索引
+
+`GET /_cat/indices?v`  or  `curl -X GET "localhost:9200/_cat/indices?v"`
+
+前者可以在`Kibana`的控制台执行，后者调用CURL命令直接发起http请求
+
+调用的结果大概是这样的
+
+| health | status | index       | uuid                   | pri  | rep  | docs.count | docs.deleted | store.size | pri.store.size |
+| ------ | ------ | ----------- | ---------------------- | ---- | ---- | ---------- | ------------ | ---------- | -------------- |
+| yellow | open   | customer    | 9XO49lV_Rom9K1pslti4Rw | 5    | 1    | 0          | 0            | 1.1kb      | 1.1kb          |
+| yellow | open   | shakespeare | fEWOYruRTRqI-DnZa7oDA  | 5    | 1    | 111396     | 0            | 22.3mb     | 22.3mb         |
+| yellow | open   | bank        | j4gWS47cSh29dd8Jm2Fm5g | 5    | 1    | 1000       | 0            | 474.2kb    | 474.2kb        |
+
+> 为了方便查看，做成表格形式的，实际上没有表格格式
+
+
+
+这个结果告诉我们
+
+1. 我们现在有三个索引，分别是`customer`,`shakespeare`, `bank`
+2. `customer`索引有5个主分片`primary shards`和1个副本`replica ` 
+
+> 主分片和副本的值默认情况就是这样的
+
+3. 它包括0个文档
+
+4. 它的健康状态是黄色
+
+   > 之所以健康状态是黄色：默认情况下，elasticsearch会为索引创建一个副本`replica ` 
+   >
+   > 这个副本原本是应该分配到另一个节点上的，但是我们现在只有一个节点在运行。所以这个副本是分配不了的。如果此时再有一个节点加入群集，使得这个副本能分配，那么健康状态就会变成绿色了
+
+### 3.3 往索引放东西
+
+我们要把一些简单的客户文档编入`customer`索引中,这个客户文档的ID为1.
+
+放置的命令是
+
+`PUT /customer/_doc/1?pretty{  "name": "John Doe"}`
+
+预期得到的响应数据是
+
+```
+{
+  "_index" : "customer",
+  "_type" : "_doc",
+  "_id" : "1",
+  "_version" : 1,
+  "result" : "created",
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "_seq_no" : 0,
+  "_primary_term" : 1
+}
+```
+
+从上面的响应数据，可以知道
+
+1. ` "result" : "created" &&  "successful" : 1` 恭喜你，放置成功了
+2. `  "_id" : "1"`  这个其实就是我们请求URL的那个`1`，这个是一个restful格式的请求
+3. "_version" : 1 表示文档的修改次数，目前是新创建，当然就是1了
+
+值得注意的是：`elasticsearch`在将文档编入索引之前，不一定需要先创建索引。
+
+像上面的例子，如果本身不存在`customer`索引的话，执行上面的那个文档编入命令时会自动创建`customer`索引
+
+另外，如果在编入文档之前，你不想指定ID，可以，由elasticsearch帮你手动指定也行
+
+但是命令得这么写
+
+```
+POST /customer/_doc?pretty
+{
+  "name": "Jane Doe"
+}
+```
+
+你每次执行这个命令时，都是在编入一个新的文档。
+
+返回的响应数据跟上面并没有什么不同。唯一不同的是。。。
+
+唔，id部分长这样子`"_id": "mdRWYmMBhPe_HfySEFdr"`
+
+毕竟是elasticsearch自动生成的，就别奢望能有多好了。
+
+> PS：为什么要用post动词而不是put动词呢？
+>
+> 这涉及到一个RFC的规范问题，PUT命令一般指的是服务端存入(更新)客户端的任何消息。不会多加什么处理。
+>
+> POST就比较复杂了，客户端发来的数据，服务端还要多加处理一下，比如这次，服务端自动生成ID了。
+>
+> 使用的场景比较多，容易造成滥用就是了。
+
+### 3.4 检索文档
+
+`GET /customer/_doc/1?pretty`
+
+意思就是检索`customer`索引下ID为`1`的文档，而且要漂亮的把响应打出来。
+
+这就是你想要的漂亮数据：
+
+```
+{
+  "_index": "customer",
+  "_type": "_doc",
+  "_id": "1",
+  "_version": 1,
+  "found": true,
+  "_source": {
+    "name": "John Doe"
+  }
+}
+```
+
+其中能提取的信息如下
+
+1. ` "found": true`代表你成功检索到了文档
+2. ` "_id": "1"`你要检索ID为1的文档，不是吗？这个文档的ID就是1
+3. `_source":xxx`这就是上一步往索引放入的东西，它是一个完整的json文档
+
+### 3.5 删除索引
+
+在`elasticsearch`中，你也可以做到删库跑人，只要你掌握了这个技能。。笑~
+
+删除索引很简单，只需要
+
+`DELETE /customer?pretty`
+
+预期响应的数据是
+
+```
+{
+  "acknowledged": true
+}
+```
+
+这样，就删除了一个名为`customer`的索引了。
+
+怎么验证是否成功删除,看看当前所有的索引吧，
+
+### 3.6 小小的总结
+
+在这里，你应该掌握了索引的增删查了吧。
+
+那么，仔细回顾下相关的请求的URL
+
+```
+PUT /customer
+PUT /customer/_doc/1
+{
+  "name": "John Doe"
+}
+GET /customer/_doc/1
+DELETE /customer
+```
+
+会发现一个规律，实际上这也是elasticsearch访问数据的模式
+
+`<REST Verb> /<Index>/<Type>/<ID>`
+
+翻译下？
+
+REST动词/索引名/类型/ID
+
+这种访问模式在elasticsearch所有的api中都非常普遍，要尽量掌握
+
+顺带一提，REST动词指的是
+
+1. GET  请求获取数据用的
+2. PUT 放置数据用的
+3. DELETE 删除数据用的
+4. POST
+
+### 3.7 修改数据
+
+这里说的修改数据可不是指修改索引，而是指修改索引中的文档。
+
+修改命令和往索引里面放东西的命令(索引单个文档)是一样的
+
+原本我们想往索引编入一个文档，是这么编入的
+
+```
+PUT /customer/_doc/1?pretty
+{
+  "name": "John Doe"
+}
+```
+
+现在想把这个文档的数据修改一下，比如说，人名改成hahaha
+
+命令如下
+
+```
+PUT /customer/_doc/1?pretty
+{
+  "name": "hahaha"
+}
+```
+
+其实与其说是修改命令，倒不如说是替换，把旧数据替换成新数据，不就是修改了嘛。
+
+此外，执行这个替换的命令之后，响应数据也是会变的
+
+```
+{
+  "_index": "customer",
+  "_type": "_doc",
+  "_id": "1",
+  "_version": 2,
+  "result": "updated",
+  "_shards": {
+    "total": 2,
+    "successful": 1,
+    "failed": 0
+  },
+  "_seq_no": 1,
+  "_primary_term": 1
+}
+```
+
+其中`"result": "updated"`表示我们update了一个文档，`"_version": 2`进行了一次替换操作，版本升级，变成2
+
+更新命令还可以这么写
+
+```
+POST /customer/_doc/1/_update?pretty
+{
+  "doc": { "name": "Jane Doe", "age": 20 }
+}
+```
+
+这个命令做了一件事，就是添加了一个age字段。。仅此而已。
+
+用上面的PUT命令也可以实现哦。
+
+最后，你还可以用脚本来修改数据
+
+```
+POST /customer/_doc/1/_update?pretty
+{
+  "script" : "ctx._source.age += 5"
+}
+```
+
+作用是将ID为1的json文档中的age属性的加上5
+
+其中，命令中的`ctx._source`指的是即将要更新的源文档。
+
+以上的命令都是只更新一个文档用的。
+
+事实上，还有一种命令可以给定一个条件，更新多个文档。类似于sql语句的`update-wehere`语句
+
+### 3.8 使用条件批量更新文档
+
+可以使用`_update_by_query  `api   来对索引的每一个文档进行更新，而不更改整个源文件
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## xx 问题
 
 1. 运行时报`failed error='Cannot allocate memory' (errno=12)`,可能的原因是elasticsearch运行要分配的内存太大，java虚拟机扛不住  
-  解决办法： 修改elasticsearch的`jvm.options`,将
+   解决办法： 修改elasticsearch的`jvm.options`,将
 
-  -Xms2g
-  -Xmx2g
-   修改成
+   -Xms2g
+   -Xmx2g
+    修改成
 
-  -Xms512m
-  -Xmx512m
+   -Xms512m
+   -Xmx512m
 
 2. 运行时报org.elasticsearch.bootstrap.StartupException: java.lang.RuntimeException: can not run elasticsearch as root  
-  意思就是说，不能用root用户来运行elasticsearch服务器。所以我们要为其创建一个用户和用户组。关于这个内容，请参考上面的linux部分
+   意思就是说，不能用root用户来运行elasticsearch服务器。所以我们要为其创建一个用户和用户组。关于这个内容，请参考上面的linux部分
 
 3. 切换了用户运行报：
-  `Could not register mbeans java.security.AccessControlException: access denied ("javax.management.MBeanTrustPermission" "register")`
-  这大概是因为你现在执行的时候用的用户对这个文件没有所有权，所以挂了，怎么办，诶，递归操作一下，把这个文件夹里面的文档的所有权全交给你当前登录用户的组就行了。  
+   `Could not register mbeans java.security.AccessControlException: access denied ("javax.management.MBeanTrustPermission" "register")`
+   这大概是因为你现在执行的时候用的用户对这个文件没有所有权，所以挂了，怎么办，诶，递归操作一下，把这个文件夹里面的文档的所有权全交给你当前登录用户的组就行了。  
 
 4. 改了elasticsearch配置文件后报错了  
-  1 . `max file descriptors [4096] for elasticsearch process is too low, increase to at least [65536]`  
-  这个的意思是说用于elasticsearch的文件描述符过低，现在是4096，要求增加到65536.
-  文件描述符的意思和含义请参照上面linux的知识
-  2. `max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]`
-    这个是虚拟内存的`vm.max_map_count [65530]`太低了，至少设置到262144
-    用`sysctl`命令即可实现
-### 元字段
+   1 . `max file descriptors [4096] for elasticsearch process is too low, increase to at least [65536]`  
+   这个的意思是说用于elasticsearch的文件描述符过低，现在是4096，要求增加到65536.
+   文件描述符的意思和含义请参照上面linux的知识
 
-每一个文档都有与之关联的元字段，例如_index
+   1. `max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]`
+      这个是虚拟内存的`vm.max_map_count [65530]`太低了，至少设置到262144
+      用`sysctl`命令即可实现
 
-## 第二章：kibana快速入门
+# 第二章：kibana快速入门
 
 1. 解压
 2. 修改config里面的kibana配置文件，将
@@ -67,7 +490,7 @@ ELK由三个组件组成
 
 这么简单的吗？当然不是，接下来让我们加载一些简单的数据集。。。。。
 
-### 2.1 加载一些简单的数据集
+## 2.1 加载一些简单的数据集
 
 **前提，kibana和elasticelasticsearch能互通有无**
 
@@ -185,7 +608,7 @@ Mapping divides the documents in the index into logical groups
 
 并且指定字段的特征，比如字段的可搜索性，是否被标记,哪些字段包含数字，日期，地理位置信息。。。
 
-## 第四章 定义你的索引模式
+# 第四章 定义你的索引模式
 
 加载到Elasticsearch 的每一组数据都有索引模式
 
@@ -224,14 +647,14 @@ Mapping divides the documents in the index into logical groups
 3. 运行 `bin/logstash -f logstash.conf` 命令  
 
 
-## 第五章：Logstash日志存储管道
+# 第五章：Logstash日志存储管道
 
 先不管`管道`是什么鬼，总之，它是Logstash存储日志的一个过程。这个过程需要二个必须的元素，还有一个可选的元素
 1. input：这个其实是一个插件，负责从源收集，消费数据  
 2. filter：这个可以根据你自己的指定来修改数据  
 3. output：将数据写到目的地，一般是Elasticsearch  
 
-### 5.1hello world
+## 5.1hello world
 
 首先要看下你的logstash是否安装成功了，简单的话，执行这个命令  
 `bin/logstash -e 'input { stdin { } } output { stdout {} }'`  
@@ -243,7 +666,7 @@ SUCCESS！这表示你的logstash已经能正常工作了
 
 > PS： 小贴士，按ctrl-d 可以断开shell哦  
 > ps:  如果执行以上命令抛了一个异常，说找不到这个文件`logstash-plain.log`请尝试用超级管理员执行命令  
-### 5.2在logstash中分析日志
+## 5.2在logstash中分析日志
 
 在现代社会中，日志的处理可不是上面的简单hello world,现实的日志的处理可能有更多的input,filter,output插件
 在下面的教程中，将教你怎么从web项目中取出日志并送进管道，解析这些日志，用来创建指定的特点fields，并将这些已经解析好的数据传到Elasticsearch集群中。当然，你不用在从控制台输入配置了，多累啊，现在开启配置文件时代
@@ -256,7 +679,7 @@ SUCCESS！这表示你的logstash已经能正常工作了
 > Beats input plugin 使logstash能从Elastic Beats框架接受事件  
 > PS：对于 Filebeat在另一个章节讲述，这里不说了
 
-### 5.3 logstash.conf文件格式
+## 5.3 logstash.conf文件格式
 
 这个文件其实就是logstash的配置文件
 作用：  
@@ -305,7 +728,7 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
   要看更多的话，请点击[plugin-value-types](https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#plugin-value-types)
 
 
-### 5.4使用Grok Filter Plugin来解析log日志
+## 5.4使用Grok Filter Plugin来解析log日志
 
 以上的例子中，虽然我们成功的将日志信息事件打印到控制台了但是格式太乱了，我们有必要整治这货，怎么办呢？
 这时候就需要Grok Filter Plugin来帮忙过滤日志信息了  
@@ -345,7 +768,7 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
 8. 接下来，重启filebeat吧.再等待几分钟等filebeat自动加载配置文件，就可以把新的日志结构体打印出来了，厉害吧。  
    然而我还是感觉像鬼画符  
 
-### 5.5 Geoip过滤器插件为你的数据补充细节
+## 5.5 Geoip过滤器插件为你的数据补充细节
 
 除了分析日志以达到更好的搜索结果外，还有一个插件可以在已存在的数据中获取补充信息
 比如说，从现有数据获取ip地址信息，再从地址信息获取地理位置，并将该位置信息添加到日志中  
@@ -367,7 +790,7 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
 1. 删除注册文件，然后重启Filebeat 。等logstash重新加载配置文件完毕，你就可以看到控制台打印出来的日志信息了
 2. 这一步什么都不用做，看下打印出来的日志json数据，里面有一个`city_name`或者`country_name`就OK了
 
-### 5.6 将你的数据编入Elasticsearch
+## 5.6 将你的数据编入Elasticsearch
 
 **前提：Elasticsearch必须，在9200端口上运行，处于运行状态**  
 在上面的几步中，我们已经将web日志分割成几个特定的字段，但是仅仅只是把数据输出到控制台是不是有点不爽，嗯，接下来，我们就要把数据送到
@@ -407,14 +830,14 @@ Elasticsearch了
 
 > 如果你学会为`Filebeat`加载Kibana索引模式,你可以在kibana的web页面中看到日志信息，有关信息，请参阅filebeat的入门教程
 
-### 5.7在logstash使用多个输入和输出插件
+## 5.7在logstash使用多个输入和输出插件
 
 在实际开发中，你的日志来源通常有多个地方，要输出的目的地也可能有多个，这个时候，单个input和output肯定不能满足需求。
 在这一节中。你将创建一个logstash的管道，该管道从推特简讯和filebeat的client获取输入，也就是说，有两个输入。  
 然后将信息发送到Elasticsearch集群，并且还会写入到文件。也就是说，有两个输出。  
 那么问题来了，在中国，你怎么能访问到推特简讯？？？WTF！
 
-### 5.8 logstash 是如何工作的？
+## 5.8 logstash 是如何工作的？
 
 logstash处理事件有三个阶段：输入生成事件，过滤修改事件，输出将事件运往其他地方.
 
@@ -422,7 +845,7 @@ logstash处理事件有三个阶段：输入生成事件，过滤修改事件，
 
 来简单介绍下输入，输出，过滤，编解码。
 
-#### 5.8.1输入插件
+### 5.8.1输入插件
 
 输入插件将数据传到logstash，一些常见的输入插件是
 
@@ -444,7 +867,7 @@ logstash处理事件有三个阶段：输入生成事件，过滤修改事件，
 4. **clone** 复制一个事件，可能会添加或者修改字段
 5. **geoip** 从ip地址获取地理信息添加到数据中
 
-#### 5.8.2输出插件
+### 5.8.2输出插件
 
 输出是logstash管道的最后阶段，一个事件可以有多个输出，但是一旦所有输出处理完成，这个事件就结束了，一些常见的输出插件如下  
 
@@ -453,7 +876,7 @@ logstash处理事件有三个阶段：输入生成事件，过滤修改事件，
 3. **graphite** 将事件数据发送给graphite，这是一个开源的工具，可以存储和绘制指标
 4. **statsd** 将事件数据发送给statsd
 
-#### 5.8.3 编解码器
+### 5.8.3 编解码器
 
 编解码器一般是作为输出或者输出过程的一部分，作为流过滤器而存在的
 
@@ -463,7 +886,7 @@ logstash处理事件有三个阶段：输入生成事件，过滤修改事件，
 - **multiline** 将多行文本事件（例如java的堆栈异常）合并到单个事件中
 
 
-#### 5.8.4 log4j的输入插件
+### 5.8.4 log4j的输入插件
 
 注：logstash的log4j插件其实已经过时了，现在推荐使用的是搭配filebeat来使用
 
