@@ -426,27 +426,206 @@ POST /customer/_doc/1/_update?pretty
 
 其中，命令中的`ctx._source`指的是即将要更新的源文档。
 
+> 前提是要有age这个字段
+
 以上的命令都是只更新一个文档用的。
 
 事实上，还有一种命令可以给定一个条件，更新多个文档。类似于sql语句的`update-wehere`语句
 
 ### 3.8 使用条件批量更新文档
 
-可以使用`_update_by_query  `api   来对索引的每一个文档进行更新，而不更改整个源文件
+可以使用`_update_by_query  `api   来对索引的每一个文档进行先查询，再更新，而不更改整个源文件
 
+类似于sql语句的`update-wehere`语句
 
+使用`_update_by_query`要小心版本冲突
 
+因为`_update_by_query`在启动索引时会拿一份索引的拷贝，并使用内部版本来控制索引。
 
+所以如果在拿索引拷贝到处理索引请求的之间，文档发生变化，将会导致版本冲突。
 
+当且仅当版本号一致时，文档更新并且版本号会叠加。
 
+> 不明白的地方：启动索引时是指什么时候
+>
+> 文档发生变化是指什么变化，修改，删除都算吗？
+>
+> 现在的情况下是，我单独更新文档后，再使用上面的那个命令，并没有遇到版本冲突。。
+>
+> 关于这个问题，可能还需要考虑一下。(莫名想起了乐观锁)
 
+> 内部版本不支持将0作为版本号，所以版本号为0的文档无法使用`_update_by_query`进行更新，即使使用了，也会挂
 
+> 一旦更新和查询的过程出现失败，则整个`_update_by_query`将会终止，但是已经执行的更新是生效的.
+>
+> 也就是说，`_update_by_query`这个过程不会回滚，只会中止。
 
+那么第一步，要知道怎么查询
 
+比如这个命令:`POST customer/_update_by_query?conflicts=proceed`
 
+响应数据大致如此
 
+```
+{
+  "took": 534,
+  "timed_out": false,
+  "total": 3,
+  "updated": 3,
+  "deleted": 0,
+  "batches": 1,
+  "version_conflicts": 0,
+  "noops": 0,
+  "retries": {
+    "bulk": 0,
+    "search": 0
+  },
+  "throttled_millis": 0,
+  "requests_per_second": -1,
+  "throttled_until_millis": 0,
+  "failures": []
+}
+```
 
+其实这个命令只是简单的检测有没有导致`_update_by_query`的版本冲突
 
+### 3.9 删除文档
+
+命令：`DELETE /customer/_doc/2?pretty`
+
+删除`customer`索引中ID为2的文档
+
+当然删除也可以先查询指定的记录后删除。
+
+不过使用ID删除，肯定是效率最高的。
+
+## 4 批量处理
+
+除了能够索引(查找)，更新，和删除单个文件档外.
+
+`elasticsearch`还提供了使用`_bulk`api批量执行上述任何操作的功能。
+
+该功能十分有效，可以尽可能多的完成任务，避免过多的网络往返。
+
+顾名思义，`_bulk`api，它的请求端点就是`_bulk`
+
+举例说明
+
+1. 批量更新或者插入指定的文档
+
+   ```
+   POST /customer/_doc/_bulk?pretty
+   {"index":{"_id":"1"}}
+   {"name": "John fdgfds" }
+   {"index":{"_id":"2"}}
+   {"name": "Jane Doevbcvbcv" }
+   ```
+
+   以上，就是将`customer`索引里面,ID为1和2的文档更新。
+
+   ID为1的文档更新为`{"name": "John fdgfds" }`
+
+   ID为2的文档更新为`{"name": "Jane Doevbcvbcv" }`
+
+   如果并不存在ID为2的文档，将创建。
+
+2. 更新文档且删除文档的操作
+
+   ```
+   POST /customer/_doc/_bulk?pretty
+   {"update":{"_id":"1"}}
+   {"doc": { "name": "John Doe becomes Jane Doe" } }
+   {"delete":{"_id":"2"}}
+   ```
+
+   RT，这次呢，是将ID为1的文档更新为：`{ "name": "John Doe becomes Jane Doe" }`
+
+   然后呢，就是将ID为2的文档删除。
+
+   > 删除操作不需要加对应的源文档哦，只要传个标识过去就行了。
+
+PS:唔，就是这个API如果批量操作中，有一个操作失败了，不会中止，而是继续执行。
+
+最后返回的响应数据会为每一个操作(按照发送的顺序)提供一个状态，我们可以根据这个状态来判断特定操作是否失败了。
+
+## 5:批量导入
+
+其实就是将符合规范的json文档导入到索引里面。
+
+点击这里下载示例文档
+
+[accounts.json](https://github.com/elastic/elasticsearch/blob/master/docs/src/test/resources/accounts.json?raw=true)
+
+下载到某个文件夹。
+
+然后使用批量命令批量导入文档
+
+```
+curl -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_doc/_bulk?pretty&refresh" --data-binary "@accounts.json"
+```
+
+你可以看下下载下来的json文档，里面的格式是不是跟第四节`批量更新或者插入指定的文档`的示例数据一模一样
+
+得符合这种格式的文档，才能被`elasticsearch`识别。
+
+## 6：搜索API
+
+`elasticsearch`就是为搜索而生的，没有搜索APi，怎么能行呢？
+
+这一节，我们将使用搜索API，把想要的数据搜索出来。
+
+使用搜索API，有两种方式
+
+1. 将搜索参数附加在REST URL的参数上，就是喜闻乐见的键值对参数啦
+
+   eg：`GET /bank/_search?q=*&sort=account_number:asc&pretty`
+
+   作用是
+
+   1. 查询`bank`索引下面的所有的文档，根据参数`q=*`
+   2. 根据文档里面的`account_number`字段进行升序(从小到大)排序
+   3. 漂亮的打印响应数据，根据参数`pretty`
+
+   ```
+   {
+     "took": 15,
+     "timed_out": false,
+     "_shards": {
+       "total": 5,
+       "successful": 5,
+       "skipped": 0,
+       "failed": 0
+     },
+     "hits": {
+       "total": 1000,
+       "max_score": null,
+       "hits": [
+         {
+           "_index": "bank",
+           "_type": "_doc",
+           "_id": "0",
+           "_score": null,
+           "_source": {
+             "xxx": 0,
+             "xxx": 16623
+           },
+           "sort": [
+             0
+           ]
+         },
+   ....
+   ```
+
+   响应数据的字段部分解释如下
+
+   1. `took` elasticsearch执行搜索所花费的时间，单位是毫秒
+   2. 告诉我们搜索是否超时了
+   3. 告诉我们搜索了多少碎片？以及搜索碎片成功/失败的次数
+   4. `hits`
+
+2. 将搜索参数构造成可读的json格式，放在请求主体中。强势推荐。
+
+> 因为第二种很好很强大，所以第一种搜索的方式只是大概了解下，之后的示例都是以第二种来进行的。
 
 
 
