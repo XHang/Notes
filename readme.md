@@ -949,6 +949,16 @@ org.springframework.jdbc.UncategorizedSQLException: PreparedStatementCallback; u
 
 解决办法很简单，没有什么BUG是一次重启解决不了的，如果有，清缓存吧。
 
+7. 
+Maven 使用tomcat7:run命令时报如下异常
+```
+严重: The Filter [xxxxFilter] was defined inconsistently in multiple fragments including fragment with name [jar:file:/D:/MavenRepositoryCopy/priject/model/1.0.1/model-1.0.1.jar!/] located at [jar:file:/D:/MavenRepositoryCopy/priject/model/1.0.1/model-1.0.1.jar!/]
+```
+意思就是一个名字叫xxxxFilter的过滤器在多个片段重复出现，冲突了。
+顺带一提，那个Filter文件里面写了@WebFilter注解。
+解决办法就是找到一个冲突的Filter，重命名下Filter的名称即可
+
+
 
 ## 第二十章：Eclipse
 
