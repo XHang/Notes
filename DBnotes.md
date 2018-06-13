@@ -1,5 +1,36 @@
 # 数据库知识
-## 第X章： Oracle 和PG数据库之间的差异
+
+> 暂时记录一些有意思的知识点
+
+#第一节:查询语句
+
+1. distinct 关键字可以去掉重复记录
+
+   使用方法`select distinct field from table_name;`
+
+   这样是只查询一个字段，而且相同字段的记录会被剔除。
+
+   如果是这样使用的话`select distinct * from table_name`
+
+   那么完全相同的两个记录会被过滤
+
+   
+
+2. max方法，是一个聚合方法，只能查询出一条最大的记录。
+
+   比如说现在有一张表，表里面有姓名，部门，薪水三个字段。
+
+   要求，让你查出薪水最高的那个家伙的记录。
+
+   错误示范就是`select max(薪水) from 表名
+
+   这样只能查询出一条记录，而且连姓名也查不出来，而且要知道，薪水最高的人不止一个。
+
+   所以，正确的sql语句是`select * from 表名 where 薪水=(select max(薪水) from 表名 ) `
+
+   
+
+# 第二节： Oracle 和PG数据库之间的差异
 
 1. Oracle数据库有一个方法*NVL*( string1, replace_with)
 
@@ -59,6 +90,8 @@ pg数据库日期函数为`now();`
 使用示例`select now() from dual;`  
 Oracle数据库的日期函数为  `SYSDATE`
 使用示例`select SYSDATE from dual;`  
+
+第三节：三范式
 
 
 
