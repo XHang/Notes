@@ -607,7 +607,7 @@ mv [选项] 源文件或目录 目标文件或目录
 13. 
    wget是一个在控制台可以从各个协议上下载东西的工具
    如这条命令
-   `wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
+   `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
    直接在控制台执行，就可以从镜像网站下载hadoop压缩包
    ​
    16：
@@ -873,7 +873,7 @@ H
 15. 
    wget是一个在控制台可以从各个协议上下载东西的工具
    如这条命令
-   `wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
+   `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
    直接在控制台执行，就可以从镜像网站下载hadoop压缩包
 
 16：
@@ -990,7 +990,7 @@ H
 15. 
    wget是一个在控制台可以从各个协议上下载东西的工具
    如这条命令
-   `wget https://mirrors.tuna.tsinghua.edu.cn/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
+   `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
    直接在控制台执行，就可以从镜像网站下载hadoop压缩包
 
 16：
