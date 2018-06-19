@@ -958,6 +958,13 @@ Maven 使用tomcat7:run命令时报如下异常
 顺带一提，那个Filter文件里面写了@WebFilter注解。
 解决办法就是找到一个冲突的Filter，重命名下Filter的名称即可
 
+8.
+tomcat运行时报servlct类的某个方法找不到.
+可能原因除了类冲突外,还有可能是运行的tomcat版本太高,所以挂了
+
+9. 
+
+
 
 
 ## 第二十章：Eclipse
