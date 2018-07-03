@@ -20,21 +20,21 @@
 
 其实很简单
 
-![1530584260125](C:\Users\admin\AppData\Local\Temp\1530584260125.png)
+![1530584260125](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/IDEAPicture/1530584260125.png)
 
-![1530584295113](C:\Users\admin\AppData\Local\Temp\1530584295113.png)
+![1530584295113](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/IDEAPicture/1530584295113.png)
 
-![1530584398780](C:\Users\admin\AppData\Local\Temp\1530584398780.png)
+![1530584398780](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/IDEAPicture/1530584398780.png)
 
 要选择第二个，才可以热部署
 
-![1530584453322](C:\Users\admin\AppData\Local\Temp\1530584453322.png)
+![1530584453322](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/IDEAPicture/1530584453322.png)
 
 这个可以选择外部和项目，这样启动连带外部的项目一起启动
 
-![1530584551721](C:\Users\admin\AppData\Local\Temp\1530584551721.png)
+![1530584551721](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/IDEAPicture/1530584551721.png)
 
-![1530584579593](C:\Users\admin\AppData\Local\Temp\1530584579593.png)
+![1530584579593](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/IDEAPicture/1530584579593.png)
 
 选择第一个，当DEBUG时，就会弹出一个框，指示你想热部署还是重启什么的。
 
