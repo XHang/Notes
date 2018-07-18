@@ -98,6 +98,29 @@ Oracle数据库的日期函数为  `SYSDATE`
 经验证，冲突的表名有
 
 1. user   在PG数据库已经挂了
+
+
+
+## 第四节：MYSQL的知识
+
+1. mysql有一个模式设置为`ONLY_FULL_GROUP_BY`
+
+   这个设置在关闭状态下，Mysql的sql语句的检验就少了一项
+
+   即：`不校验查询语句显示的字段是否包含在group字句或者聚合函数里面`
+
+   像这类的查询语句，Mysql是睁一只眼，闭一只眼的
+
+   `select username,age from user group by username`
+
+   其实按照sql规范，这种的语句是不正确的，至少在oracle是会挂的。
+
+   Mysql只要不设置`ONLY_FULL_GROUP_BY`这个的话，这种不严格的语句可以通过，这当然不好，要是你的应用换了数据库呢？像Oracle，原本在mysql可以放过的sql，在Oracle可就挂了诶，所以一般来说，开发组都会把这个限制加上去的。
+
+   也就是说，以后写sql要注意点，如果sql包含了group by,那么显示的字段就一定要出现在group字句或者聚合函数里面。
+
+   不过说起来，Mysql有一个坑的，哪怕你的字段出现在group by 里面，但是用函数包起来了，这个字段出现在select字句仍然会被认为不规范。。
+
 2. 
 
 
