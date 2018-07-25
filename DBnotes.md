@@ -99,9 +99,7 @@ Oracle数据库的日期函数为  `SYSDATE`
 
 1. user   在PG数据库已经挂了
 
-
-
-## 第四节：MYSQL的知识
+# 第四节：MYSQL的知识
 
 1. mysql有一个模式设置为`ONLY_FULL_GROUP_BY`
 
@@ -125,4 +123,10 @@ Oracle数据库的日期函数为  `SYSDATE`
 
 
 
-   ​
+
+
+
+
+
+
+
