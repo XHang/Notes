@@ -998,6 +998,40 @@ tomcat运行时报servlct类的某个方法找不到.
 
 以上
 
+# 集成测试
+## 在Spring Boot上下文中使用集成测试
+步骤：
+1. 在你的项目依赖管理上面加上这个依赖
+```
+<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-test</artifactId>
+</dependency>
+```
+2. 然后在项目的test源码文件夹里面创建一个测试类，里面大概是酱紫的
+```
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes  = WebApplication.class)
+@WebAppConfiguration
+public class  Test{
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Autowired
+    private MyService myService;
+
+    @Test
+    public void test(){
+        myService.run();
+    }
+ }
+ ```
+ 解释一下
+ 1. @RunWith(SpringJUnit4ClassRunner.class)表示Junit测试运行在Spring上
+ 2. SpringApplicationConfiguration这个是指定配置类，通过这个配置类引出单元测试所需要的测试类，这个配置类可以是Spring Boot启动类。
+ 3. WebAppConfiguration 开启使用web环境
+
 
 
 
