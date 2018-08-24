@@ -439,7 +439,7 @@ PATH="$PATH":/test
 ## 常见知识点
 ​
 1. openssh安装后如何启动？  
-  命令：/etc/init.d/ssh start  必须在su权限下运行
+    命令：/etc/init.d/ssh start  必须在su权限下运行
 
 2. 如何修改系统语言
 
@@ -554,12 +554,12 @@ centos版：
 ​
 mv [选项] 源文件或目录 目标文件或目录  
 2. 删除文件夹命令
-  ​
-  `rm -rf  文件夹路径 ` 
-  ​
+    ​
+    `rm -rf  文件夹路径 ` 
+    ​
 3. 解压命令
-  `tar -xzvf file.tar.gz`  
-  ​
+    `tar -xzvf file.tar.gz`  
+    ​
 4. 设置linux的环境变量  
     vi  /etc/proifle 在其末尾添加这几句 
 ```
@@ -573,61 +573,61 @@ mv [选项] 源文件或目录 目标文件或目录
 `source /etc/profile`更新一下。。  
 
 9. pwd命令    
-  `pwd`命令可以查看当前所在的路径（centos）  
-  ​
-  ​
+    `pwd`命令可以查看当前所在的路径（centos）  
+    ​
+    ​
 10. 获取java安装目录  
-  利用`which java`得到路径1  which java是打印出java命令文件的路径    
-  `ls -lrt+路径1`得到 箭头后的路径2  
-  `ls -lrt+路径2`就ok了  
-  默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
-  ​
+    利用`which java`得到路径1  which java是打印出java命令文件的路径    
+    `ls -lrt+路径1`得到 箭头后的路径2  
+    `ls -lrt+路径2`就ok了  
+    默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
+    ​
 11. 
-   centos查看网络端口占用:
-   ` firewall-cmd --zone=public --list-ports`  
-   开启或者关闭firewalld（centos7的防火墙）:
+      centos查看网络端口占用:
+      ` firewall-cmd --zone=public --list-ports`  
+      开启或者关闭firewalld（centos7的防火墙）:
     `systemctl start firewalld`and`systemctl stop firewalld`    
-   永远禁用centos防火墙:
-   `systemctl disable firewalld.service `  
-   ​
+      永远禁用centos防火墙:
+      `systemctl disable firewalld.service `  
+      ​
 12. 
-   centos修改主机名:`hostnamectl set-hostname 主机名`
-   `hostnamectl --static` 可以查看主机名
-   ​
-   13.
-   `centos`关机命令
-   `reboot`  重启
-   `poweroff` 立刻关机
-   ​
-   14.
-   在linux文件系统路径中
-   ~代表用户目录
-   如：`~/`就是`/home/make/`
-   ​
+      centos修改主机名:`hostnamectl set-hostname 主机名`
+      `hostnamectl --static` 可以查看主机名
+      ​
+      13.
+      `centos`关机命令
+      `reboot`  重启
+      `poweroff` 立刻关机
+      ​
+      14.
+      在linux文件系统路径中
+      ~代表用户目录
+      如：`~/`就是`/home/make/`
+      ​
 13. 
-   wget是一个在控制台可以从各个协议上下载东西的工具
-   如这条命令
-   `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
-   直接在控制台执行，就可以从镜像网站下载hadoop压缩包
-   ​
-   16：
-   看下在环境变量配置这里
-   `export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin`
-   这种配法有什么用？
-   ​
+      wget是一个在控制台可以从各个协议上下载东西的工具
+      如这条命令
+      `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
+      直接在控制台执行，就可以从镜像网站下载hadoop压缩包
+      ​
+      16：
+      看下在环境变量配置这里
+      `export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin`
+      这种配法有什么用？
+      ​
 14. 
-   更新`yum`源  
-   有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
-   首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
-   然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
+      更新`yum`源  
+      有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
+      首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
+      然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
     `yum clean all`  
     `yum makecache`
-   运行以上两个命令生成yum的缓存  
-   ​
+      运行以上两个命令生成yum的缓存  
+      ​
 15. 
-   为wget设置代理，其实很简单
-   修改其配置文件` vi /etc/wgetrc  ` 
-   里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
+      为wget设置代理，其实很简单
+      修改其配置文件` vi /etc/wgetrc  ` 
+      里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
     当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
 16. centos添加用户
     首先登录 root 账号
@@ -637,21 +637,21 @@ mv [选项] 源文件或目录 目标文件或目录
     不加参数的仅仅只是删除用户，用户的信息没有被删除。  
     ​
 17. 切换用户登录，centos：login -f username 
-   注：1. 加f参数不用输入密码  
-   ​
+      注：1. 加f参数不用输入密码  
+      ​
 18. 在ssh客户端切换登录会退出哦
-   ​
+      ​
 19. 查看用户所在的组`groups username` 一般说来
-   ​
+      ​
 20. 添加组 `groupadd name`
-   ​
+      ​
 21. 将某文件或者文件夹的
-   ​
+      ​
 22. 归属到某一个组中
-   `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
-   ​
-   -R可以递归整个目录的归属权
-   ​
+      `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
+      ​
+      -R可以递归整个目录的归属权
+      ​
 ## 文件描述符
 
 含义：在linux中，文件描述符是linux为了高效管理已打开的文件而创建的索引，其值是一个非负整数，用于指代被打开的文件。  
@@ -682,6 +682,8 @@ nproc(单个用户可用的最大进程数量)
 如果想永久设置值的话，可以编辑`/etc/sysctl.conf的vm.max_map_count`
 ​
 然后在文件的末尾追加`key=value` 保存，重启机器，就可以看到改变了
+
+> vm.max_map_count 这个是虚拟neoclassical
 
 ## Linux线程
 
@@ -839,26 +841,26 @@ H
 `source /etc/profile`更新一下。。  
 
 9. pwd命令    
-  `pwd`命令可以查看当前所在的路径（centos）  
+    `pwd`命令可以查看当前所在的路径（centos）  
 
 
 10. 获取java安装目录  
-  利用`which java`得到路径1  which java是打印出java命令文件的路径    
-  `ls -lrt+路径1`得到 箭头后的路径2  
-  `ls -lrt+路径2`就ok了  
-  默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
+    利用`which java`得到路径1  which java是打印出java命令文件的路径    
+    `ls -lrt+路径1`得到 箭头后的路径2  
+    `ls -lrt+路径2`就ok了  
+    默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
 
 11. 
-   centos查看网络端口占用:
-   ` firewall-cmd --zone=public --list-ports`  
-   开启或者关闭firewalld（centos7的防火墙）:
+      centos查看网络端口占用:
+      ` firewall-cmd --zone=public --list-ports`  
+      开启或者关闭firewalld（centos7的防火墙）:
     `systemctl start firewalld`and`systemctl stop firewalld`    
-   永远禁用centos防火墙:
-   `systemctl disable firewalld.service `  
+      永远禁用centos防火墙:
+      `systemctl disable firewalld.service `  
 
 12. 
-   centos修改主机名:`hostnamectl set-hostname 主机名`
-   `hostnamectl --static` 可以查看主机名
+      centos修改主机名:`hostnamectl set-hostname 主机名`
+      `hostnamectl --static` 可以查看主机名
 
 13.
 `centos`关机命令
@@ -871,10 +873,10 @@ H
 如：`~/`就是`/home/make/`
 
 15. 
-   wget是一个在控制台可以从各个协议上下载东西的工具
-   如这条命令
-   `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
-   直接在控制台执行，就可以从镜像网站下载hadoop压缩包
+      wget是一个在控制台可以从各个协议上下载东西的工具
+      如这条命令
+      `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
+      直接在控制台执行，就可以从镜像网站下载hadoop压缩包
 
 16：
 看下在环境变量配置这里
@@ -882,18 +884,18 @@ H
 这种配法有什么用？
 
 17. 
-   更新`yum`源  
-   有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
-   首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
-   然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
+      更新`yum`源  
+      有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
+      首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
+      然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
     `yum clean all`  
     `yum makecache`
-   运行以上两个命令生成yum的缓存  
+      运行以上两个命令生成yum的缓存  
 
 18. 
-   为wget设置代理，其实很简单
-   修改其配置文件` vi /etc/wgetrc  ` 
-   里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
+      为wget设置代理，其实很简单
+      修改其配置文件` vi /etc/wgetrc  ` 
+      里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
     当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
 19. centos添加用户
     首先登录 root 账号
@@ -903,7 +905,7 @@ H
     不加参数的仅仅只是删除用户，用户的信息没有被删除。  
 
 20. 切换用户登录，centos：login -f username 
-   注：1. 加f参数不用输入密码  
+      注：1. 加f参数不用输入密码  
 
 21. 在ssh客户端切换登录会退出哦
 
@@ -914,7 +916,7 @@ H
 24. 将某文件或者文件夹的
 
 25. 归属到某一个组中
-   `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
+      `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
 
    -R可以递归整个目录的归属
 
@@ -951,7 +953,7 @@ H
 
    1. 不用我说了吧，去官网下载包，丢到linux服务器中
    2. 执行这个命令`rpm -iv jdk-8u161-linux-x64.rpm `
-     其他待定，因为我删除后jdk又神奇的恢复到oracle jdk了
+       其他待定，因为我删除后jdk又神奇的恢复到oracle jdk了
 
    所以这个坑，先挖着
 
@@ -966,16 +968,16 @@ H
        默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
 
 3. 
-  centos查看网络端口占用:
-  ` firewall-cmd --zone=public --list-ports`  
-  开启或者关闭firewalld（centos7的防火墙）:
-   `systemctl start firewalld`and`systemctl stop firewalld`    
-  永远禁用centos防火墙:
-  `systemctl disable firewalld.service `  
+    centos查看网络端口占用:
+    ` firewall-cmd --zone=public --list-ports`  
+    开启或者关闭firewalld（centos7的防火墙）:
+      `systemctl start firewalld`and`systemctl stop firewalld`    
+    永远禁用centos防火墙:
+    `systemctl disable firewalld.service `  
 
 4. 
-  centos修改主机名:`hostnamectl set-hostname 主机名`
-  `hostnamectl --static` 可以查看主机名
+    centos修改主机名:`hostnamectl set-hostname 主机名`
+    `hostnamectl --static` 可以查看主机名
 
 13.
 `centos`关机命令
@@ -988,10 +990,10 @@ H
 如：`~/`就是`/home/make/`
 
 15. 
-   wget是一个在控制台可以从各个协议上下载东西的工具
-   如这条命令
-   `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
-   直接在控制台执行，就可以从镜像网站下载hadoop压缩包
+      wget是一个在控制台可以从各个协议上下载东西的工具
+      如这条命令
+      `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
+      直接在控制台执行，就可以从镜像网站下载hadoop压缩包
 
 16：
 看下在环境变量配置这里
@@ -999,18 +1001,18 @@ H
 这种配法有什么用？
 
 17. 
-   更新`yum`源  
-   有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
-   首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
-   然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
+      更新`yum`源  
+      有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
+      首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
+      然后在/etc/yum.repos.d/目录下用wget命令下载镜像的repo文件，确保下载下来的文件重命名  为：`CentOS-Base.repo`  
     `yum clean all`  
     `yum makecache`
-   运行以上两个命令生成yum的缓存  
+      运行以上两个命令生成yum的缓存  
 
 18. 
-   为wget设置代理，其实很简单
-   修改其配置文件` vi /etc/wgetrc  ` 
-   里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
+      为wget设置代理，其实很简单
+      修改其配置文件` vi /etc/wgetrc  ` 
+      里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
     当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
 19. centos添加用户
     首先登录 root 账号
@@ -1020,7 +1022,7 @@ H
     不加参数的仅仅只是删除用户，用户的信息没有被删除。  
 
 20. 切换用户登录，centos：login -f username 
-   注：1. 加f参数不用输入密码  
+      注：1. 加f参数不用输入密码  
 
 21. 在ssh客户端切换登录会退出哦
 
@@ -1031,7 +1033,7 @@ H
 24. 将某文件或者文件夹的
 
 25. 归属到某一个组中
-   `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
+      `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
 
    -R可以递归整个目录的归属权
 
@@ -1254,7 +1256,53 @@ http链接转socket连接 polipo 自行搜索配置
 
    `--data-binary`自然就是指定传输的文件了，没错，这个请求要传一个二进制文件过去。后面的@带文件路径
 
-   ​
+   
+
+
+
+# 第五章：其他知识
+
+## 5.1 添加linux的虚拟内存
+
+1. 首先可以根据这个命令查看当前系统的虚拟内存
+
+   `free -m -h `  得到的结果如下
+
+   ```
+                total        used        free      shared  buff/cache   available
+   Mem:           2.0G        792M         73M         20M        1.1G        998M
+   Swap:          5.9G        776K        5.9G
+   ```
+
+   由上文可知，当前的虚拟内存为5.9G,很多了。不用设置了，本章完结。。。开玩笑的
+
+2. 用管理员权限在根目录下面建一个文件夹。
+
+   `mkdir /swap`
+
+3. 创建一个虚拟内存文件
+
+   `dd if=/dev/zero of=/swap/swapfile bs=8k count=512000`
+
+   这个命令的意思就是创建一个名字教程swapfile 的文件，大小为8K*512000字节那么大，大概是4G吧。
+
+   里面全部用null填充
+
+4. 创建虚拟内存
+
+   `mkswap /swap/swapfile  `
+
+5. 启动虚拟内存
+
+   `swapon /swap/swapfile  `
+
+   > 关闭的话，是这个命令`swapoff /swap/swapfile `
+
+6. OK，再用free -m 看下，虚拟内存是不是增加的。。
+
+7. 其实追加的虚拟内存是临时的，貌似重启后就失效了，可以设置永久性的虚拟内存
+
+8. 
 
 
 

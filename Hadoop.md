@@ -47,11 +47,11 @@ MapReduce负责取出文件的逻辑
 
 它的原理是这样的：
 
-将大的数据分析分成小块逐个分析，最后再将提取出来的数据汇总分析，最终获得我们想要的内容。
+把输入集切割成若干个独立的数据集，由Map任务以完全并行的方式来处理它们，最后把处理的结果输入给*reduce*任务
 
  ## 4. Hadoop的安装
 
-先决条件：
+先决
 
 1. Jdk1.8以上
 2. ssh支持
@@ -172,6 +172,32 @@ MapReduce负责取出文件的逻辑
 
 `sbin/stop-dfs.sh`
 
+### 7.5 列出文件列表
+
+`./bin/hdfs dfs -ls <path>`
+
+如上，就可以列出指定路径下面的文件和文件夹列表
+
+### 7.6 查看文件内容
+
+`./bin/hdfs dfs -cat <filepath>`
+
+### 7.7 删除指定文件/文件夹
+
+`./bin/hdfs dfs -rm /user/cxh.txt`
+
+删除文件夹跟删除文件一样，不过还要加上 -r参数
+
+意思就是递归删除咯
+
+其实很多命令跟linux命令的习惯是一样的。。
+
+
+
+
+
+
+
 ## 8 YARN的部署
 
 YARN是Hadoop的资源管理系统，致力于管理Hadoop的MapReduce 框架，将
@@ -211,6 +237,322 @@ ResourceManger(资源管理 )和JobScheduling/JobMonitoring (任务调度监控)
 4. 搞定，想关闭YRAN的话，执行这个命令
 
    ` sbin/stop-yarn.sh`
+
+## 9:Hadoop的编程使用
+
+这章主要是使用Java，用Hadoop完成一些小功能，比如说，完成一个字段统计的功能。
+
+**第一步：搭建一个简单的Mavel项目吧**
+
+pom文件如下所示
+
+```
+<dependency>
+	<groupId>org.apache.hadoop</groupId>
+	<artifactId>hadoop-common</artifactId>
+	<version>3.0.3</version>
+</dependency>
+<dependency>
+	<groupId>junit</groupId>
+	<artifactId>junit</artifactId>
+	<version>4.4</version>
+	<scope>test</scope>
+</dependency>
+<dependency>
+	<groupId>org.apache.hadoop</groupId>
+	<artifactId>hadoop-hdfs</artifactId>
+	<version>3.0.3</version>
+</dependency>
+<dependency>
+	<groupId>org.apache.hadoop</groupId>
+	<artifactId>hadoop-mapreduce-client-core</artifactId>
+	<version>3.0.3</version>
+</dependency>
+<dependency>
+	<groupId>org.apache.hadoop</groupId>
+	<artifactId>hadoop-client</artifactId>
+	<version>3.0.3</version>
+</dependency>
+<dependency>
+	<groupId>com.oracle</groupId>
+	<artifactId>jdk.tools</artifactId>
+	<version>1.0</version>
+	<scope>system</scope>
+	<systemPath>${JAVA_HOME}/lib/tools.jar</systemPath>
+</dependency>
+```
+
+该配置主要参考非官方教程，因为实在在官方文档找不到需要依赖的项，所以只能如此了。
+
+如果有更官方的依赖项，欢迎补充。
+
+要注意的是
+
+1. 本教程使用的hadoop是3.0.3，所以依赖的版本全都是3.0.3
+
+   如果你的的hadoop版本不是3.0.3.需要改下依赖性的version。
+
+2. `jdk.tools`是安装jdk就自带的一个jar包，这里使用了系统的绝对路径来指定这个jar包的路径。
+
+   你的路径可能未必跟我一样，可能也需要更改
+
+**第二步：编写一个简单的WordCount**
+
+即计算单词数的小程序。程序的代码如下
+
+```
+public class WordCount  {
+    public static class TokenizerMapper
+            extends Mapper<Object, Text, Text, IntWritable> {
+        private final static IntWritable one = new IntWritable(1);
+        private Text word = new Text();
+
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+            StringTokenizer itr = new StringTokenizer(value.toString());
+            while (itr.hasMoreTokens()) {
+                word.set(itr.nextToken());
+                context.write(word, one);
+            }
+        }
+    }
+
+    public static class IntSumReducer
+            extends Reducer<Text,IntWritable,Text,IntWritable> {
+        private IntWritable result = new IntWritable();
+        public void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
+            int sum = 0;
+            for (IntWritable val : values) {
+                sum += val.get();
+            }
+            result.set(sum);
+            context.write(key, result);
+        }
+    }
+    public static void main(String [] args) throws IOException, ClassNotFoundException, InterruptedException {
+        Configuration conf = new Configuration();
+        Job job = Job.getInstance(conf, "word count");
+        job.setJarByClass(WordCount.class);
+        job.setMapperClass(TokenizerMapper.class);
+        job.setCombinerClass(IntSumReducer.class);
+        job.setReducerClass(IntSumReducer.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+        FileInputFormat.addInputPath(job, new Path("/input"));
+        FileOutputFormat.setOutputPath(job, new Path("/output"));
+        System.exit(job.waitForCompletion(true) ? 0 : 1);
+    }
+}
+```
+
+程序需要指定下输入的数据和输出的数据
+
+主要在这两句指定
+
+```
+ FileInputFormat.addInputPath(job, new Path("/input"));
+ FileOutputFormat.setOutputPath(job, new Path("/output"));
+```
+
+这里面的`/inut`和`/output`是分布式文件系统里面的文件夹，可别搞错了
+
+input文件里面放我们需要统计字数的数据文件，output文件夹里面放生成的结果文件。
+
+
+
+
+
+**第三步：设定输入数据和输出路径**
+
+首先创建两个文件文件，假定内容如下
+
+文件1：`Hello World Bye World`
+
+文件2：`Hello Hadoop Goodbye Hadoop`
+
+然后把他们put到分布式系统里面的input文件夹。
+
+OK，输入数据准备完毕。
+
+输出呢？其实只需要创建一个output文件夹即可。
+
+怎么创建，嗯，上面的HDFS命令已经有了。
+
+
+
+**第四步：设定环境变量**
+
+如下所示
+
+```
+export JAVA_HOME=/usr/java/default
+export PATH=${JAVA_HOME}/bin:${PATH}
+export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar
+```
+
+仅供参考
+
+
+
+**第五步：运行程序**
+
+将这个简单的项目打包成jar文件，并放在安装hadoop的机子上。
+
+然后执行这个命令
+
+`./bin/hadoop jar /home/cxh/wc.jar com.hadoop.example.WordCount`
+
+如果你足够幸运，可以看到运行不报错，那很OK。不过笔者显然没那么幸运。
+
+**问题1**
+
+`找不到这个这个类：org.apache.hadoop.mapreduce.v2.app.MRAppMaster`
+
+解决方案
+
+1. 在`yarn-site.xml `追加配置
+
+   ```
+   <property>
+          <name>yarn.application.classpath</name>
+           <value>
+           /hadoop_install/hadoop-2.6.5/etc/hadoop:/hadoop_install/hadoop-2.6.5/share/hadoop/common/lib/*:
+           /hadoop_install/hadoop-2.6.5/share/hadoop/common/*:
+           /hadoop_install/hadoop-2.6.5/share/hadoop/hdfs:
+           /hadoop_install/hadoop-2.6.5/share/hadoop/hdfs/lib/*:
+           /hadoop_install/hadoop-2.6.5/share/hadoop/hdfs/*:
+           /hadoop_install/hadoop-2.6.5/share/hadoop/yarn/lib/*:
+           /hadoop_install/hadoop-2.6.5/share/hadoop/yarn/*:
+           /hadoop_install/hadoop-2.6.5/share/hadoop/mapreduce/lib/*:
+           /hadoop_install/hadoop-2.6.5/share/hadoop/mapreduce/*:
+           /hadoop_install/hadoop-2.6.5/contrib/capacity-scheduler/*.jar
+           </value>
+    </property>
+   ```
+
+   2. 重启服务器
+
+   > 注意：`/hadoop_install/hadoop-2.6.5`请替换为你自己hadoop的安装路径
+   >
+   > 什么，你想把上面的路径配置成环境变量，虽然想法很好，但是不能生效
+
+**问题2**
+
+`Name node is in safe mode.`
+
+这个其实很简单，因为hadoop处于安全模式下，是不允许修改文件的。
+
+当然你可以退出安全模式。执行这个命令
+
+`bin/hadoop dfsadmin -safemode leave `
+
+**问题3**
+
+`running beyond virtual memory limits. Current usage: 205.4 MB of 1 GB physical memory used; 2.5 GB of 2.1 GB virtual memory used. Killing container`
+
+很简单，就是虚拟内存不够了，它使用了2.5GB的虚拟内存，但是你的机器只能提供2.1GB的内存，所以就挂了。
+
+这个问题只要充钱买内存就能解决。。开玩笑。
+
+你要设置虚拟内存，想当然的情况就是设置linux自己的虚拟内存，然鹅，笔者设置了之后还是不行。
+
+最后可以使用这个,编辑`yarn-site.xml `添加此配置
+
+```
+<property>
+  <name>yarn.nodemanager.vmem-pmem-ratio</name>
+  <value>5</value>
+</property>
+```
+
+这个是设置增加虚拟内存到物理内存的比率。默认是2.1。
+
+**问题4**
+
+`Error: org.apache.hadoop.hdfs.BlockMissingException: Could not obtain block: `
+
+这个意思大概是说，无法获取块。
+
+我查了一下，有篇文章说是因为块副本位置没有指定路径，于是默认配置为/tmp路径。
+
+但是这个tmp文件经常会被linux进行大清除，所以，块副本数据也就被清扫了。
+
+解决办法，第一步，先手动指定下块副本文件存放的位置，编辑`hdfs-site.xml `
+
+```
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>/home/cxh/hadoop-3.0.3/HDFSData</value>
+    </property>
+```
+
+第二步：想方法恢复数据，我采取的做法是删除然后重新put进去。
+
+第三步，重启hadoop
+
+第四部：没了，尽情测试吧。反正LZ成功了。
+
+### 9.1 额外篇，在外网上运行WordCount
+
+其实这篇要解决的问题很简单，就是把之前在宿主机运行的WordCount程序员，搬到外网，如windows上运行。
+
+程序照样还是上面的程序，只不过，有些配置需要更改。
+
+1. 首先你的hadoop的HDFS端口要在外网能ping通，这个的话，就得编辑`core-site.xml`
+
+   把这段配置改下
+
+   ```
+       <property>
+           <name>fs.defaultFS</name>
+           <value>hdfs://192.168.0.178:9000</value>
+           </property>
+   
+   ```
+
+   主要是ip要换成外网的IP。
+
+2. 遇到这个问题`HADOOP_HOME and hadoop.home.dir are unset`
+
+   解决办法，把hadoop二进制的安装文件下载到本地，然后解压。假设解压后的目录为`D:\\hadoop`
+
+   然后呢？在程序一开始的地方设置一下环境变量
+
+   `System.setProperty("hadoop.home.dir", "D:\\hadoop");`
+
+   
+
+
+
+
+
+
+
+## 10 在外网上，通过web访问Hadoop 的webUI
+
+一般情况下，hadoop 提供的webUI都是只能在本地回环地址上面使用的。如果想在外网上访问Hadoop的外网UI的话。需要在`hdfs-site.xml`里面配置
+
+```
+<property>
+  <name>dfs.http.address</name>
+  <value>0.0.0.0:50070</value>
+</property>
+```
+
+然后重启hadoop,在外网上，键入地址`http://ip:50070`即可进入。
+
+默认情况是这个端口啦，当然不能保证你可能会改配置。
+
+
+
+
+
+
+
+
+
+
+
+
 
 # 第二章：HBase
 
