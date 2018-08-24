@@ -1007,6 +1007,9 @@ tomcat运行时报servlct类的某个方法找不到.
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-test</artifactId>
 </dependency>
+
+> 注意：如果你在用这个依赖后，报log的栈溢出。
+那就是这个依赖引起的，需要把里面的一个依赖去掉
 ```
 2. 然后在项目的test源码文件夹里面创建一个测试类，里面大概是酱紫的
 ```
