@@ -119,7 +119,12 @@ Oracle数据库的日期函数为  `SYSDATE`
 
    不过说起来，Mysql有一个坑的，哪怕你的字段出现在group by 里面，但是用函数包起来了，这个字段出现在select字句仍然会被认为不规范。。
 
-2. 
+2. 在mysql查询里面显示行数
+这个功能，如果在Oracle，直接ruwNum就可以搞定，但是，mysql没有这个行数，怎么办呢？可以用变量。
+在Mysql里面，变量用@定义。这道题用变量来做，是这样的
+假如有一张表，表名是t,查询该表所有记录，并显示它的行号，sql是这么写的
+`select t.*,@rowno:=@rowno+1 as rownum from t,(select @rowno:=0) t1; `
+其中@rowno:=1是给行号赋予初值，然后每次记录查出来都执行,`@rowno:=@rowno+1`，就起到行数的作用了  
 
 # 神奇的查询
 ## 连续性问题
@@ -155,9 +160,10 @@ Oracle数据库的日期函数为  `SYSDATE`
 3. 这个时候，如果是连续的记录，就有字段是一样的了，就是我们的字段c
 然后我们把它分组，最后取分组数量大于三，就是我们想要的结果了。
 整个的sql语句是这样的。（未验证，只是-伪sql语句）
-`select userName from (select T1.*,(T1.Loginas-${runNum}) c from （ select * from T order by userName,Loginas ）T1) T2 group by T2.userName,T2.c where`
-作为T2
-对T2进行where查询就OK了，写出来太大了，不写了
+`select userName from (select T1.*,(T1.Loginas-${runNum}) c from （ select * from T order by userName,Loginas ）T1) T2 group by T2.userName,T2.c where`  
+作为T2  
+对T2进行where查询就OK了，写出来太大了，不写了  
+
 
 
 
