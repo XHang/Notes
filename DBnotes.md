@@ -14,8 +14,6 @@
 
    那么完全相同的两个记录会被过滤
 
-   
-
 2. max方法，是一个聚合方法，只能查询出一条最大的记录。
 
    比如说现在有一张表，表里面有姓名，部门，薪水三个字段。
@@ -28,7 +26,6 @@
 
    所以，正确的sql语句是`select * from 表名 where 薪水=(select max(薪水) from 表名 ) `
 
-   
 
 # 第二节： Oracle 和PG数据库之间的差异
 
@@ -150,19 +147,77 @@ Oracle数据库的日期函数为  `SYSDATE`
 | 陈胜     | 1           |
 | 陈胜     | 3           |
 
+所用数据库：Oracle
+核心概念：连续的数a-连续的数b=固定的数。
 
-所用数据 Oracel
-核心概念：连续的数a-连续的数b=固定的数。比如说3,4,5  减去 1,2,3 得到的结果是2,2,2 这就是数学的魅力。
+比如说3,4,5  减去 1,2,3 得到的结果是2,2,2 这就是数学的魅力。
 用这个概念，就可以实现需求了。
-1. 首先根据userName和Loginas来降序排列
+
+1. 首先根据userName和Loginas来降序排列 记为T，目的是把连续的记录挤在一起
+
 2. 用前面查询出来的每一条记录，用其Loginas减去行数，即 
-`select T1.*,(T1.Loginas-${runNum}) c from （ select * from T order by userName,Loginas ）T1` 
+     `select T.*,(T1.Loginas-${runNum}) c from T`  记T1
+
 3. 这个时候，如果是连续的记录，就有字段是一样的了，就是我们的字段c
-然后我们把它分组，最后取分组数量大于三，就是我们想要的结果了。
-整个的sql语句是这样的。（未验证，只是-伪sql语句）
-`select userName from (select T1.*,(T1.Loginas-${runNum}) c from （ select * from T order by userName,Loginas ）T1) T2 group by T2.userName,T2.c where`  
-作为T2  
-对T2进行where查询就OK了，写出来太大了，不写了  
+    我们把字段C统计一下次数，就是用户连续登陆的次数了
+     `select userName,count(T1.c) as c from T1 group by T1.userName,T1.c` 
+
+      记T2
+
+4. 接下来很简单吧，都有连续登陆的次数了，一个where语句，搞定！
+
+   `select * from T2 where T2.c>3`
+
+实战演练
+
+```
+field1	field2
+2014	1
+2014	2
+2014	3
+2014	4
+2014	5
+2014	7
+2014	8
+2014	9
+2013	120
+2013	121
+2013	122
+2013	124
+2017	55
+```
+
+用mysql查询field2连续出现3次的记录
+
+凡人们，颤抖吧
+
+```
+select * from (
+SELECT
+	field1,count(field1)  as c
+FROM
+	(
+	SELECT
+		t1.*,
+		t1.field2 - t1.rownum  as c
+	FROM
+		(
+		SELECT
+			t.*,
+			@rowno := @rowno + 1 AS rownum 
+		FROM
+			t,
+			( SELECT @rowno := 0 ) x 
+		ORDER BY
+			field1,
+			field2 
+		) t1 
+	) t2
+	group by field1,c) t3
+	where t3.c>3
+```
+
+
 
 
 
