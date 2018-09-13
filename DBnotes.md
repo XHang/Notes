@@ -121,6 +121,40 @@ Oracle数据库的日期函数为  `SYSDATE`
 
 2. 
 
+# 神奇的查询
+## 连续性问题
+业务场景：小航，报表部门要你开发一个功能，能查询连续登录三个月及以上的登录用户。数据库表已经发给你了，最迟今晚完成。
+表数据T
+| userName | loginas(月) |
+| -------- | ----------- |
+| 李四     | 3           |
+| 李四     | 4           |
+| 李四     | 5           |
+| 李四     | 6           |
+| 李四     | 7           |
+| 张三     | 2           |
+| 张三     | 3           |
+| 张三     | 4           |
+| 张三     | 5           |
+| 王五     | 1           |
+| 王五     | 2           |
+| 王五     | 5           |
+| 王五     | 6           |
+| 王五     | 2           |
+| 陈胜     | 1           |
+| 陈胜     | 3           |
+所用数据 Oracel
+核心概念：连续的数a-连续的数b=固定的数。比如说3,4,5  减去 1,2,3 得到的结果是2,2,2 这就是数学的魅力。
+用这个概念，就可以实现需求了。
+1. 首先根据userName和Loginas来降序排列
+2. 用前面查询出来的每一条记录，用其Loginas减去行数，即 
+`select T1.*,(T1.Loginas-${runNum}) c from （ select * from T order by userName,Loginas ）T1` 
+3. 这个时候，如果是连续的记录，就有字段是一样的了，就是我们的字段c
+然后我们把它分组，最后取分组数量大于三，就是我们想要的结果了。
+整个的sql语句是这样的。（未验证，只是-伪sql语句）
+`select userName from (select T1.*,(T1.Loginas-${runNum}) c from （ select * from T order by userName,Loginas ）T1) T2 group by T2.userName,T2.c where`
+作为T2
+对T2进行where查询就OK了，写出来太大了，不写了
 
 
 
