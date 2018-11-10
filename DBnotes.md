@@ -1,94 +1,66 @@
-# 数据库知识
+ 数据库知识
 
-> 暂时记录一些有意思的知识点
+暂时记录一些有意思的知识点
 
-# 第一节:查询语句
+第一节:查询语句
 
 1. distinct 关键字可以去掉重复记录
-
-   使用方法`select distinct field from table_name;`
-
+   使用方法select distinct field from table_name;
    这样是只查询一个字段，而且相同字段的记录会被剔除。
-
-   如果是这样使用的话`select distinct * from table_name`
-
+   如果是这样使用的话select distinct * from table_name
    那么完全相同的两个记录会被过滤
-
 2. max方法，是一个聚合方法，只能查询出一条最大的记录。
-
    比如说现在有一张表，表里面有姓名，部门，薪水三个字段。
-
    要求，让你查出薪水最高的那个家伙的记录。
-
    错误示范就是`select max(薪水) from 表名
-
    这样只能查询出一条记录，而且连姓名也查不出来，而且要知道，薪水最高的人不止一个。
+   所以，正确的sql语句是select * from 表名 where 薪水=(select max(薪水) from 表名 )
 
-   所以，正确的sql语句是`select * from 表名 where 薪水=(select max(薪水) from 表名 ) `
+第二节： Oracle 和PG数据库之间的差异
 
-
-# 第二节： Oracle 和PG数据库之间的差异
-
-1. Oracle数据库有一个方法*NVL*( string1, replace_with)
-
+1. Oracle数据库有一个方法NVL( string1, replace_with)
    功能是当String1为null时，函数返回replace_with
-
    否则返回String1
-
    PG数据库没有这个函数。但是要想实现这种功能的话，可以选择COALESCE(参数1，参数2，参数3.....)
-
    功能是返回所给参数中第一个不为空的元素.
-
    所以要实现NVL的功能的话，可以这样COALESCE(参数1,'0')
-
    这样如果参数1是空的话，返回的就是0了，也就是预设的默认值。
-
 2. ORACLE数据库的表名可以小写，默认给你转成大小
-
    但是PG数据库要是大写了，查表的时候，表名就得大写加双引号。不然会报找不到相关的表
-
 3. Oracle中,update语句中,update的字段值你想通过其他表查询到,然后用查询到的值update.
-
    做法很简单,就是
-
-   ```
-   UPDATE table1 t1
-   SET (name, desc) = (SELECT t2.name, t2.desc
-                            FROM table2 t2
-                           WHERE t1.id = t2.id)
-    WHERE t1.id='11'
-   ```
-
+       UPDATE table1 t1
+       SET (name, desc) = (SELECT t2.name, t2.desc
+                                FROM table2 t2
+                               WHERE t1.id = t2.id)
+        WHERE t1.id='11'
 
    很好,看起来不错,但是pg数据库也想来这么一下,一运行,语法错误....
 
-   怎么办呢?只能用一个黑科技了,就是`update from`sql
+   怎么办呢?只能用一个黑科技了,就是update fromsql
 
-   ```
-   UPDATE table 
-   SET name = link.other_name,
-   FROM
-    (select * from list where id='11' ) as other_name
-   WHERE
-    id='11'
-   ```
+       UPDATE table 
+       SET name = link.other_name,
+       FROM
+        (select * from list where id='11' ) as other_name
+       WHERE
+        id='11'
 
-   大致就是这样了,唔~~~`update from`这种其实不是严格的sql语句规范哦
+   大致就是这样了,唔~~~update from这种其实不是严格的sql语句规范哦
 
-4. PG数据库的update语句不支持用表的别名,一定要用,只能加表的全称
-
-5. Oracle和pg数据库的序列sql也不一样。
+1. PG数据库的update语句不支持用表的别名,一定要用,只能加表的全称
+2. Oracle和pg数据库的序列sql也不一样。
 假设序列名字叫
-pg的语法是：`SELECT nextval('seq_user_version')`  
-Oracle的语法是`select seq_user_version.nextval  from dual;`
+pg的语法是：SELECT nextval('seq_user_version')  
+Oracle的语法是select seq_user_version.nextval  from dual;
 
 6：关于日期的区别  
-pg数据库日期函数为`now();`  
-使用示例`select now() from dual;`  
-Oracle数据库的日期函数为  `SYSDATE`
-使用示例`select SYSDATE from dual;`  
+pg数据库日期函数为now();  
+使用示例select now() from dual;  
+Oracle数据库的日期函数为  SYSDATE
+使用示例select SYSDATE from dual;  
 
-# 第三节:一般数据库的禁忌
+第三节:一般数据库的禁忌
 
 在为某些数据库建表时，要小心表名不能和数据库已有的关键字冲突。
 
@@ -96,56 +68,48 @@ Oracle数据库的日期函数为  `SYSDATE`
 
 1. user   在PG数据库已经挂了
 
-# 第四节：MYSQL的知识
+第四节：MYSQL的知识
 
-1. mysql有一个模式设置为`ONLY_FULL_GROUP_BY`
-
+1. mysql有一个模式设置为ONLY_FULL_GROUP_BY
    这个设置在关闭状态下，Mysql的sql语句的检验就少了一项
-
-   即：`不校验查询语句显示的字段是否包含在group字句或者聚合函数里面`
-
+   即：不校验查询语句显示的字段是否包含在group字句或者聚合函数里面
    像这类的查询语句，Mysql是睁一只眼，闭一只眼的
-
-   `select username,age from user group by username`
-
+   select username,age from user group by username
    其实按照sql规范，这种的语句是不正确的，至少在oracle是会挂的。
-
-   Mysql只要不设置`ONLY_FULL_GROUP_BY`这个的话，这种不严格的语句可以通过，这当然不好，要是你的应用换了数据库呢？像Oracle，原本在mysql可以放过的sql，在Oracle可就挂了诶，所以一般来说，开发组都会把这个限制加上去的。
-
+   Mysql只要不设置ONLY_FULL_GROUP_BY这个的话，这种不严格的语句可以通过，这当然不好，要是你的应用换了数据库呢？像Oracle，原本在mysql可以放过的sql，在Oracle可就挂了诶，所以一般来说，开发组都会把这个限制加上去的。
    也就是说，以后写sql要注意点，如果sql包含了group by,那么显示的字段就一定要出现在group字句或者聚合函数里面。
-
    不过说起来，Mysql有一个坑的，哪怕你的字段出现在group by 里面，但是用函数包起来了，这个字段出现在select字句仍然会被认为不规范。。
-
 2. 在mysql查询里面显示行数
 这个功能，如果在Oracle，直接ruwNum就可以搞定，但是，mysql没有这个行数，怎么办呢？可以用变量。
 在Mysql里面，变量用@定义。这道题用变量来做，是这样的
 假如有一张表，表名是t,查询该表所有记录，并显示它的行号，sql是这么写的
-`select t.*,@rowno:=@rowno+1 as rownum from t,(select @rowno:=0) t1; `
-其中@rowno:=1是给行号赋予初值，然后每次记录查出来都执行,`@rowno:=@rowno+1`，就起到行数的作用了  
+select t.*,@rowno:=@rowno+1 as rownum from t,(select @rowno:=0) t1;
+其中@rowno:=1是给行号赋予初值，然后每次记录查出来都执行,@rowno:=@rowno+1，就起到行数的作用了  
 
-# 神奇的查询
-## 连续性问题
+神奇的查询
+
+连续性问题
+
 业务场景：小航，报表部门要你开发一个功能，能查询连续登录三个月及以上的登录用户。数据库表已经发给你了，最迟今晚完成。
 表数据T
 
-| userName | loginas(月) |
-| -------- | ----------- |
-| 李四     | 3           |
-| 李四     | 4           |
-| 李四     | 5           |
-| 李四     | 6           |
-| 李四     | 7           |
-| 张三     | 2           |
-| 张三     | 3           |
-| 张三     | 4           |
-| 张三     | 5           |
-| 王五     | 1           |
-| 王五     | 2           |
-| 王五     | 5           |
-| 王五     | 6           |
-| 王五     | 2           |
-| 陈胜     | 1           |
-| 陈胜     | 3           |
+  userName	loginas(月)
+  李四      	3         
+  李四      	4         
+  李四      	5         
+  李四      	6         
+  李四      	7         
+  张三      	2         
+  张三      	3         
+  张三      	4         
+  张三      	5         
+  王五      	1         
+  王五      	2         
+  王五      	5         
+  王五      	6         
+  王五      	2         
+  陈胜      	1         
+  陈胜      	3         
 
 所用数据库：Oracle
 核心概念：连续的数a-连续的数b=固定的数。
@@ -154,77 +118,77 @@ Oracle数据库的日期函数为  `SYSDATE`
 用这个概念，就可以实现需求了。
 
 1. 首先根据userName和Loginas来降序排列 记为T，目的是把连续的记录挤在一起
-
 2. 用前面查询出来的每一条记录，用其Loginas减去行数，即 
-     `select T.*,(T1.Loginas-${runNum}) c from T`  记T1
-
+select T.*,(T1.Loginas-${runNum}) c from T  记T1
 3. 这个时候，如果是连续的记录，就有字段是一样的了，就是我们的字段c
-    我们把字段C统计一下次数，就是用户连续登陆的次数了
-     `select userName,count(T1.c) as c from T1 group by T1.userName,T1.c` 
-
-      记T2
-
+我们把字段C统计一下次数，就是用户连续登陆的次数了
+ select userName,count(T1.c) as c from T1 group by T1.userName,T1.c 
+     记T2
 4. 接下来很简单吧，都有连续登陆的次数了，一个where语句，搞定！
-
-   `select * from T2 where T2.c>3`
+   select * from T2 where T2.c>3
 
 实战演练
 
-```
-field1	field2
-2014	1
-2014	2
-2014	3
-2014	4
-2014	5
-2014	7
-2014	8
-2014	9
-2013	120
-2013	121
-2013	122
-2013	124
-2017	55
-```
+    field1	field2
+    2014	1
+    2014	2
+    2014	3
+    2014	4
+    2014	5
+    2014	7
+    2014	8
+    2014	9
+    2013	120
+    2013	121
+    2013	122
+    2013	124
+    2017	55
 
 用mysql查询field2连续出现3次的记录
 
 凡人们，颤抖吧
 
-```
-select * from (
-SELECT
-	field1,count(field1)  as c
-FROM
-	(
-	SELECT
-		t1.*,
-		t1.field2 - t1.rownum  as c
-	FROM
-		(
-		SELECT
-			t.*,
-			@rowno := @rowno + 1 AS rownum 
-		FROM
-			t,
-			( SELECT @rowno := 0 ) x 
-		ORDER BY
-			field1,
-			field2 
-		) t1 
-	) t2
-	group by field1,c) t3
-	where t3.c>3
-```
+    select * from (
+    SELECT
+    	field1,count(field1)  as c
+    FROM
+    	(
+    	SELECT
+    		t1.*,
+    		t1.field2 - t1.rownum  as c
+    	FROM
+    		(
+    		SELECT
+    			t.*,
+    			@rowno := @rowno + 1 AS rownum 
+    		FROM
+    			t,
+    			( SELECT @rowno := 0 ) x 
+    		ORDER BY
+    			field1,
+    			field2 
+    		) t1 
+    	) t2
+    	group by field1,c) t3
+    	where t3.c>3
 
 
 
 
 
+EXPLAIN的使用
 
+这个可以用于查看,mysql在处理select语句时，是怎么进行的，有没有用索引，有没有关联表等
 
+用法是
 
+EXPLAIN {sql}
 
+sql填写sql语句后，直接执行，就可以查询到相关信息了，如
 
+  id  	select_type	table	partitions	type 	possible_keys	key    	key_len	ref  	rows	filtered	Extra
+  1   	SIMPLE     	site 	          	const	PRIMARY      	PRIMARY	4      	const	1   	100.00  	     
+      	           	     	          	     	             	       	       	     	    	        	     
+      	           	     	          	     	             	       	       	     	    	        	     
 
-
+ 
