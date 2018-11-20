@@ -78,9 +78,9 @@
 4. PG数据库的update语句不支持用表的别名,一定要用,只能加表的全称
 
 5. Oracle和pg数据库的序列sql也不一样。
-  假设序列名字叫
-  pg的语法是：`SELECT nextval('seq_user_version')`  
-  Oracle的语法是`select seq_user_version.nextval  from dual;`
+    假设序列名字叫
+    pg的语法是：`SELECT nextval('seq_user_version')`  
+    Oracle的语法是`select seq_user_version.nextval  from dual;`
 
 6：关于日期的区别  
 pg数据库日期函数为`now();`  
@@ -117,11 +117,11 @@ Oracle数据库的日期函数为  `SYSDATE`
    不过说起来，Mysql有一个坑的，哪怕你的字段出现在group by 里面，但是用函数包起来了，这个字段出现在select字句仍然会被认为不规范。。
 
 2. 在mysql查询里面显示行数
-  这个功能，如果在Oracle，直接ruwNum就可以搞定，但是，mysql没有这个行数，怎么办呢？可以用变量。
-  在Mysql里面，变量用@定义。这道题用变量来做，是这样的
-  假如有一张表，表名是t,查询该表所有记录，并显示它的行号，sql是这么写的
-  `select t.*,@rowno:=@rowno+1 as rownum from t,(select @rowno:=0) t1; `
-  其中@rowno:=1是给行号赋予初值，然后每次记录查出来都执行,`@rowno:=@rowno+1`，就起到行数的作用了  
+    这个功能，如果在Oracle，直接ruwNum就可以搞定，但是，mysql没有这个行数，怎么办呢？可以用变量。
+    在Mysql里面，变量用@定义。这道题用变量来做，是这样的
+    假如有一张表，表名是t,查询该表所有记录，并显示它的行号，sql是这么写的
+    `select t.*,@rowno:=@rowno+1 as rownum from t,(select @rowno:=0) t1; `
+    其中@rowno:=1是给行号赋予初值，然后每次记录查出来都执行,`@rowno:=@rowno+1`，就起到行数的作用了  
 
 # 神奇的查询
 ## 连续性问题
@@ -237,7 +237,42 @@ sql填写sql语句后，直接执行，就可以查询到相关信息了，如
 |      |             |       |            |       |               |         |         |       |      |          |       |
 |      |             |       |            |       |               |         |         |       |      |          |       |
 
-# decimal字段类型  
+
+
+## mysql变量的使用	
+
+在mysql中，变量的表示是以@变量名开头来表示的
+
+如`@var` `@temp`  的等等
+
+
+
+一般说来，mysql的变量一般用于数据库的过程编写，但是，其实，也可以用于sql语句中的一些变化。
+
+举个例子：现在我有一个表，表里有一个字段X，这个字段要求是递增的。
+
+现在就要把表里每一行记录里面的X字段，都按照一定的排序来递增记录。
+
+在sql中，就可以用变量来记录这个递增值。
+
+参考的sql语句如下
+
+```
+ set @var=0;
+ update table set x=@var:=@var+1
+ order by create_time ASC
+```
+
+搞定
+
+
+
+
+
+
+
+# 第五节：decimal字段类型  
+
 这个类型比较特殊，比如说，它定义成decimal(5,4)  
 这个的意思，就是说，这个字段把整数部分和小数部分算在一起，其数字的个数不能超过5个，其中，小数的个数占了4个，也就意味着  
 整数部位只能一位。  
