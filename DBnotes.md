@@ -1,281 +1,288 @@
-#  数据库知识
+# BUG日记
 
-> 暂时记录一些有意思的知识点
-
-# 第一节:查询语句
-
-1. distinct 关键字可以去掉重复记录
-
-   使用方法`select distinct field from table_name;`
-
-   这样是只查询一个字段，而且相同字段的记录会被剔除。
-
-   如果是这样使用的话`select distinct * from table_name`
-
-   那么完全相同的两个记录会被过滤
-
-2. max方法，是一个聚合方法，只能查询出一条最大的记录。
-
-   比如说现在有一张表，表里面有姓名，部门，薪水三个字段。
-
-   要求，让你查出薪水最高的那个家伙的记录。
-
-   错误示范就是`select max(薪水) from 表名
-
-   这样只能查询出一条记录，而且连姓名也查不出来，而且要知道，薪水最高的人不止一个。
-
-   所以，正确的sql语句是`select * from 表名 where 薪水=(select max(薪水) from 表名 ) `
+# 一：未规范的BUG
 
 
-# 第二节： Oracle 和PG数据库之间的差异
 
-1. Oracle数据库有一个方法*NVL*( string1, replace_with)
+1. cglib作为代理类的生成，生成Controller代理类。如果原来的Controller的requestMapping方法有private的话，那么cglib无法代理这个方法，造成的结果就是当前端访问到这个接口时，无法读取到IOC注入的变量。其他public方法就可以造成访问。
 
-   功能是当String1为null时，函数返回replace_with
+2. Arrays.asList的方法返回的不是我们常见的java.util.ArrayList，而是java.util.Arrays.ArrayList。两种名字一样实际可大不同。后者仅仅是对数组的一种封装而不能进行修改操作，执行修改操作都报UnsupportedOperationException异常
+     然后Arrays.asList方法里面参数只能放引用类型，不能放基本类型，否则都会解析成数组类型。
+       例如Arrays.asList(1,2,4);会把1，2，4当做整体，即数组。长度为1.
 
-   否则返回String1
-
-   PG数据库没有这个函数。但是要想实现这种功能的话，可以选择COALESCE(参数1，参数2，参数3.....)
-
-   功能是返回所给参数中第一个不为空的元素.
-
-   所以要实现NVL的功能的话，可以这样COALESCE(参数1,'0')
-
-   这样如果参数1是空的话，返回的就是0了，也就是预设的默认值。
-
-2. ORACLE数据库的表名可以小写，默认给你转成大小
-
-   但是PG数据库要是大写了，查表的时候，表名就得大写加双引号。不然会报找不到相关的表
-
-3. Oracle中,update语句中,update的字段值你想通过其他表查询到,然后用查询到的值update.
-
-   做法很简单,就是
-
-   ```
-   UPDATE table1 t1
-   SET (name, desc) = (SELECT t2.name, t2.desc
-                            FROM table2 t2
-                           WHERE t1.id = t2.id)
-    WHERE t1.id='11'
-   ```
-
-
-   很好,看起来不错,但是pg数据库也想来这么一下,一运行,语法错误....
-
-   怎么办呢?只能用一个黑科技了,就是`update from`sql
-
-   ```
-   UPDATE table 
-   SET name = link.other_name,
-   FROM
-    (select * from list where id='11' ) as other_name
-   WHERE
-    id='11'
-   ```
-
-   大致就是这样了,唔~~~`update from`这种其实不是严格的sql语句规范哦
-
-4. PG数据库的update语句不支持用表的别名,一定要用,只能加表的全称
-
-5. Oracle和pg数据库的序列sql也不一样。
-    假设序列名字叫
-    pg的语法是：`SELECT nextval('seq_user_version')`  
-    Oracle的语法是`select seq_user_version.nextval  from dual;`
-
-6：关于日期的区别  
-pg数据库日期函数为`now();`  
-使用示例`select now() from dual;`  
-Oracle数据库的日期函数为  `SYSDATE`
-使用示例`select SYSDATE from dual;`  
-
-# 第三节:一般数据库的禁忌
-
-在为某些数据库建表时，要小心表名不能和数据库已有的关键字冲突。
-
-经验证，冲突的表名有
-
-1. user   在PG数据库已经挂了
-
-# 第四节：MYSQL的知识
-
-1. mysql有一个模式设置为`ONLY_FULL_GROUP_BY`
-
-   这个设置在关闭状态下，Mysql的sql语句的检验就少了一项
-
-   即：`不校验查询语句显示的字段是否包含在group字句或者聚合函数里面`
-
-   像这类的查询语句，Mysql是睁一只眼，闭一只眼的
-
-   `select username,age from user group by username`
-
-   其实按照sql规范，这种的语句是不正确的，至少在oracle是会挂的。
-
-   Mysql只要不设置`ONLY_FULL_GROUP_BY`这个的话，这种不严格的语句可以通过，这当然不好，要是你的应用换了数据库呢？像Oracle，原本在mysql可以放过的sql，在Oracle可就挂了诶，所以一般来说，开发组都会把这个限制加上去的。
-
-   也就是说，以后写sql要注意点，如果sql包含了group by,那么显示的字段就一定要出现在group字句或者聚合函数里面。
-
-   不过说起来，Mysql有一个坑的，哪怕你的字段出现在group by 里面，但是用函数包起来了，这个字段出现在select字句仍然会被认为不规范。。
-
-2. 在mysql查询里面显示行数
-    这个功能，如果在Oracle，直接ruwNum就可以搞定，但是，mysql没有这个行数，怎么办呢？可以用变量。
-    在Mysql里面，变量用@定义。这道题用变量来做，是这样的
-    假如有一张表，表名是t,查询该表所有记录，并显示它的行号，sql是这么写的
-    `select t.*,@rowno:=@rowno+1 as rownum from t,(select @rowno:=0) t1; `
-    其中@rowno:=1是给行号赋予初值，然后每次记录查出来都执行,`@rowno:=@rowno+1`，就起到行数的作用了  
-
-# 神奇的查询
-## 连续性问题
-业务场景：小航，报表部门要你开发一个功能，能查询连续登录三个月及以上的登录用户。数据库表已经发给你了，最迟今晚完成。
-表数据T
-
-| userName | loginas(月) |
-| -------- | ----------- |
-| 李四     | 3           |
-| 李四     | 4           |
-| 李四     | 5           |
-| 李四     | 6           |
-| 李四     | 7           |
-| 张三     | 2           |
-| 张三     | 3           |
-| 张三     | 4           |
-| 张三     | 5           |
-| 王五     | 1           |
-| 王五     | 2           |
-| 王五     | 5           |
-| 王五     | 6           |
-| 王五     | 2           |
-| 陈胜     | 1           |
-| 陈胜     | 3           |
-
-所用数据库：Oracle
-核心概念：连续的数a-连续的数b=固定的数。
-
-比如说3,4,5  减去 1,2,3 得到的结果是2,2,2 这就是数学的魅力。
-用这个概念，就可以实现需求了。
-
-1. 首先根据userName和Loginas来降序排列 记为T，目的是把连续的记录挤在一起
-
-2. 用前面查询出来的每一条记录，用其Loginas减去行数，即 
-     `select T.*,(T1.Loginas-${runNum}) c from T`  记T1
-
-3. 这个时候，如果是连续的记录，就有字段是一样的了，就是我们的字段c
-    我们把字段C统计一下次数，就是用户连续登陆的次数了
-     `select userName,count(T1.c) as c from T1 group by T1.userName,T1.c` 
-
-      记T2
-
-4. 接下来很简单吧，都有连续登陆的次数了，一个where语句，搞定！
-
-   `select * from T2 where T2.c>3`
-
-实战演练
+3. 如果要传一个数组给后端，ajax请求要加一个参数，traditional: true
+     RT
 
 ```
-field1	field2
-2014	1
-2014	2
-2014	3
-2014	4
-2014	5
-2014	7
-2014	8
-2014	9
-2013	120
-2013	121
-2013	122
-2013	124
-2017	55
-```
-
-用mysql查询field2连续出现3次的记录
-
-凡人们，颤抖吧
+$.ajax({
+				url: 'xxxx',  
+				traditional: true,
+				type: "get",  
+				dataType: "json",
+				data:{
+					parameter_1 : id,
+					parameter_2 : arr_1,
+					parameter_2 : arr_2 
+				}
 
 ```
-select * from (
-SELECT
-	field1,count(field1)  as c
-FROM
-	(
-	SELECT
-		t1.*,
-		t1.field2 - t1.rownum  as c
-	FROM
-		(
-		SELECT
-			t.*,
-			@rowno := @rowno + 1 AS rownum 
-		FROM
-			t,
-			( SELECT @rowno := 0 ) x 
-		ORDER BY
-			field1,
-			field2 
-		) t1 
-	) t2
-	group by field1,c) t3
-	where t3.c>3
+
+这样才能传到后端，当然了，arr_1和arr_2都是js的数组对象。
+原因：阻止jquery对参数的深度序列化
+
+4. 今天突然发现的，用Junit测试框架测试多线程的并发问题会有造成线程运行运行着突然挂了。
+
+得在main函数的测试下才是正常的
+
+5. cxf webService客户端运行时报异常：
+
+```
+Unmarshalling Error: Illegal character (NULL, unicode 0) encountered: not valid in any content
+```
+
+报的位置在执行请求，获取响应的地方。
+
+其原因是webService服务端返回的报文存在不规范的字符，基本都是Ascll码的控制字符，如退格键，或者铃声符，null之类的。
+
+一旦xml存在这些特殊字符，连解析都做不到。
+
+解决办法很简单
+
+1. 怼服务提供方，叫他提供正确的xml报文。
+2. 自己实现一个拦截器修改响应的报文，祛除特殊字符。
+
+代码实现：---在本项目中查看附带原代码
+
+6. 报错了
+
+```
+org.springframework.jdbc.UncategorizedSQLException: PreparedStatementCallback; uncategorized SQLException for SQL [{sql expression} ]; SQL state [0A000]; error code [0]; ERROR: cached plan must not change result type; nested exception is org.postgresql.util.PSQLException: ERROR: cached plan must not change result type
+```
+
+今天遇到这个报错信息了，意思很简单，就是缓存计划不得更改结果类型。
+
+引起的原因是因为数据库的某个表的表结构发生改动，但是应用程序里面的缓存还是老的。
+
+所以。。就挂了。
+
+解决办法很简单，没有什么BUG是一次重启解决不了的，如果有，清缓存吧。
+
+7. Maven 使用tomcat7:run命令时报如下异常
+
+```
+严重: The Filter [xxxxFilter] was defined inconsistently in multiple fragments including fragment with name [jar:file:/D:/MavenRepositoryCopy/priject/model/1.0.1/model-1.0.1.jar!/] located at [jar:file:/D:/MavenRepositoryCopy/priject/model/1.0.1/model-1.0.1.jar!/]
+```
+
+意思就是一个名字叫xxxxFilter的过滤器在多个片段重复出现，冲突了。
+顺带一提，那个Filter文件里面写了@WebFilter注解。
+解决办法就是找到一个冲突的Filter，重命名下Filter的名称即可
+
+8. tomcat运行时报servlct类的某个方法找不到.
+   可能原因除了类冲突外,还有可能是运行的tomcat版本太高,所以挂
+
+9. 要注意数据库驱动和数据库软件之间的对应关系，如果版本对不上。
+    就会爆许多莫名其妙的BUG，比如说，今天就爆了数据库连接不上。。。
+
+10. log4j2配置文件写了，而且依赖也加了，但是就是不生效。
+
+    原因是项目里面含有两个log4j2的文件。
+
+    一个内容很少的配置文件生效了。
+
+# 二：普通BUG
+
+## 2.1 日志和测试依赖BUg
+
+### BUG环境：
+
+Spring Boot 应用中，添加了测试框架依赖
+
+如下
+
+```
+ <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+</dependency>
+```
+
+原先项目已经依赖了一个日志框架
+
+```
+<dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-log4j2</artifactId>
+</dependency>               
+```
+
+然后Spring Boot 版本是`2.0.1.RELEASE`
+
+最后测试代码是
+
+```
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes  = WwisWebApplication.class)
+@WebAppConfiguration
+public class KmCustomerControllerTest {
+    @Test
+    public void list() {
+
+    }
+}
+```
+
+### 引发BUG的操作
+
+执行测试代码
+
+### BUG 现象：
+
+控制台报错
+
+```
+java.lang.StackOverflowError
+	at java.lang.reflect.InvocationTargetException.<init>(InvocationTargetException.java:72)
+	at sun.reflect.GeneratedMethodAccessor1.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.apache.logging.log4j.util.StackLocator.getCallerClass(StackLocator.java:112)
+	at org.apache.logging.log4j.util.StackLocator.getCallerClass(StackLocator.java:125)
+	at org.apache.logging.log4j.util.StackLocatorUtil.getCallerClass(StackLocatorUtil.java:55)
+```
+
+### BUG解决方案：
+
+以上一个依赖改为
+
+```
+ <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>logback-classic</artifactId>
+                    <groupId>ch.qos.logback</groupId>
+                </exclusion>
+                    <exclusion>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-logging</artifactId>
+                    </exclusion>
+            </exclusions>
+        </dependency>
 ```
 
 
 
+# 三：有趣的BUG
+
+## 3.1 时区引起的时间戳转日期错误
+
+ ### BUG 环境
+
+测试环境，使用Linux机器，使用Tomcat运行项目
+
+### 引发BUG的操作
+
+后台以时间戳保存一个日期值，渲染在浏览器上面，是昨天的日期
+
+### BUG现象
+
+保存的时间戳，渲染出来的，是昨天的日期。
+
+### BUG解决方案
+
+先说下，数据的传输是浏览器选定一个时间，前台传来时间戳，后台将其包含在json中，保存到数据库
+
+后面再到浏览器进行一次操作，将该时间戳连同json反序列化成实体类（时间戳被反序列化成Date类型），保存到数据库中。
+
+最后，在显示数据库的信息时，那个数据戳表示的日期滞后一天。
+
+怀疑1：代码问题，本地测试无法复现BUG，将本地代码部署至测试环境，挂，还是出现BUG
+
+怀疑2：JSON序列化问题，其实归根结底，还是怀疑1一样，做了重复性工作。无终而返
+
+怀疑3：了解了时间戳原理。
+
+> 时间戳同个时刻，在地球的任何角落，都是一样。但是会因为时区的不同，渲染出来的时间也会有所不同。
+
+所以怀疑是Linux机器的时区不对，跟客户机不是一样的时区。
+
+先把出问题的时间戳用linux机器的命令转成日期，发现确实滞后一天了。
+
+板上钉钉！
+
+最后改了linux的时区，改成东八区(原先是标准区)。搞定
+
+小插曲，改为linux的时区后，没重启服务器前，服务器还是认旧的时区，得重启生效。
 
 
-## EXPLAIN的使用
 
-这个可以用于查看,mysql在处理select语句时，是怎么进行的，有没有用索引，有没有关联表等
+## 3.2 保存一个日期后，浏览器显示日期滞后
 
-用法是
+直接说解决方案
 
-`EXPLAIN {sql}`
+数据库时区改正
 
-sql填写sql语句后，直接执行，就可以查询到相关信息了，如
+## 3.3 Tomcat内存无法分配
 
-| id   | select_type | table | partitions | type  | possible_keys | key     | key_len | ref   | rows | filtered | Extra |
-| ---- | ----------- | ----- | ---------- | ----- | ------------- | ------- | ------- | ----- | ---- | -------- | ----- |
-| 1    | SIMPLE      | site  |            | const | PRIMARY       | PRIMARY | 4       | const | 1    | 100.00   |       |
-|      |             |       |            |       |               |         |         |       |      |          |       |
-|      |             |       |            |       |               |         |         |       |      |          |       |
+### BUG环境
 
+还是linux环境，tomcat容器
 
+### 引发BUG的操作
 
-## mysql变量的使用	
+启动服务器
 
-在mysql中，变量的表示是以@变量名开头来表示的
+### BUG现象
 
-如`@var` `@temp`  的等等
-
-
-
-一般说来，mysql的变量一般用于数据库的过程编写，但是，其实，也可以用于sql语句中的一些变化。
-
-举个例子：现在我有一个表，表里有一个字段X，这个字段要求是递增的。
-
-现在就要把表里每一行记录里面的X字段，都按照一定的排序来递增记录。
-
-在sql中，就可以用变量来记录这个递增值。
-
-参考的sql语句如下
+服务器启动到最后，报出
 
 ```
- set @var=0;
- update table set x=@var:=@var+1
- order by create_time ASC
+commit_memory(0x000000009bf80000, 117440512, 0) failed; error='Cannot allocate memory' (errno=12)
 ```
 
-搞定
+此错误
+
+同时目录生成一个hsxxxx文件，为JVM发生致命错误时生成的报告文件
+
+附上关键内容
+
+```
+memory: 4k page, physical 8036096k(109720k free), swap 999420k(0k free)
+```
+
+### BUG 解决方案
+
+该问题很明显就是服务器内存不够了，所谓`Cannot allocate memory`
+
+就是不能分配内存的意思
+
+然后看下启动保存的信息，Tomcat他想分配的内存大小是
+
+`117440512字节`=`112.0004654M`字节
+
+再看下奔溃文件，目前能分配的内存大小是
+
+`109720千字节`=`107.1484375M`字节
+
+所以，这就是压倒骆驼的最后一根牧草
+
+最后怎么解决呢？
+
+加内存，加钱，加显卡,加CPU
+
+什么，没钱，那么，再压下Tomcat的内存吧
+
+`vi ./bin/catalina.sh `
+
+加入一行
+
+`JAVA_OPTS="-Xms512m -Xmx1024m -Xss1024K"`
+
+save.... 搞定，运行，没问题，下班，走人
 
 
 
 
-
-
-
-# 第五节：decimal字段类型  
-
-这个类型比较特殊，比如说，它定义成decimal(5,4)  
-这个的意思，就是说，这个字段把整数部分和小数部分算在一起，其数字的个数不能超过5个，其中，小数的个数占了4个，也就意味着  
-整数部位只能一位。  
-所以，你想插入11.4啊，10.0啊，统统行不通。
-然后，特殊的是，你却可以插入9.99999999 虽然你看到小数部分个数是4，但是它允许你小数部分不限制加。。。  
-不过，实际存到数据库里面的，其实是截断过的   
