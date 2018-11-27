@@ -225,14 +225,63 @@ java.lang.StackOverflowError
 
 数据库时区改正
 
+## 3.3 Tomcat内存无法分配
 
+### BUG环境
 
+还是linux环境，tomcat容器
 
+### 引发BUG的操作
 
+启动服务器
 
+### BUG现象
 
+服务器启动到最后，报出
 
+```
+commit_memory(0x000000009bf80000, 117440512, 0) failed; error='Cannot allocate memory' (errno=12)
+```
 
+此错误
+
+同时目录生成一个hsxxxx文件，为JVM发生致命错误时生成的报告文件
+
+附上关键内容
+
+```
+memory: 4k page, physical 8036096k(109720k free), swap 999420k(0k free)
+```
+
+### BUG 解决方案
+
+该问题很明显就是服务器内存不够了，所谓`Cannot allocate memory`
+
+就是不能分配内存的意思
+
+然后看下启动保存的信息，Tomcat他想分配的内存大小是
+
+`117440512字节`=`112.0004654M`字节
+
+再看下奔溃文件，目前能分配的内存大小是
+
+`109720千字节`=`107.1484375M`字节
+
+所以，这就是压倒骆驼的最后一根牧草
+
+最后怎么解决呢？
+
+加内存，加钱，加显卡,加CPU
+
+什么，没钱，那么，再压下Tomcat的内存吧
+
+`vi ./bin/catalina.sh `
+
+加入一行
+
+`JAVA_OPTS="-Xms512m -Xmx1024m -Xss1024K"`
+
+save.... 搞定，运行，没问题，下班，走人
 
 
 
