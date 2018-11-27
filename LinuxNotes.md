@@ -1136,7 +1136,8 @@ linux上的分区就类似与windows上面的C盘，D盘。
    进入该目录：`WLHOME/common/bin` 找到`config.sh`文件，然后执行此命令
    `sh config.sh`
    > 注：WLHOME就是weblogic的安装目录，所以如果你忘记了weblogic的安装目录，就等着哭吧
-   > 顺带一提，本次实验的weblogic的安装目录是`/home/cxh/Oracle/Middleware/Oracle_Home/wlserver/common/bin`
+   >
+   >  > 顺带一提，本次实验的weblogic的安装目录是`/home/cxh/Oracle/Middleware/Oracle_Home/wlserver/common/bin`
 
    第三步：执行这个命令之后
    linux应该就弹出了一个GUI窗口
@@ -1256,7 +1257,6 @@ http链接转socket连接 polipo 自行搜索配置
 
    `--data-binary`自然就是指定传输的文件了，没错，这个请求要传一个二进制文件过去。后面的@带文件路径
 
-   
 
 
 
@@ -1302,7 +1302,16 @@ http链接转socket连接 polipo 自行搜索配置
 
 7. 其实追加的虚拟内存是临时的，貌似重启后就失效了，可以设置永久性的虚拟内存
 
-8. 
+# 第六章 linux的命令
+
+# 6.1 时间相关命令
+
+1. 将当前时间以Unix时间戳表示  `date +%s`
+2. 将Unix时间戳转换为日期时间  `date -d @1361542596` 
+3. 指定日期格式的转换  `date -d @1543248000000 +"%Y-%m-%d %H:%M:%S"`
+4. 查看当前时间和时区信息  `timedatectl`
+5. 设置时区  `timedatectl set-timezone Asia/Shanghai`  
+6. `timedatectl list-timezones`  查看所有时区名
 
 
 
@@ -1318,3 +1327,4 @@ http链接转socket连接 polipo 自行搜索配置
 
 
 
+ 
