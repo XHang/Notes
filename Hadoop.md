@@ -35,9 +35,6 @@ HDFS的相关名词
 
    > DataNode结点会先在NameNode上注册，这样它们的数据才可以被使用。
 
-   
-
-   
 
 ## 3. MapReduce介绍
 
@@ -73,11 +70,11 @@ MapReduce负责取出文件的逻辑
 
    > 放心，这个命令只是列出命令列表罢了，不会开启运行的
 
-​	接下来会配置Hadoop的运行方式，Hadoop的运行方式有三种
+	接下来会配置Hadoop的运行方式，Hadoop的运行方式有三种
 
-​	1：单机模式  2：伪分布模式   3：集群模式
+	1：单机模式  2：伪分布模式   3：集群模式
 
-​	这篇教程使用第二种，也就是伪分布模式
+	这篇教程使用第二种，也就是伪分布模式
 
 5. 编辑：etc/hadoop/core-site.xml:
 
@@ -194,6 +191,48 @@ MapReduce负责取出文件的逻辑
 
 
 
+## 7.8 查看节点信息
+
+输入命令：`./bin/hadoop dfsadmin -report`
+
+显示的结果如下
+
+```
+
+Configured Capacity: 0 (0 B)
+Present Capacity: 0 (0 B)
+DFS Remaining: 0 (0 B)
+DFS Used: 0 (0 B)
+DFS Used%: 0.00%
+Replicated Blocks:
+        Under replicated blocks: 0
+        Blocks with corrupt replicas: 0
+        Missing blocks: 0
+        Missing blocks (with replication factor 1): 0
+        Pending deletion blocks: 0
+Erasure Coded Block Groups:
+        Low redundancy block groups: 0
+        Block groups with corrupt internal blocks: 0
+        Missing block groups: 0
+        Pending deletion blocks: 0
+
+```
+
+没错，你的数据节点挂了
+
+如果是正常的，显示的结果如下
+
+```
+
+```
+
+
+
+## 7.9 安全模式相关
+
+1. 查看当前是否属于安全模式
+
+   `hadoop dfsadmin -safemode get`
 
 
 
@@ -491,42 +530,6 @@ export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar
 
 第四部：没了，尽情测试吧。反正LZ成功了。
 
-### 9.1 额外篇，在外网上运行WordCount
-
-其实这篇要解决的问题很简单，就是把之前在宿主机运行的WordCount程序员，搬到外网，如windows上运行。
-
-程序照样还是上面的程序，只不过，有些配置需要更改。
-
-1. 首先你的hadoop的HDFS端口要在外网能ping通，这个的话，就得编辑`core-site.xml`
-
-   把这段配置改下
-
-   ```
-       <property>
-           <name>fs.defaultFS</name>
-           <value>hdfs://192.168.0.178:9000</value>
-           </property>
-   
-   ```
-
-   主要是ip要换成外网的IP。
-
-2. 遇到这个问题`HADOOP_HOME and hadoop.home.dir are unset`
-
-   解决办法，把hadoop二进制的安装文件下载到本地，然后解压。假设解压后的目录为`D:\\hadoop`
-
-   然后呢？在程序一开始的地方设置一下环境变量
-
-   `System.setProperty("hadoop.home.dir", "D:\\hadoop");`
-
-   
-
-
-
-
-
-
-
 ## 10 在外网上，通过web访问Hadoop 的webUI
 
 一般情况下，hadoop 提供的webUI都是只能在本地回环地址上面使用的。如果想在外网上访问Hadoop的外网UI的话。需要在`hdfs-site.xml`里面配置
@@ -535,6 +538,7 @@ export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar
 <property>
   <name>dfs.http.address</name>
   <value>0.0.0.0:50070</value>
+  <!--NameNode web管理端口,如果端口为0，将在空闲端口启动-->
 </property>
 ```
 
@@ -542,7 +546,27 @@ export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar
 
 默认情况是这个端口啦，当然不能保证你可能会改配置。
 
+## 11 BUG集合
 
+1. 许久没登录hadoop了，某次启动后，执行一个命令，报端口9000无法连接。
+
+   查了许久，没有发现问题，后来。。
+
+   重新格式化分布式文件系统，重启，好了。。。
+
+2. 某次启动后（好吧，其实之前还格式化过系统。。。）
+
+   总之，在将数据放入系统时，报了一个错误，大概意思是说，没有数据节点。
+
+   确实，后来找到报告也是说没有数据节点。
+
+   最后我是怎么解决的呢？、
+
+   很简单，删除原先分布式文件系统的一切东西，重新格式化一遍
+
+   大概原因也明了了，因为我之前格式化文件系统没有考虑到hadoop的感受。
+
+   导致老数据和新数据冲突了
 
 
 
@@ -565,9 +589,9 @@ export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar
 
 
 
-​	
+	
 
-​	
+	
 # export JAVA_HOME=/usr/java/jdk1.6.0/
 改为 export JAVA_HOME=/home/jdk/jdk1.8.0_11    根据自己的java安装目录自己填写！
 第二步
@@ -649,7 +673,7 @@ create '表名', 'ColumnFamily名'
 	  接下来，我们就要搞事情了。。。额不，将Hbase和Hadoop结合起来
 
 
-​	  
+	  
 	  在之前的教程中，我们成功的将Hbase以独立方式运行，并利用shell命令进行了增删改查任务
 	  接下来，我们要设置Hbase的数据目录为HDFS分布式文件系统下面的目录，而非普通的linux文件目录
 	  第一步：
@@ -704,7 +728,7 @@ create '表名', 'ColumnFamily名'
 			eg：$ .bin/local-regionservers.sh stop 3
 
 
-​			
+			
 --------------------混乱的分割线----------------------
 Hbase的配置详解
 假定：你已经伪分布式并运行了Hbase和Hadoop
@@ -732,10 +756,10 @@ regionservers
 	hadoop fs -ls  /  列出根目录下面的所有文件
 
 
-​			
+			
 
 
-​	
+	
 
  	
 
