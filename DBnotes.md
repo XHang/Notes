@@ -123,7 +123,7 @@ Oracle数据库的日期函数为  `SYSDATE`
     `select t.*,@rowno:=@rowno+1 as rownum from t,(select @rowno:=0) t1; `
     其中@rowno:=1是给行号赋予初值，然后每次记录查出来都执行,`@rowno:=@rowno+1`，就起到行数的作用了  
 
-# 神奇的查询
+#  第五节：神奇的查询
 ## 连续性问题
 业务场景：小航，报表部门要你开发一个功能，能查询连续登录三个月及以上的登录用户。数据库表已经发给你了，最迟今晚完成。
 表数据T
@@ -265,6 +265,123 @@ sql填写sql语句后，直接执行，就可以查询到相关信息了，如
 
 搞定
 
+## 递归查询问题
+
+以常见的用水性质为例
+
+一般的水司，用水性质都是分层的。
+
+例如说
+
+1. 居民生活用水
+   1. 城镇居民用水
+   2. 社会福利机构
+   3. 教育机构
+2. 工商用水
+   1. 采矿业
+   2. 制造业
+   3. 建筑业
+
+这只是两层结构，实际随着业务发展，可以是三层，甚至四层
+
+现在问题来了，已知最低一层的记录ID，要求查到它最顶层的用水性质ID.
+
+而且，使用sql完成
+
+现在，给你一个用水性质的表结构（table_name = nature）
+
+| 主键（id） | 用水性质（nature） | 父级ID(parent_id) |
+| ---------- | ------------------ | ----------------- |
+| 1          | 居民生活用水       | 0                 |
+| 2          | 工商用水           | 0                 |
+| 3          | 城镇居民用水       | 1                 |
+| 4          | 社会福利机构       | 1                 |
+| 5          | 教育机构           | 1                 |
+| 6          | 采矿业             | 2                 |
+| 7          | 制造业             | 2                 |
+| 8          | 建筑业             | 2                 |
+
+那么，sql怎么写呢？要求制造业最顶层的用水性质
+
+如果你用的是mysql，想用mysql的sql语句实现递归查询。。。tan90 不可棱
+
+所以只能用存储过程。定义一个存储过程，用来递归查询
+
+下面直接写存储过程的解决方案
+
+```
+CREATE  PROCEDURE `getTopId`( OUT topid INT, IN originid INT )
+BEGIN
+	//声明一个中间变量，放父ID
+	DECLARE parentId INT;
+	//执行一个查询语句，并将ID和父ID赋值到两个变量中
+	SELECT parent_id,id INTO parentId,topid FROM nature WHERE id = originid;
+	//如果查询出的父ID不为0，表示还没查到顶层的数据，还需要递归call调用
+	IF parentId <> 0 THEN CALL getTopId ( topid, parentId );	
+	//结束IF语句块
+	END IF; 
+	//仅查询结果，去掉也可
+	SELECT topid;
+
+END
+```
+
+其中 存储过程的语法：声明变量，赋值变量，使用变量。判断IF语法，声明语法
+
+麻雀虽小，五脏俱全
+
+看语句就能理解，这里就不多描述了
+
+把上面的存储过程转成函数。试试？
+
+奉上函数代码
+
+```
+CREATE  FUNCTION `getTopId`( originid INT ) RETURNS int(11)
+BEGIN	
+	DECLARE parentId INT;
+	DECLARE topId INT;
+	SELECT parent_id,id INTO parentId,topId FROM usenature WHERE id = originid;
+	IF parentId <> 0 THEN  set topId = getTopId ( parentId );	
+	END IF; 
+	return topId;
+
+END
+```
+
+
+
+
+
+教训：
+
+1. 函数里面调用函数不是 foo = function(bar)  而是set foo =  function(bar) 
+
+2. 调用函数时发生`Recursive stored functions and triggers are not allowed.`
+
+   最后发现？？？好吧，Mysql的函数不支持递归调用
+
+
+
+
+存储过程OK了，但是怎么调用呢？
+
+1. 存储过程调用存储过程已经有示例了
+
+2. 在sql语句调用存储过程的话
+
+   待定
+
+
+
+
+
+PS：表设计上，考虑到这种递归写法对开发人员比较高的要求，实际上会加一个冗余字段`path`
+
+记录每一个记录的路径，比如说，制造业，那么它的path就是1,7
+
+这样你无需编写递归的sql，直接sql like去查询即可
+
 
 
 
@@ -279,4 +396,6 @@ sql填写sql语句后，直接执行，就可以查询到相关信息了，如
 所以，你想插入11.4啊，10.0啊，统统行不通。
 然后，特殊的是，你却可以插入9.99999999 虽然你看到小数部分个数是4，但是它允许你小数部分不限制加。。。  
 不过，实际存到数据库里面的，其实是截断过的   
-译
+
+
+
