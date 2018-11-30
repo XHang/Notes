@@ -47,5 +47,40 @@
 
 # 使用IDEA内部的Debug或者Run按钮运行项目，新改代码没生效  
 1. 解决办法很简单，找到Debug的运行配置，在最下方，有一个Before launch  
-选择BUild，双击，勾选那个xxx.war export 搞定  
-其实就是在点击那个按钮前，构建一下web应用。  
+  选择BUild，双击，勾选那个xxx.war export 搞定  
+  其实就是在点击那个按钮前，构建一下web应用。  
+
+# 五：使用IDEA的 Live Templates生成代码
+
+配置位置：直接搜索就行
+
+怎么操作也很简单
+
+下面介绍几个常用的模板
+
+```
+public static final Logger log = LoggerFactory.getLogger($CLASS$.class);
+
+CLASS 变量名表达式 className()
+
+快速生成log声明
+```
+
+```
+ if ($parameter$.get$field$() !=null){
+            $parameter$.set$field$( -$parameter$.get$field$()); 
+}
+
+
+$parameter$   as        groovyScript("_1[0]", methodParameters())
+field  as capitalize(camelCase(clipboard()))
+效果
+if (bill.getPayedfee() != null) {
+            bill.setPayedfee(-bill.getPayedfee());
+}
+自动拿取方法的第一个参数，并填充到bill，然后从黏贴板拿到字符串，首先转驼峰，然后首字母大写。
+其实复制数据库字段名就是这类的用法了
+ 
+
+```
+
