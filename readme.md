@@ -50,9 +50,9 @@ maven同样可以找到子pom。
     	</dependencyManagement>
 ```
 子pom如果需要引用该jar包，则直接引用即可！不需要加入<version>，便于统一管理。当然如果你加version的话，表明这个依赖是子项目特有的
-		然后插件也可以这么管理
-		主项目：
-	
+​		然后插件也可以这么管理
+​		主项目：
+​	
 	<build>
 		   <pluginManagement>
 		      <plugins>
@@ -144,18 +144,18 @@ maven同样可以找到子pom。
 ### 1.3.5: maven全局或者局部设置java编译版本
 在setting文件中，补上这份代码  
 ​	
-	<profile>   
-	    <id>jdk1.6</id>
-	    <activation>   
-	    <activeByDefault>true</activeByDefault>
-	    <jdk>1.6</jdk>   
-	    </activation>
-	    <properties>   
-	        <maven.compiler.source>1.6</maven.compiler.source>
-	        <maven.compiler.target>1.6</maven.compiler.target>
-	        <maven.compiler.compilerVersion>1.6</maven.compiler.compilerVersion>   
-	    </properties>   
-	</profile>  
+​	<profile>   
+​	    <id>jdk1.6</id>
+​	    <activation>   
+​	    <activeByDefault>true</activeByDefault>
+​	    <jdk>1.6</jdk>   
+​	    </activation>
+​	    <properties>   
+​	        <maven.compiler.source>1.6</maven.compiler.source>
+​	        <maven.compiler.target>1.6</maven.compiler.target>
+​	        <maven.compiler.compilerVersion>1.6</maven.compiler.compilerVersion>   
+​	    </properties>   
+​	</profile>  
 保存即可  
 如果全局设置失败，试下局部设置  
 在pom 文件中补上这个代码  
@@ -170,14 +170,18 @@ maven同样可以找到子pom。
 	    </configuration>
 	</plugin>
 
+## 1.3.6 指定打包路径
+
+
+
 # 第二章：杂项
 
 ## 2.1：BigDecimal的学习
 
 构造函数  
-		`BigDecimal(double val); ` 
-		`BigDecimal(int val);`  
-		`BigDecimal(String val);`  
+​		`BigDecimal(double val); ` 
+​		`BigDecimal(int val);`  
+​		`BigDecimal(String val);`  
 分别可以将double，int，String代表的数字转成BigDecimal对象  
 ## 2.2 :HttpClient分两个阶段版本，有些时候下错了就悲剧了
 
@@ -272,8 +276,8 @@ NOSQL意为非关系型数据库，分为几种
 ### redis的基础运用场景 
 1：多web项目中共享一个session  
 2：分布式缓存，由于redis提供了几大语言的接口，比如java，.net,c等语言。  
-		因此对于异质平台间进行数据交换起到了作用，因此它可以用作大型系统的分布式缓存，  
-		并且其setnx的锁常被用于”秒杀“，”抢红包“这种电商活动场景中。  
+​		因此对于异质平台间进行数据交换起到了作用，因此它可以用作大型系统的分布式缓存，  
+​		并且其setnx的锁常被用于”秒杀“，”抢红包“这种电商活动场景中。  
 
 
 
@@ -370,12 +374,12 @@ excludesfile = .gitignore
 			}); 
 ```
  关键点：  
-    1. contentType: 'application/json' 没加，报类型不匹配，毕竟加了@RequestBody 
-    mvc就很智能的帮你找这部分请求了，不合请求的 当然就踢走了
-     traditional: true,阻止jquery将你的字符串序列化成键值对。
-     JSON.stringify(obj)  毕竟真正在网络传输的其实是字符串，传个对象是不科学的。
-     js的对象组合也是很重要的，不过说白了也就是对象.属性.属性=xxxx  酱紫。。。
-    施工完毕
+​    1. contentType: 'application/json' 没加，报类型不匹配，毕竟加了@RequestBody 
+​    mvc就很智能的帮你找这部分请求了，不合请求的 当然就踢走了
+​     traditional: true,阻止jquery将你的字符串序列化成键值对。
+​     JSON.stringify(obj)  毕竟真正在网络传输的其实是字符串，传个对象是不科学的。
+​     js的对象组合也是很重要的，不过说白了也就是对象.属性.属性=xxxx  酱紫。。。
+​    施工完毕
 
 2.如何传一个复杂对象到Springmvc的控制器中？
   其实这部分应该是Spring知识，下次有空将其补上
@@ -434,8 +438,8 @@ excludesfile = .gitignore
 Plate<？ super Fruit> 下界通配符，'？'表示水果以及水果类的父类。
 换句话说，这个盘子可以放水果和食物。。
 ​	
-	`PS：虽然说可以放食物，你可不能往里面放猪肉。它可以放的是食物的实例，因为食物是水果的父类。
-	        猪肉是水果的父类吗?显然不对`
+​	`PS：虽然说可以放食物，你可不能往里面放猪肉。它可以放的是食物的实例，因为食物是水果的父类。
+​	        猪肉是水果的父类吗?显然不对`
 下界通配符 可以这么使用： `Plate<？ super Fruit> plate = new Plate<Food>(new Food())`
 这样的话编译器知道你搞了一个盘子，里面可以放水果或者水果以上的食物，但具体是什么它也不清楚。  
 所以放苹果是合适的，苹果既是水果，又是食物。  
@@ -543,20 +547,20 @@ jdk7引入了一个工具类，专门是Object的工具类：Objects
      最后改了jdk版本为1.7.重新update。版本恢复为1.7了。。		
      付代码
      `     <plugin>    
-            <groupId>org.apache.maven.plugins</groupId>    
-            <artifactId>maven-compiler-plugin</artifactId>    
-            <configuration>    
-                <source>1.7</source>    
-                <target>1.7</target>    
-            </configuration>    
+     ​       <groupId>org.apache.maven.plugins</groupId>    
+     ​       <artifactId>maven-compiler-plugin</artifactId>    
+     ​       <configuration>    
+     ​           <source>1.7</source>    
+     ​           <target>1.7</target>    
+     ​       </configuration>    
         </plugin>   
         <plugin>    
-            <groupId>org.apache.maven.plugins</groupId>    
-            <artifactId>maven-compiler-plugin</artifactId>    
-            <configuration>    
-                <source>1.7</source>    
-                <target>1.7</target>    
-            </configuration>    
+     ​       <groupId>org.apache.maven.plugins</groupId>    
+     ​       <artifactId>maven-compiler-plugin</artifactId>    
+     ​       <configuration>    
+     ​           <source>1.7</source>    
+     ​           <target>1.7</target>    
+     ​       </configuration>    
         </plugin>   </pre>`
        未知：setting文件改jdk版本为1.7仍然无效。这个小妖精。。。。
 
@@ -569,8 +573,8 @@ jdk7引入了一个工具类，专门是Object的工具类：Objects
 ##第九章：正则表达式
 1.  目前测试得知，java1.7 不支持捕获组里面写无限匹配量词，也就是'+'和'{2,}' 不能用
       eg:(?<=package\\s{1,})  or  (?<=package\\s+)  可以匹配'package   '后面的位置，但是java不支持这种写法
-   	考虑可以换成(?<=package\\s{1,10000})
-   	顺便贴上msg：Look-behind group does not have an obvious maximum length near index {num}
+      	考虑可以换成(?<=package\\s{1,10000})
+      	顺便贴上msg：Look-behind group does not have an obvious maximum length near index {num}
 
 ## 第十章：消息队列
 ### 何谓消息队列？  
@@ -751,9 +755,9 @@ taskkill /pid 2472 -t -f;
 简而言之，就是数据库正在忙，待会再试吧。。
 ..... 开玩笑，怎么可能待会再试，这种情况一般是数据库正在执行事务甚至死锁，这时候就要查询哪里正在执行事务了
 ​	
-	select t2.username,t2.sid,t2.serial#,t2.logon_time
-	from v$locked_object t1,v$session t2
-	where t1.session_id=t2.sid order by t2.logon_time;
+​	select t2.username,t2.sid,t2.serial#,t2.logon_time
+​	from v$locked_object t1,v$session t2
+​	where t1.session_id=t2.sid order by t2.logon_time;
 
 这个语句可以查出数据库有哪些锁
 
