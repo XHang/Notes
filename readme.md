@@ -53,17 +53,17 @@ maven同样可以找到子pom。
 ​		然后插件也可以这么管理
 ​		主项目：
 ​	
-	<build>
-		   <pluginManagement>
-		      <plugins>
-		          <plugin>
-		               <groupId>org.apache.maven.plugins</groupId>
-		               <artifactId>maven-source-plugin</artifactId>
-		               <version>2.1.1</version>
-		          </plugin>
-		      </plugins>
-		   </pluginManagement>
-		</build>
+​	<build>
+​		   <pluginManagement>
+​		      <plugins>
+​		          <plugin>
+​		               <groupId>org.apache.maven.plugins</groupId>
+​		               <artifactId>maven-source-plugin</artifactId>
+​		               <version>2.1.1</version>
+​		          </plugin>
+​		      </plugins>
+​		   </pluginManagement>
+​		</build>
 
 子项目：
 
@@ -141,7 +141,8 @@ maven同样可以找到子pom。
 
 原因：pom文件没写依赖。。。
 
-### 1.3.5: maven全局或者局部设置java编译版本
+## 1.4: maven全局或者局部设置java编译版本
+
 在setting文件中，补上这份代码  
 ​	
 ​	<profile>   
@@ -170,7 +171,153 @@ maven同样可以找到子pom。
 	    </configuration>
 	</plugin>
 
-## 1.3.6 指定打包路径
+## 1.5 指定打包路径
+
+
+
+## 1.6 打包时根据条件打包不同的目录
+
+用处很大，可以根据不同的环境，打包不同的配置文件
+
+其实要完成这样的功能，其实有很多方式。这里讲的只是通过打包的方式
+
+现在，假设你的webapp项目遵循Maven目录规范
+
+那么就会有src/main/resources/  这层目录
+
+
+
+### NO1:首先把各个环境的配置文件放在自己的文件夹内，示例
+
+```
+-src/main/resources/ 
+
+	-dev
+
+	-local
+
+	-prd
+
+	-test
+
+```
+
+
+
+### NO2:在项目根pom里面，加上这个
+
+```
+  <profiles>
+        <profile>
+            <id>local</id>
+            <properties>
+                <env>local</env>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <env>dev</env>
+            </properties>
+        </profile>
+        <profile>
+            <id>test</id>
+            <properties>
+                <env>test</env>
+            </properties>
+        </profile>
+        <profile>
+            <id>prd</id>
+            <properties>
+                <env>prd</env>
+            </properties>
+        </profile>
+    </profiles>
+```
+
+其中，`profile`是maven提出的一种用于构建配置文件的一个方案，它可以通过不同的触发，使env里面的环境变量生效。
+
+其中一个触发方式，便是在maven命令行指定。
+
+如`clean package -P prd`
+
+如此一来，就触发了`prd`的构建配置，使环境变量`prd`注入到`env`这个环境变量里面
+
+顺便一提`activeByDefault`标签的作用。
+
+如果你没指定任何触发方式，使`profile`生效的话。默认就会启用`activeByDefault`标签所在的`profile`配置
+
+### NO3:配置打包的资源目录
+
+上面仅仅只是设置某个环境变量的值
+
+接下里就要使用这个环境变量来指定特定的配置文件
+
+配置如下
+
+```
+<build>
+	 <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <excludes>
+                <exclude>local/*</exclude>
+                <exclude>dev/*</exclude>
+                <exclude>test/*</exclude>
+                <exclude>prd/*</exclude>
+            </excludes>
+        </resource>
+        <resource>
+            <directory>src/main/resources/${env}</directory>
+        </resource>
+    </resources>
+</build>
+```
+
+稍微解释下
+
+`<directory>src/main/resources</directory>`
+
+就是将项目里面这个文件夹里面的所有文件，都复制到打包后的资源文件目录
+
+`excludes`标签就是排除啦，毕竟你也看到了。
+
+各个环境的配置文件就在local、pro文件夹里面。没必要把所有环境的配置文件都打包在一起。
+
+最关键的还是
+
+` <directory>src/main/resources/${env}</directory>`
+
+之前说过的环境变量env可有用武之地了。
+
+把环境变量的值替换掉，拿到目标文件夹，再把里面的所有文件，复制到打包后的资源目录。
+
+这样就可以完成各个环境的配置文件打包。
+
+
+
+以上。
+
+另外一提。
+
+有一种更简单的打包方式，就是将触发方式设置为系统环境变量触发。
+
+根据打包所在系统的环境变量不同，来自动选择配置文件。
+
+可以说，只要设置一次系统环境变量，之后什么环境配置就不用管了。
+
+但是Maven的方式用起来有点尴尬。
+
+推荐使用Spring Boot的profile
+
+这东西可以做到启动时，根据环境变量的不同，自动选择配置文件。
+
+
+
+
 
 
 
@@ -183,16 +330,17 @@ maven同样可以找到子pom。
 ​		`BigDecimal(int val);`  
 ​		`BigDecimal(String val);`  
 分别可以将double，int，String代表的数字转成BigDecimal对象  
+
 ## 2.2 :HttpClient分两个阶段版本，有些时候下错了就悲剧了
 
 目前最新阶段的最新版本的依赖  
-```xml
+​```xml
 <dependency>
-	<groupId>org.apache.httpcomponents</groupId>
-	<artifactId>httpclient</artifactId>
-	<version>4.5.2</version>
+​	<groupId>org.apache.httpcomponents</groupId>
+​	<artifactId>httpclient</artifactId>
+​	<version>4.5.2</version>
 </dependency>
-```
+​```
 其HttpPost对象可以设置实体内容。而get不行！  
 其HttpClient对象这么创建：`CloseableHttpClient httpclient = HttpClients.createDefault(); `  
 
@@ -328,51 +476,51 @@ Springmvc控制器方法上的produces 要注意一下，仅当Accept请求头�
  只要在你在eclispe有安装EGIT，就可以在用户文件夹里面发现一个.gitconfig文件，里面就是关于git的全局配置，配置全局忽略的文件也在这里配，那么怎么配呢？  
 在用户文件夹里面再创建一个文件，就叫.gitignore 
 在新建的文件写上要过滤的文件，eg：
- ```
+```
  .setting
  .project
   target
   bin
- ```
+```
   一行一个。#表示注释
 
 在.gitconfig文件写上
-````
+​````
 [user]
 name = XiaoHang
 email = 1083594261@1-PC
 [core]
 excludesfile = .gitignore
-````
+​````
 ##第六章：Springmvc
 1.给Springmvc的控制器传对象我想大家都知道了吧，不就是对象.属性=xxx传键值对嘛...
   要换个说法，传个json字符串让控制器接受并自觉实例化成对象，怎么做？
   别瞎比比了，亮代码
-```
+​```
 @RequestMapping("/xxxx")
  public String  action (@RequestBody DsspRequestVo vo,		 												HttpServletRequest request,
  							HttpServletResponse response,
  							ModelMap model) 
  							throws IOException
  {return null}
-```
+​```
  后台代码酱紫，重要的是那个@RequestBody  
  后台代码很简单，重要的是前台代码
-```	
-			$.ajax({
-			type:"post",
-			url:"xxxx",
-			traditional: true,
-			contentType: 'application/json',
-			data :JSON.stringify(obj),
-				success:function(data){
-					 xxxx
-				},
-				error : function(data){
-					xxxx
-				}
-			}); 
-```
+​```	
+​			$.ajax({
+​			type:"post",
+​			url:"xxxx",
+​			traditional: true,
+​			contentType: 'application/json',
+​			data :JSON.stringify(obj),
+​				success:function(data){
+​					 xxxx
+​				},
+​				error : function(data){
+​					xxxx
+​				}
+​			}); 
+​```
  关键点：  
 ​    1. contentType: 'application/json' 没加，报类型不匹配，毕竟加了@RequestBody 
 ​    mvc就很智能的帮你找这部分请求了，不合请求的 当然就踢走了
@@ -385,7 +533,7 @@ excludesfile = .gitignore
   其实这部分应该是Spring知识，下次有空将其补上
   回到正题，如何传呢？
   url地址 用对象的属性.内部属性来传，ajax 如下	
-  ```
+ ```
   	$.ajax({
   	  			type:"get",
   	  			url:"xxxx",
@@ -398,7 +546,7 @@ excludesfile = .gitignore
   	  					"requestBody.flowintime" : "2017/6/7 22:22:22",
   	  					},
   	  ......
-  ```
+ ```
 就酱
 
 ##第七章：基础不扎实篇
@@ -529,15 +677,8 @@ jdk7引入了一个工具类，专门是Object的工具类：Objects
 
 20. 记住，程序里面`^`这个的话，是按位异或，不是指数啊！！
 
-### 反射
-1. 反射中，`class.getFields()`方法只能获取public的字段，`private`方法的字段获取不到。
+## 第八章：Eclipse的坑
 
-   这个方法才可以 ：`clazz.getDeclaredFields();`
-
-2. ​
-
-
-##第八章：Eclipse的坑
 1. eclipse的构建路径中的order and export 作用是 <br/>
    order就是使用class的顺序(因为可能出现class同名的情况)<br/>
    export就是把用到的一些的lib和project同时发布.<br/>
@@ -789,61 +930,61 @@ taskkill /pid 2472 -t -f;
 
 3:
 
-```
+​```
 常量命名全部大写（很少用到，权且一记）
-```
+​```
 
 4:
 
-```
+​```
 抽象类命名使用Abstract或Base开头；异常类命名使用Exception结尾；测试类命名以它要测试的类的名称开始，以Test结尾。
-```
+​```
 
 5:
 
-```
+​```
 数组定义请用 String []  args 而不要用 String args [] 
 为什么？第一个这样写很明显的，前者是字符串数组类型，后者是它的应用。第二个这么写，前者很明显是字符串类型，后者是其数组类型的一个引用。
 单从语句执行情况没有区别，但是前者把数据类型和引用分开了，更清晰。
 况且，使用后者，万一出现这种情况，String args[],str ;也许你写的时候知道str是字符串类型，但是后来的维护人员想骂街，一行定义两个数据类型，坑！
-```
+​```
 
 6:
 
-```
+​```
 包名统一小写啊（开发很少需要写包名，自己写项目的时候就要注意了）
-```
+​```
 
 7:
 
-```
+​```
 接口类中的方法和属性不要加任何修饰符号（public 也不要加）
 个人倒觉得无可厚非，加了更明显的标注接口的功能，再者，接口本来代码就不多。简洁嘛，也没多大必要
 标注是为了开发时注意点，个人写就随意了
-```
+​```
 
 8：
 
-```
+​```
 自己添加，代码里面的公有常量最好封装在一个工具包的枚举中，
 枚举出现的原因就是为了服务公有变量，枚举不能实例化符合工具类不能实例化这个需求。
-```
+​```
 
 9：
 
-```
+​```
 接口类后缀名是Service，实现类后缀名是ServiceImpl
-```
+​```
 
 10:
 
-```
+​```
 枚举类名建议带上Enum后缀，枚举成员名称需要全大写，单词间用下划线隔开。
-```
+​```
 
 11:
 
-```
+​```
 业务层数据层方法规范
 获取单个对象用getxxx
 获取列表对象用listxxxx
@@ -853,7 +994,7 @@ taskkill /pid 2472 -t -f;
 修改方法用update
 注意：不是说阿里云叫你这么做你就非得怎么做，遵守项目组的规范，看看前人写的方法名，
 照犬画狗即可，当然如果项目组没规范可讲，你就根据上面的规范吧。。。。
-```
+​```
 
 12：抛异常时想清楚这个异常是什么情况的，不要直接在方法名上throws Exception 就行了
 
@@ -862,9 +1003,9 @@ taskkill /pid 2472 -t -f;
 15:抛异常把异常信息说清楚点。。。还有封装代码时思考一下这么做值得吗？
 16:如果一个对象已经是注入的了，就不要用程序来再次修改它的状态
 
-```
+​```
 比如说有一个对象通过ioc注入，在使用时为了方便还在程序设置了几个对象属性。这是不合理的。
-```
+​```
 ## YAML文件格式
 ###  what is YAML?
 YAML是新一代的配置文件，其文件名的后缀是`yml`  
@@ -905,17 +1046,17 @@ YAML是新一代的配置文件，其文件名的后缀是`yml`
 ## 在Spring Boot上下文中使用集成测试
 步骤：
 1. 在你的项目依赖管理上面加上这个依赖
-```
+​```
 <dependency>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-test</artifactId>
+	​	<groupId>org.springframework.boot</groupId>
+	​	<artifactId>spring-boot-starter-test</artifactId>
 </dependency>
 
 > 注意：如果你在用这个依赖后，报log的栈溢出。
 那就是这个依赖引起的，需要把里面的一个依赖去掉
-```
+​```
 2. 然后在项目的test源码文件夹里面创建一个测试类，里面大概是酱紫的
-```
+​```
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes  = WebApplication.class)
 @WebAppConfiguration
@@ -929,22 +1070,11 @@ public class  Test{
 
     @Test
     public void test(){
-        myService.run();
+   ​     myService.run();
     }
  }
-```
+​```
  解释一下
  1. @RunWith(SpringJUnit4ClassRunner.class)表示Junit测试运行在Spring上
  2. SpringApplicationConfiguration这个是指定配置类，通过这个配置类引出单元测试所需要的测试类，这个配置类可以是Spring Boot启动类。
  3. WebAppConfiguration 开启使用web环境
-
-
-
-
-
-
-
-
-
-
-
