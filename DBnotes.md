@@ -406,6 +406,20 @@ WHERE id = 13
 
 
 
+## 连接Join的使用
+
+那些什么左连接，右连接，全连接,内连接，就不解释了
+
+今天要介绍的是，一个特立独行的json
+
+`corss join`
+
+唔~还是不怎么理解，貌似是求并集，把两个表的结果集合并起来
+
+很少用就是了
+
+
+
 # 第五节：decimal字段类型  
 
 这个类型比较特殊，比如说，它定义成decimal(5,4)  
@@ -418,6 +432,225 @@ WHERE id = 13
 
 
 # 第七节：神奇的DDL语句
+
+# 第八节  Mysql BUG合集
+
+##  8.1 导入数据时出错
+
+### 8.1.2 BUG描述
+
+在导入数据到数据库时，报`MySQL server has gone away`
+
+### 8.1.3 BUG分析
+
+这个错误提醒的意思是Mysql服务器断开连接。
+
+断开连接有两种原因
+
+1. 数据库bong沙卡拉卡了
+
+   可以用`show global status like 'uptime';`
+
+   去查询数据库存活的年龄。
+
+   如果值太小，那就是说数据库曾经挂掉了，而又偷偷重启了
+
+2. 连接被数据库关掉了
+
+   这个不好怎么判断
+
+但是不管那两种原因，最终还是要看日志文件来得知，到底发生了什么事情
+
+关于mysql的日志，还有一些不为人知的事情，比如说，mysql日志其实分为几类。还有，日志文件路径如何配置等等
+
+
+
+总之，我们看了mysql日志，终于知道
+
+导致`MySQL server has gone away`的原因，是
+
+`Got a packet bigger than 'max_allowed_packet' bytes`
+
+说成汉语就是得到的二进制包大于`max_allowed_packet`的大小，所以挂了
+
+原来mysql对于得到的二进制包的大小，有限制，不能大于`max_allowed_packet`的值
+
+### 8.1.4  BUG 的解决
+
+既然知道是`max_allowed_packet`值太小的缘故，那么把它调大点不就好了？
+
+怎么调整？
+
+1. 永久性调整，修改mysql配置文件的*************
+
+2. 暂时性调整，执行
+
+   `set global max_allowed_packet = 100 * 1024 * 1024*1024 * 1024;`
+
+   里面的值随你调整
+
+
+
+
+
+
+
+# 第九节 数据库的特殊字符
+
+数据库有些特殊字符，如果你的数据库里面有这些特殊字符的记录，在查询这些特殊字符时，就需要转义下
+
+比如说，你的数据库记录里面有`%2`字符，想查出这些字符的记录。你的sql可能会这么写
+
+`select * from table where field like %%2%`
+
+这样的sql会查出很多你不想查下来的记录。
+
+因为sql数据库会把`%`认为不是简单的百分号
+
+所以，你需要转义
+
+`select * from table where field like %\%2%`
+
+`\`就是转义字符
+
+但是转义字符怎么可能只有`\`
+
+再介绍一个？`_`
+
+这个字符也是like里面的用到的特殊字符，匹配任何单个字符
+
+遇到这个`_`特殊字符的查询，也需要转义啦
+
+
+
+# 第十节：存储程序和函数的语法
+
+## 10. 1声明变量语法
+
+`DECLARE var_name [, var_name] ... type [DEFAULT value]`
+
+如语法所示，一个`DECLARE `语句只可以声明一种类型的变量，但是可以有多个不同名字的变量
+
+示例
+
+```
+    DECLARE
+	areaNo 	VARCHAR(255) ;
+DECLARE
+	areaId 	int(255) ;
+```
+
+
+
+## 10.2 游标
+
+Oracle上面的游标学过了，Mysql其实也大同小异。
+
+但是有几个特性，还是要着墨记下的
+
+1. 只读
+2. 只能在一个方向上遍历，不能跳过行或者反向
+3. 游标声明必须在变量声明之后，处理程序之前声明
+
+作用就是遍历select的每一个记录
+
+首先要声明一个游标：
+
+`DECLARE  变量名 CURSOR for select_sql;`
+
+forExample
+
+`DECLARE areaRecord CURSOR for select id,area_no FROM km_reading_area;`
+
+这样就声明了一个游标
+
+注意几点
+
+1. 游标使用前必先打开
+
+   `open 游标名;`
+
+2. 不用时要关闭游标
+
+   `close 游标名`
+
+如何取得游标里面的元素
+
+` fetch 游标名 into 变量1,变量2;` 
+
+每次执行` fetch ` 语句后，游标都会往结果集下面移动一行
+
+由此，可以使用循环的方式拿去结果集的一些信息，并做一些处理
+
+常用的编码格式是酱紫的
+
+```
+-- 申明一个游标终止标识
+DECLARE done INT DEFAULT FALSE;
+-- 申明一个游标
+DECLARE  游标名 CURSOR for select_sql;
+-- 申明一个游标读到末尾时的一个触发动作。设置done为false
+DECLARE CONTINUE HANDLER for NOT FOUND set done = true;
+-- 打开游标
+open 游标名;
+-- 循环体
+back loop;
+	-- 拿取游标里面的字段
+	fetch 游标名 into 变量1,变量2;
+	-- 如果游标已经读取到末尾，跳出循环
+	 if(done) 
+	 	THEN LEAVE back; 
+	 end if;
+	-- 处理其他业务
+	....
+end loop;
+-- 循环体
+close 游标名;
+
+
+```
+
+## 10.3 创建存储过程的语法
+
+```
+CREATE PROCEDURE 过程名()
+begin 
+	-- 可以声明和处理一些程序了
+	····
+end 	
+```
+
+没有介绍如果有参数的语法。实际上，只消去mysql官方文档看一下就行了
+
+
+
+## 10.4 创建函数的语法
+
+```
+CREATE FUNCTION 函数名(入参名 数据类型)  returns 返回值类型  DETERMINISTIC  
+begin 
+	····
+end
+```
+
+就这么简单，但是有一点其实还不是很理解
+
+就是 `DETERMINISTIC` 的作用，去掉改值或者换其他值都会报错
+
+
+
+## 10 . 5调用函数的语法
+
+两种
+
+1. select  函数名(入参变量1,入参变量2);
+2. set 变量 = 函数名(入参变量1,入参变量2);
+
+什么，你想用call 唔，很遗憾的告诉你，call只能用于存储过程。所以......死，了，这，条，心，吧
+
+
+
+
 
 
 

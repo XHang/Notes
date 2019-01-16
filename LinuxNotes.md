@@ -434,6 +434,10 @@ PATH="$PATH":/test
 
 ## centos 软件相关
 
+## 在Linux上安装和使用linux
+
+
+
 
 
 ## 常见知识点
