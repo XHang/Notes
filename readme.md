@@ -141,6 +141,32 @@ maven同样可以找到子pom。
 
 原因：pom文件没写依赖。。。
 
+
+
+### 1.3.5 编码GBK的不可映射字符 BUG
+
+这个BUG主要是install时出现的
+
+在pom文件尝试加上这段话
+
+```
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <source>1.7</source>
+        <target>1.7</target>
+        <encoding>utf8</encoding>  
+    </configuration>
+</plugin>
+```
+
+当然最重要的就是那个encoding标签了
+
+
+
+
+
 ## 1.4: maven全局或者局部设置java编译版本
 
 在setting文件中，补上这份代码  
