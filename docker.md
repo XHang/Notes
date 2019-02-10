@@ -1,5 +1,17 @@
 # Docker笔记
 
+# 未完成点
+
+1. `docker swarm init`  是什么意思
+
+2. 第九章加粗点不理解
+
+3. 
+
+   
+
+   
+
 # 一：什么是Docker?
 
 Docker是一个容器技术。可以让我们的服务器程序置身其中，提供独立的环境配置
@@ -392,9 +404,110 @@ if __name__ == "__main__":
 
 `docker-compose.yml`文件定义了Docker容器，在生产环境上是如何工作的
 
+以下是一个示例的`docker-compose.yml`文件内容
 
+```
+version: "3"
+services:
+  web:
+  	# 别傻傻的复制后直接运行，这地方要改下的说
+    image: username/repo:tag
+    deploy:
+      replicas: 5
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "4000:80"
+    networks:
+      - webnet
+networks:
+  webnet:
+```
 
-待定。。。
+这个文件做了几件事情
+
+1. 从本地或者远程仓库中拉去名字为`username/repo:tag`的映像
+2. 启用5个容器运行该镜像，限制每个容器使用最多10%的cpu和50M的内存
+3. 如果一个失败了，立即重启该容器
+4. **将宿主机的4000端口映射到容器的80端口** 
+5. **让每一个容器共享负载平衡网络的端口80**
+6. **使用默认设置定义webnet网络（它是一个负载平衡的覆盖网络）**
+
+要在Docker创建一个分布式服务，首先要
+
+1. 创建`docker-compose.yml`文件
+
+2. 运行cmd命令
+
+   ```
+   docker swarm init
+   ```
+
+> 启动swarm（集群）模式并使当前计算机成为集群管理器
+
+3.  运行命令 
+
+`docker stack deploy -c docker-compose.yml getstartedlab`
+
+> 从 docker-compose.yml读取配置并部署一个新的栈
+>
+> 并起名为getstartedlab
+>
+> 当然，如果`getstartedlab`已存在，就是更新这个栈啦
+
+4. 查看效果
+
+   命令行键入`docker service ls`
+
+   查看你有多少服务
+
+   你也可以敲入`docker container ls`查看，因为分布式的每一个服务，都是一个容器，所以当然能显示出来啦
+
+   但是有个缺点，它没有过滤不是服务的容器。不管容器是不是服务器，它都会显示出来
+
+5. 继续查看效果
+
+   总的来说，就是在宿主机上访问`http://localhost:4000/`
+
+   并且多次执行以查看情况。
+
+   你会发现**Hostname**在每次访问都不一样
+
+   这就是负载均衡正常运行的一个实锤了
+
+   > Hostname 就是主机的ID，Docker默认的特性。别告诉我说你忘了
+
+6. 想更新这个栈，很简单，比如说，我微服务想弄多点，我要弄6个
+
+   也就是说`docker-compose.yml`
+
+   这个文件里面的`replicas`设置为6
+
+   然后改完，保存。
+
+   只需再执行`docker stack deploy -c docker-compose.yml getstartedlab`
+
+   不需要停止容器或者停止栈
+
+   ## 9.1 删除服务
+
+   步骤1：删除放置服务的栈
+
+   `docker stack rm {stack_Name}`
+
+   > docker stack ls 可以查看你当前有哪些栈，这个其实不用我讲吧
+
+   步骤2：离开集群
+
+   `docker swarm leave --force`
+
+   #
+
+   
 
    
 
