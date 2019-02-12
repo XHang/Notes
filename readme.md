@@ -141,6 +141,32 @@ maven同样可以找到子pom。
 
 原因：pom文件没写依赖。。。
 
+
+
+### 1.3.5 编码GBK的不可映射字符 BUG
+
+这个BUG主要是install时出现的
+
+在pom文件尝试加上这段话
+
+```
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <source>1.7</source>
+        <target>1.7</target>
+        <encoding>utf8</encoding>  
+    </configuration>
+</plugin>
+```
+
+当然最重要的就是那个encoding标签了
+
+
+
+
+
 ## 1.4: maven全局或者局部设置java编译版本
 
 在setting文件中，补上这份代码  
@@ -711,11 +737,38 @@ jdk7引入了一个工具类，专门是Object的工具类：Objects
     那么复原是失败的，你得先复原web文件夹，才能往下继续复原。。  
     这个特性真糟糕。  
 
-##第九章：正则表达式
-1.  目前测试得知，java1.7 不支持捕获组里面写无限匹配量词，也就是'+'和'{2,}' 不能用
-      eg:(?<=package\\s{1,})  or  (?<=package\\s+)  可以匹配'package   '后面的位置，但是java不支持这种写法
-      	考虑可以换成(?<=package\\s{1,10000})
-      	顺便贴上msg：Look-behind group does not have an obvious maximum length near index {num}
+ ##  第九章：正则表达式
+
+1. 目前测试得知，java1.7 不支持捕获组里面写无限匹配量词，也就是'+'和'{2,}' 不能用
+     eg:(?<=package\\s{1,})  or  (?<=package\\s+)  可以匹配'package   '后面的位置，但是java不支持这种写法
+     	考虑可以换成(?<=package\\s{1,10000})
+     	顺便贴上msg：Look-behind group does not have an obvious maximum length near index {num}
+
+2. 常用的正则表达式
+
+   1. 只要源字符串出现某一个字符，则匹配不通过
+
+      感谢StackOverFlow想出的正则表达式
+
+      `^[^-]+$`
+
+      该正则表达式的效果是，如果字符串含有`-`字符，则匹配不通过
+
+      换言之，只要字符串不含`-`，都是匹配的
+
+      这个正则表达式解释起来也还算简单
+
+      `[^-]`表示匹配除了`-`以外的所有字符
+
+      `+`表示一个或者多次
+
+      `^ `   `$`  匹配字符串的开始和结束
+
+      把这几个概念结合起来
+
+      就是从头到尾匹配字符串，其中`_`字符串，不得出现一次或者多次
+
+      居然还挺简单的。2333 
 
 ## 第十章：消息队列
 ### 何谓消息队列？  
