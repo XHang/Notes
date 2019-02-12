@@ -353,73 +353,11 @@ linux文件架构指的是linux系统都有哪些文件夹,代表的含义是什
 
    ​
 
-## 第三章:Linux的环境变量PATH
+1. 1. > 
 
-环境变量PATH是一个比较重要的变量.
+# 第三章：linun软件相关
 
-在输入一般命令的时候,如果这个命令的文件路径就在PATH环境变量中,那么不需要知道命令文件的所在位置.
-
-直接敲入命令,就可以执行命令.
-
-比如说ls,chmod这些命令.
-
-举一反三,如果有一个命令在/test文件夹.但是你想在其他地方也能执行到这个命令的话.就把/test文件夹路径加在path变量中,怎么加呢?
-
-```
-PATH="$PATH":/test
-```
-
-另外,如果有两个同名的命令在不同的目录中,而且这些目录都加在了PATH环境变量中,那么执行那个同名命令的话.
-
-先查询到的那个命令会先执行.
-
-因此,如果你写一个坏命令,起名叫ls,然后加在PATH变量的最前面.
-
-那么,你懂得..
-
-> 有两个文件可以设置环境变量，分别是`/etc/profile`  and  `/etc/bash.bashrc`
->
-> 经验证，后者可以生效，前者半死不活。不知道什么原因 
-
-
-
-​	
-
-
-
-
-
-  ​
-
-
-
-## ununtu 添加开机启动项目
-
-几种方式
-
-1. 编辑` /etc/rc.local `文本，把启动项目的脚本添加到里面，当然要在exit之前
-
-2. 编写自己的脚本文件，并通过命令添加到开机启动项里面
-
-   1. 创建一个脚本文件，后缀名为`sh`,假设为`run_server.sh`
-
-      > 别忘了改权限
-
-   2. 将脚本文件拷贝到`/etc/init.d` 文件夹里面，当然，链接过去也行
-
-      > 文件后缀名去掉吧。。。
-
-   3. 然后执行这个命令`sudo update-rc.d run_server defaults 90`
-
-      其中90这个数字越大，启动的顺序就越晚
-
-   4. OK ，顺手敲一个poweroff 
-
-      > 诶诶诶诶，我的电脑怎么关机了？
-
-      ​
-
-## ununtu 软件相关
+## 3.1：ununtu 软件相关
 
 `apt install 软件名`   可以安装置顶软件到
 
@@ -432,39 +370,87 @@ PATH="$PATH":/test
 
 
 
-## centos 软件相关
-
-## 在Linux上安装和使用linux
+## 3.2：centos 软件相关
 
 
 
 
 
-## 常见知识点
-​
-1. openssh安装后如何启动？  
-    命令：/etc/init.d/ssh start  必须在su权限下运行
+## 3.3:搭建SSR梯子
 
-2. 如何修改系统语言
+参考
 
-  `export LC_ALL=en_US.utf8`
+`https://www.jianshu.com/p/cc8e3bf2ca08`
 
-  修改本地系统语言为英系
+1. 第一步：下载安装包
 
-3. ​
+`wget --no-check-certificate https://raw.githubusercontent.com/Ellean/ShadowsocksRR_Auto_Installer/master/ShadowsocksRR.sh`
 
-## VIM编辑器怎么入坑  
+2. 第二步·：修改权限`chmod +x ShadowsocksRR.sh`
 
-  用vi  文件路径  即可打开一个文本文件  
-  初次进入是以命令行模式打开的，要编辑此文件，敲入i即可进入编辑模式。  
-  编辑模式下按esc回退到命令行模式  
-  将光标移动到某处，按dd即可删除该行  
-   「x」：每按一次，删除光标所在位置的“后面”一个字符。  
-  「#x」：例如，「6x」表示删除光标所在位置的“后面”6个字符。  
-  「X」：大写的X，每按一次，删除光标所在位置的“前面”一个字符。  
-  「#X」：例如，「20X」表示删除光标所在位置的“前面”20个字符。  
-  按下：号  
-  输入wq!强制保存并退出。。    
+3. 开始安装SSR ，并把安装日志保存到文件中  `./ShadowsocksRR.sh 2>&1 | tee shadowsocksR.log`
+
+4. 进行安装操作，包括选择端口，加密协议，密码等等
+
+5. 安装完毕，开始下载SSR客户端享受吧
+
+6. 最后列出几个服务端可能用到的命令
+
+   | 功能 | 命令                            |
+   | ---- | ------------------------------- |
+   | 启动 | /etc/init.d/shadowsocks start   |
+   | 停止 | /etc/init.d/shadowsocks stop    |
+   | 重启 | /etc/init.d/shadowsocks restart |
+   | 状态 | /etc/init.d/shadowsocks status  |
+   | 卸载 | ./shadowsocksR.sh uninstall     |
+
+7. 出了点问题
+
+   ```
+     File "/usr/local/shadowsocks/server.py", line 221, in <module>
+       main()
+     File "/usr/local/shadowsocks/server.py", line 39, in main
+       config = shell.get_config(False)
+     File "/usr/local/shadowsocks/../shadowsocks/shell.py", line 169, in get_config
+       with open(config_path, 'rb') as f:
+   IOError: [Errno 2] No such file or directory: '-d'
+   
+   ```
+
+看错误大致能理解，不知为何，SSR服务器拿到的配置文件路径是`-d`
+
+于是乎，把源码文件给改了，写死了配置文件路径
+
+就在文件`/usr/local/shadowsocks/../shadowsocks/shell.py`的169行
+
+## 3.4 SSH 连接工具
+
+openssh安装后如何启动？  
+命令：/etc/init.d/ssh start  必须在su权限下运行
+
+## 3.5 VIM编辑器
+
+1. 用vi  文件路径  即可打开一个文本文件  
+2. 初次进入是以命令行模式打开的，要编辑此文件，敲入i即可进入编辑模式。  
+3.  编辑模式下按esc回退到命令行模式  
+
+4.  将光标移动到某处，按dd即可删除该行  
+
+5. 「x」：每按一次，删除光标所在位置的“后面”一个字符。  
+
+6.  「#x」：例如，「6x」表示删除光标所在位置的“后面”6个字符。  
+
+7.  「X」：大写的X，每按一次，删除光标所在位置的“前面”一个字符。  
+
+8.  「#X」：例如，「20X」表示删除光标所在位置的“前面”20个字符。  
+
+9.  按下：号    输入wq!强制保存并退出。。    
+
+
+
+## 3.6 安装Tomcat
+
+
 
 
 ## 远程传输知识
@@ -563,7 +549,7 @@ mv [选项] 源文件或目录 目标文件或目录
     ​
 3. 解压命令
     `tar -xzvf file.tar.gz`  
-    ​
+    
 4. 设置linux的环境变量  
     vi  /etc/proifle 在其末尾添加这几句 
 ```
@@ -580,46 +566,55 @@ mv [选项] 源文件或目录 目标文件或目录
     `pwd`命令可以查看当前所在的路径（centos）  
     ​
     ​
+
 10. 获取java安装目录  
     利用`which java`得到路径1  which java是打印出java命令文件的路径    
     `ls -lrt+路径1`得到 箭头后的路径2  
     `ls -lrt+路径2`就ok了  
     默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
     ​
-11. 
-      centos查看网络端口占用:
-      ` firewall-cmd --zone=public --list-ports`  
-      开启或者关闭firewalld（centos7的防火墙）:
-    `systemctl start firewalld`and`systemctl stop firewalld`    
-      永远禁用centos防火墙:
-      `systemctl disable firewalld.service `  
-      ​
-12. 
-      centos修改主机名:`hostnamectl set-hostname 主机名`
-      `hostnamectl --static` 可以查看主机名
-      ​
-      13.
-      `centos`关机命令
-      `reboot`  重启
-      `poweroff` 立刻关机
-      ​
-      14.
-      在linux文件系统路径中
-      ~代表用户目录
-      如：`~/`就是`/home/make/`
-      ​
-13. 
-      wget是一个在控制台可以从各个协议上下载东西的工具
-      如这条命令
-      `wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
-      直接在控制台执行，就可以从镜像网站下载hadoop压缩包
-      ​
-      16：
-      看下在环境变量配置这里
+
+11.   centos查看网络端口占用:
+       ` firewall-cmd --zone=public --list-ports`  
+       开启或者关闭firewalld（centos7的防火墙）:
+     `systemctl start firewalld`and`systemctl stop firewalld`    
+       永远禁用centos防火墙:
+       `systemctl disable firewalld.service `  
+    
+     开放端口给其他机器访问
+    
+     `firewall-cmd --zone=public --add-port=80/tcp --permanent  `
+    
+     最后使用
+    
+     `firewall-cmd --reload`  
+    
+     立即生效
+
+12.   centos修改主机名:`hostnamectl set-hostname 主机名`
+       `hostnamectl --static` 可以查看主机名
+
+13.
+​       `centos`关机命令
+​       `reboot`  重启
+​       `poweroff` 立刻关机
+​       
+
+14.
+​       在linux文件系统路径中
+​       ~代表用户目录
+​       如：`~/`就是`/home/make/`
+
+15.     wget是一个在控制台可以从各个协议上下载东西的工具
+如这条命令
+`wget https://mirrors.tuna.tsinghua.edu.com/apache/hadoop/common/hadoop-2.7.4/hadoop-2.7.4.tar.gz`
+ 直接在控制台执行，就可以从镜像网站下载hadoop压缩包
+      
+16. ： 看下在环境变量配置这里
       `export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin`
       这种配法有什么用？
-      ​
-14. 
+
+2. 
       更新`yum`源  
       有时候自带的`yum`版本落后了，下载的软件都是老版本的，这时候就要考虑更换下yum的版本了 
       首先备份旧的yum源`/etc/yum.repos.d/CentOS-Base.repo`
@@ -628,34 +623,34 @@ mv [选项] 源文件或目录 目标文件或目录
     `yum makecache`
       运行以上两个命令生成yum的缓存  
       ​
-15. 
+3. 
       为wget设置代理，其实很简单
       修改其配置文件` vi /etc/wgetrc  ` 
       里面有教你如何设置代理，将其设置为有运行ss软件的机子的ip地址，端口设置为ss的端口即可。
     当然ss要开：允许局域网连接，并且要设置代理的机子和开ss的机子在同一个网段上
-16. centos添加用户
+4. centos添加用户
     首先登录 root 账号
     执行： `useradd 用户名`命令创建一个新用户
     执行`passwd username` 为新用户设置新密码并激活
     centos删除用户 ：`userdel -rf grid` 删除用户的所有信息.
     不加参数的仅仅只是删除用户，用户的信息没有被删除。  
     ​
-17. 切换用户登录，centos：login -f username 
+5. 切换用户登录，centos：login -f username 
       注：1. 加f参数不用输入密码  
       ​
-18. 在ssh客户端切换登录会退出哦
+6. 在ssh客户端切换登录会退出哦
       ​
-19. 查看用户所在的组`groups username` 一般说来
+7. 查看用户所在的组`groups username` 一般说来
       ​
-20. 添加组 `groupadd name`
+8. 添加组 `groupadd name`
       ​
-21. 将某文件或者文件夹的
+9. 将某文件或者文件夹的
       ​
-22. 归属到某一个组中
-      `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
-      ​
-      -R可以递归整个目录的归属权
-      ​
+10. 归属到某一个组中
+       `chown groupname /var/run/httpd.pid`  将/var/run/httpd.pid此文件的所有权归属到groupname这个组中
+       ​
+       -R可以递归整个目录的归属权
+       ​
 ## 文件描述符
 
 含义：在linux中，文件描述符是linux为了高效管理已打开的文件而创建的索引，其值是一个非负整数，用于指代被打开的文件。  
@@ -1275,7 +1270,7 @@ http链接转socket连接 polipo 自行搜索配置
 
 `0` 代表标准输入
 
-代表表示输出
+`1`代表表示输出
 
 `2`代表标准错误
 
@@ -1291,7 +1286,15 @@ http链接转socket连接 polipo 自行搜索配置
 
 好，那么问题来了
 
-请问`>`
+请问`2>&1` 代表什么意思
+
+代表将标准错误输出到标准输出。
+
+就是错误能打印到控制台上
+
+就这么简单
+
+
 
 
 
@@ -1354,6 +1357,70 @@ http链接转socket连接 polipo 自行搜索配置
 4. 查看当前时间和时区信息  `timedatectl`
 5. 设置时区  `timedatectl set-timezone Asia/Shanghai`  
 6. `timedatectl list-timezones`  查看所有时区名
+
+# 第X章:Linux的零碎知识点
+
+## x.1环境变量PATH是
+
+一个比较重要的变量.
+
+在输入一般命令的时候,如果这个命令的文件路径就在PATH环境变量中,那么不需要知道命令文件的所在位置.
+
+直接敲入命令,就可以执行命令.
+
+比如说ls,chmod这些命令.
+
+举一反三,如果有一个命令在/test文件夹.但是你想在其他地方也能执行到这个命令的话.就把/test文件夹路径加在path变量中,怎么加呢?
+
+```
+PATH="$PATH":/test
+```
+
+另外,如果有两个同名的命令在不同的目录中,而且这些目录都加在了PATH环境变量中,那么执行那个同名命令的话.
+
+先查询到的那个命令会先执行.
+
+因此,如果你写一个坏命令,起名叫ls,然后加在PATH变量的最前面.
+
+那么,你懂得..
+
+> 有两个文件可以设置环境变量，分别是`/etc/profile`  and  `/etc/bash.bashrc`
+>
+> 经验证，后者可以生效，前者半死不活。不知道什么原因 
+
+
+
+## x.2 :ununtu 添加开机启动项目
+
+几种方式
+
+1. 编辑` /etc/rc.local `文本，把启动项目的脚本添加到里面，当然要在exit之前
+
+2. 编写自己的脚本文件，并通过命令添加到开机启动项里面
+
+   1. 创建一个脚本文件，后缀名为`sh`,假设为`run_server.sh`
+
+      > 别忘了改权限
+
+   2. 将脚本文件拷贝到`/etc/init.d` 文件夹里面，当然，链接过去也行
+
+      > 文件后缀名去掉吧。。。
+
+   3. 然后执行这个命令`sudo update-rc.d run_server defaults 90`
+
+      其中90这个数字越大，启动的顺序就越晚
+
+   4. OK ，顺手敲一个poweroff 
+
+      > 诶诶诶诶，我的电脑怎么关机了？
+
+
+
+## x.4 改系统语言
+
+`export LC_ALL=en_US.utf8`
+
+学点英语也不错
 
 
 
