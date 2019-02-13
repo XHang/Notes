@@ -112,6 +112,14 @@ Images:机翻把它翻译成图像，其实它的术语叫做映像。
 
 > 谁叫你的系统是Win10 家庭版~~~
 
+
+
+> 另外说一点，想在Linux上运行Docker，只需要下载Docker引擎就行（毕竟Docker是Linux的亲儿子）
+>
+> 关于怎么安装，官网说的很清楚了，用官网的教程没有任何问题，所以，这里也不介绍了
+>
+> 最后只要能运行HelloWorld镜像，那就没问题
+
 ## 2.2 运行一个HelloWorld映像
 
 在cmd命令行键入`docker --version`
@@ -493,7 +501,9 @@ networks:
 
    不需要停止容器或者停止栈
 
-   ## 9.1 删除服务
+   
+
+## 9.1 删除服务
 
    步骤1：删除放置服务的栈
 
@@ -504,8 +514,54 @@ networks:
    步骤2：离开集群
 
    `docker swarm leave --force`
+# 十 用Docker实现集群
 
-   #
+所谓集群，就是运行Docker的一组计算机。
+
+集群的计算机，可以是虚拟的，也可以是物理的，但是加入集群后，它门被称为节点
+
+你可以用Docker命令管理集群，而执行这个Docker命令的容器，被称为集群管理器
+
+Docker的集群管理器可以指定多个策略来运行节点中的容器
+
+Docker集群管理器是唯一可以执行Docker命令的容器。其他的容器只能提供服务。
+
+说了这么多，来实际设置自己的集群吧。
+
+前提
+
+1. win10，有hyperv功能
+
+   > 如果没有hyperv功能，也可以安装virtualbox ，但这就不在下面的讨论访问内了，你可以去官网找找看教程
+
+2. 安装Docker 
+
+步骤
+
+1. 首先你要在想成为集群管理器的机子上执行`docker swarm init`
+
+2. 打开hyperv管理界面，新建一个虚拟交换机`Virtual Switch` 并命名为`myswitch`
+
+   保证`共享此网络适配器`复选框选中
+
+3. 在cmd敲入
+
+   ```
+   docker-machine create -d hyperv --hyperv-virtual-switch "myswitch" myvm1
+   docker-machine create -d hyperv --hyperv-virtual-switch "myswitch" myvm2
+   ```
+
+   这个命令需要下载一个iso文件，可能会等较长时间（50多MB）建议设置梯子
+
+4. 
+
+
+
+
+
+
+
+   
 
    
 
