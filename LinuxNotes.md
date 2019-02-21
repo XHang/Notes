@@ -1430,7 +1430,22 @@ http链接转socket连接 polipo 自行搜索配置
 
 7. 其实追加的虚拟内存是临时的，貌似重启后就失效了，可以设置永久性的虚拟内存
 
+## 5.2 忘记了Linux ROOT 密码咋办
 
+前提是linux物理机就在你身边
+
+1. 重启
+2. 在提示你按下e键时，果断按下e建
+3. 找到`Linux16`开头的第一行，在行末尾加`    init=/bin/sh` 
+4. 然后按`ctrl+x` 进入单用户模式
+5. 接下来执行一系列命令
+   1. `mount -o remount,rw /`
+   2. `passwd`
+   3. 输入密码啦
+   4. `touch /.autorelabel`
+   5. `exec /sbin/init`
+   6. 等待重启
+6. 搞定
 
 
 
