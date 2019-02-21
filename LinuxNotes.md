@@ -448,12 +448,70 @@ openssh安装后如何启动？
 
 
 
-## 3.6 安装Tomcat
+## 3.6 搭建SS梯子
+
+```
+wget –no-check-certificate -O shadowsocks.sh https://raw.githubusercontent.com/teddysun/shadowsocks_install/master/shadowsocks.sh
+```
 
 
 
+```
+chmod +x shadowsocks.sh
 
-## 远程传输知识
+./shadowsocks.sh 2>&1 | tee shadowsocks.log
+```
+
+以上命令依次执行即可
+
+
+
+## 3.8 安装BBR  加速用
+
+ 首先下载BBR.sh
+
+然后运行。。。没了
+
+但是，如果的系统内核低于4.22。要升级下系统内核
+
+可以用`uname -a`  查看系统内核版本
+
+升级步骤
+
+1. `yum update -y`
+
+2. ```
+   rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+   rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-2.el7.elrepo.noarch.rpm
+   yum --enablerepo=elrepo-kernel install kernel-ml
+   ```
+
+3. 查看你的已安装的内核
+
+   ```
+   rpm -qa | grep kernel
+   ```
+
+   如果看到有比较新的版本内核，那就是成功
+
+4. 然后嘛
+
+   ```
+   egrep ^menuentry /etc/grub2.cfg | cut -f {index} -d \'
+   grub2-set-default {index} 
+   ```
+
+   `{index} `是执行`rpm -qa | grep kernel`命令后，从上往下数，从0开始。启动第几个内核
+
+5. 重启
+
+6. 重启完毕继续用`uname -a`  查看系统内核版本
+
+
+
+# 第四章：Linux周边相关
+
+## 4.1 远程传输知识
 
 1. 利用putt传文件到远程服务器  
 
@@ -466,16 +524,17 @@ putt客户端下载下来一般都有那个pscp.exe文件。进入该文件对�
 注意：有时候发送过去但是找不到文件或者发送时提示`permission denied ` 
 就是访问被拒绝了，这时候你得手动更改远程服务器的文件夹为可读可写  chmod 777 xxxx  
 注：pscp -r 后面指定文件夹名可以远程传输文件夹  
-​
 
-## linux网络相关知识
-### Ubuntu的防火墙设置
+# 第五章： Linux网络相关
+
+## 5.1：Ubuntu的防火墙设置
 
 开启防火墙并设置为开机启动
 
 `ufw enable`
 
-### 初次网络配置
+## 5.2：初次网络配置
+
 当你第一次安装完centos7系统后，并不能直接使用网络，这是因为，默认情况下，新安装的系统没有在启动系统的时候也启动网络
 ​
 这时候呢？我们需要改下配置文件
@@ -526,9 +585,33 @@ ONBOOT：值有yes和no 分别代表系统启动是是否随之启动网络接�
 ​
 即可重启网络
 
-### 关闭防火墙
+## 5.3关闭防火墙
 
 `systemctl stop firewalld.service`
+
+
+
+## 5.4 设置网络的DNS
+
+以centso为例
+
+为了设置网络的DNS,你需要编辑一个配置文件
+
+文件的位置在
+
+`/etc/resolv.conf`
+
+修改后的文件内容大致如下
+
+```
+
+nameserver 2001:19f0:300:1704::6
+nameserver 8.8.8.8 #google域名服务器
+nameserver 8.8.4.4 #google域名服务器
+egrep ^menuentry /etc/grub2.cfg | cut -f 11 -d \'
+```
+
+
 
 
 
@@ -1346,6 +1429,10 @@ http链接转socket连接 polipo 自行搜索配置
 6. OK，再用free -m 看下，虚拟内存是不是增加的。。
 
 7. 其实追加的虚拟内存是临时的，貌似重启后就失效了，可以设置永久性的虚拟内存
+
+
+
+
 
 # 第六章 linux的命令
 
