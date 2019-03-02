@@ -428,6 +428,39 @@ linux文件架构指的是linux系统都有哪些文件夹,代表的含义是什
 openssh安装后如何启动？  
 命令：/etc/init.d/ssh start  必须在su权限下运行
 
+
+
+如何免密登录 
+
+情景介绍，假设你现在两台服务器，其中一条想通过无密码，ssh远程连接到另外一条服务器
+
+你需要按照以下步骤
+
+1. 通过一个安装了ssh的机器，执行以下命令`ssh-keygen -t dsa`
+
+   > 使用dsa的密钥类型生成一个公钥和私钥。
+
+   执行过程一路Next，中级要你输入密码你可不要输入了，毕竟我们需要免密登录
+
+2. 将公钥的内容复制到需要免密登录的服务器上的，具体路径是`~/.ssh/authorized_keys`
+
+   如果上面没有这个路径，你需要自己建一个，注意`.ssh`和`authorized_keys`文件当前用户要能执行，
+
+   其他用户最多只有执行权限，所以这两个文件都要修改权限为`600`
+
+3. 把生成的秘钥，复制在客户端，然后ssh登录（没试过）
+
+   其实我只是想记录取得秘钥的方法而已。。
+
+   
+
+   
+
+   
+
+
+
+
 ## 3.5 VIM编辑器
 
 1. 用vi  文件路径  即可打开一个文本文件  
@@ -580,15 +613,15 @@ mv [选项] 源文件或目录 目标文件或目录
      `systemctl start firewalld`and`systemctl stop firewalld`    
        永远禁用centos防火墙:
        `systemctl disable firewalld.service `  
-    
+     
      开放端口给其他机器访问
-    
+     
      `firewall-cmd --zone=public --add-port=80/tcp --permanent  `
-    
+     
      最后使用
-    
+     
      `firewall-cmd --reload`  
-    
+     
      立即生效
 
 12.   centos修改主机名:`hostnamectl set-hostname 主机名`
@@ -1293,6 +1326,18 @@ http链接转socket连接 polipo 自行搜索配置
 就是错误能打印到控制台上
 
 就这么简单
+
+另外：还有一些输出重定向命令
+
+`>>` 把前面命令的输出内容，写入到另一个地方
+
+比如将一个文件的内容追加到另一个文件中，可以使用这个命令
+
+`cat id_dsa.pub >> authorized_keys `
+
+
+
+
 
 
 

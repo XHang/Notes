@@ -553,19 +553,415 @@ Docker集群管理器是唯一可以执行Docker命令的容器。其他的容�
 
    这个命令需要下载一个iso文件，可能会等较长时间（50多MB）建议设置梯子
 
-4. 
+   顺便一提，这里两个命令的作用是，在你的hyperv虚拟机上，创建两个虚拟机.
+
+   一个叫`myvm1`
+
+   一个叫`myvm2`
+
+   注：如果执行上面那个命令后，控制台卡在了`(myvm1) Waiting for host to start...`
+
+   请打开网络适配器，看看里面是不是有一个名为`switch`的适配器连不上网络，显示网线被拔断
+
+   如果是，可能是你的虚拟交换机`switch`的网卡配置有问题，选了一个·不能上网的网卡
+
+   笔者就是这样的。。
+
+4. 以上两个命令执行完，相信你也可以看到`hyperv`管理器里面多出了两个虚拟机。
+
+   如果你想再验证下，可以敲`docker-machine ls`  
+
+   你可以看到这两个虚拟机的IP地址以及名字等一些信息
+
+---
+
+通过以上的操作，我们建立两个虚拟机，并且安装了docker
+
+其实吧，上面的操作，即使你不用虚拟机，而是有多个物理机，同样也可以做到
+
+而正式开发上，肯定也是这样的，不可能把集群全安装一个机器上，节点全都是虚拟机吧
+
+那怎么做的。 
+
+前提，你真的要有起码两台物理机，其中一条安装Docker，用于执行命令，另外一条至少安装有ssh，可以远程登录
+
+1. 取得安装ssh机器的ssh私钥（请参考linux教程）
+
+2. 然后在安装了docker的机器上，执行命令
+
+   ```
+   docker-machine create \
+     --driver generic \
+     --generic-ip-address=144.202.59.222 \
+     --generic-ssh-key ~/.ssh/id_rsa \
+     vm
+   ```
+
+   注意啦，如果你是在windows执行该命令的
+
+   `\`都要换成 `` ` 前面再加一个空格哦
+
+   windows和linux的多行编辑符不一样
+
+   然而还是有一个问题，就是在windows上，ssh key总是访问不到
+
+   其实是因为docker认的windows文件夹分隔符只能是`/` 这不是规范，这是docker的特性
+
+   最后还是不知道怎么肥四就弄好了。。ORZ
+
+   执行以上命令，你的云主机就自动创建了docker并在客户端记录了一个machine的记录了
+
+   你可以通过`docker-machine ls `来查看机器列表 
+
+   有时会出现timeOut的情况，你可以加延迟超时时间
+
+   `docker-machine ls -t 30` 默认10s超时，这次改成30秒超时
+
+---
+
+通过以上两种方式，相信你已经弄了几个虚拟机/物理机，并把它们都加入到了docker-machine列表里面了
+
+接下来
+
+1. 我们选其中一个物理机/虚拟机，让它成为swarm集群管理器
+
+   `docker-machine ssh myvm1 "docker swarm init --advertise-addr <myvm1 ip>"`
+
+   这样，我们就把machine列表中，一个叫`myvm1 `的机器设置为集群管理器了
+
+   使用这个命令，你不用专门跑到那个集群管理器来执行这个命令
+
+   这个命令本来就是远程ssh来执行的哦
+
+   `--advertise-addr`是这个集群对外的地址，将来加入集群的服务器需要用到这个地址
+
+   这个地址其实还有一个端口，不过我们没指定，就默认是`2377`了
+
+   另外，如果你要自定义端口的话，切记不要用`2376` 那个是docker守护程序的端口
+
+   最后，执行那个命令，返回响应会包含一个命令
+
+   `docker swarm join --token SWMTKN-1-0sd6ihyygbxlyvdahsuawb31qknugpm5lqdvjqn9mtafkcpo88-4dbnwwxo334w3rtk49ml8wlpu 144.202.59.222:2377`
+
+   执行这个命令，可以将对应的docker主机加入到集群中。
+
+   可以在其他装有docker的机子上执行
+
+   当然，也可以用docker-machine工具来执行
+
+2. 加入集群
+
+   其实用的就是上面那个命令
+
+   `docker swarm join --token SWMTKN-1-15w7ii8xmnfjpc6tl80kq0d96vymr7a3n0ajlr3jrsm3xgu9s7-1079vd27rdy2xt781hanslcz2 192.168.200.126:2377`
+
+   > 忘记了Token和IP咋办，只要你还知道集群管理器是哪个
+   >
+   > 执行这个命令`docker swarm join-token manager`
+   >
+   > 就可以重现那个join命令
+
+   不过我们可以用`docker-machine ssh {machine_name} "{command}"` 来远程执行
+
+   执行完命令你可以看到
+
+   `This node joined a swarm as a worker.`
+
+   欢呼把，庆幸吧，还好你没遇见timeOut问题
+
+   我就遇见了。。。嘛，docker告诉我，虽然执行过程timeout了，但是实际上还在后台执行
+
+   我可以在集群管理器执行`docker info` 来查看集群情况
+
+   > 其实不止集群，很多东西都爆出来了。。
+
+3. 在集群管理器上，执行`docker node ls`
+
+   可以查看加入集群的节点
+
+4. 如果想离开集群，可以在想离开集群的节点上执行`docker swarm leave`
+
+   ---
+
+5. 切换当前shell环境为集群管理器
+
+   首先我们把当前的控制台配置为直接和远程的VM通信（其实就是跟XSHELL一样）
+
+   执行以下命令
+
+   `docker-machine env {machine_name}`
+
+   该命令执行后，会提示你运行某一行命令，我运行的命令是这个
+
+   ```
+   & "C:\Program Files\Docker\Docker\Resources\bin\docker-machine.exe" env myvm1 | Invoke-Expression
+   ```
+
+   其他人可能不一样，要紧盯控制台的输入哦
+
+   ok，这些完毕后，你在控制台的任何输入，都会反馈到远程的服务器上，就相当于一个SSH了
+
+   但是它又可以直接访问到本地的文件，可以说很牛*了
+
+   > 想退出此shell怎么办
+   >
+   > ` & "C:\Program Files\Docker\Docker\Resources\bin\docker-machine.exe" env -u | Invoke-Expression`
+   >
+   > 这样你这个shell就会和远程服务器断开连接，以后执行的任何命令，都只是在本地执行了
+
+6. 在集群管理器上部署一个应用
+
+   其实跟之前部署单机的服务一样，只不过这个服务，现在变成集群服务了
+
+   执行以下命令
+
+   `docker stack deploy -c docker-compose.yml getstartedlab`
+
+   
+
+   OK ,搞定，你已经在两个集群管理器上面运行了两个相同的服务器
+
+   此谓之集群啦
+
+   想验证下？
+
+   `docker-stack ps getstartedlab`
+
+   看到输出的列表了吗？
+
+   那就是服务啦
+
+   
+
+7. 验证服务的运行
+
+   首先运行`docker-machine ls`列出注册在本机远程机器
+
+   随便拿一个IP
+
+   > (当然得是加入集群的那个机器的IP)
+
+   然后访问`IP：PORT`
+
+   > port是多少，请查找你的`docker-compose.yml`文件配置
+
+# 十一：往集群添加一个可视化工具
+
+前面我们创建一个集群，并在上面跑了一个很简单的镜像（服务）
+
+现在我们再加一个服务：可视化工具，值得注意的是，这个工具，只能运行在集群管理器，因为它是一个监控集群的一个东西。
+
+为了能够添加这么一个东西，我们需要
+
+1. 修改`docker-compose.yml`,使其如下所示
+
+```
+version: "3"
+services:
+  web:
+    image: choosedockers/test
+    deploy:
+      replicas: 6
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "4000:80"
+    networks:
+      - webnet
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - webnet
+networks:
+  webnet:
+```
+
+本次其实只是添加了一个services，名称叫`visualizer`(所以位于`servies`的下一级)
+
+新的东西还有
+
+`volumes` 让可视化工具访问docker的套接字文件
+
+`placement`使可视化工具只部署在集群管理器上
+
+2. 还愣着干嘛   执行`docker stack deploy {stack_name}`更新栈配置啊
+
+   > 对啦，从上面启动shell的env以来，我没特殊说明，就不要退出这个shell了
+   >
+   > 保证敲的命令，都能传输到集群管理器
+
+3. 浏览器进入`{ip of myvm1:8080}`  或者`{ip of myvm2:8080}` 
+
+> 8080配置文件有讲哦
+
+> 你可以看到集群里面都有几个节点，都部署了什么
+>
+> 如果你觉得可视化工具欺骗了你。执行以下`docker stack ps {stack_name}`
+>
+> 可以看到更多内容哦
+
+# 十二：添加redis依赖
+
+现在我们尝试再往上面的集群添加一个redis服务
+
+修改集群配置文件
+
+`docker-compose.yml`
+
+```
+....
+ redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - "/home/docker/data:/data"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    command: redis-server --appendonly yes
+    networks:
+      - webnet
+....
+```
+
+> 以上添加在services元素下面
+
+如上文所示，我们添加了一个redis服务
+
+> （其实也是一个镜像啦，这个是redis官方的docker镜像，名字叫做`redis`）
+
+redis部署有几个规范，希望你能准守
+
+1. redis要部署在集群管理器上，这样能使用相同的文件系统，确保它使用的是相同的主机
+
+2. redis要能访问宿主机的`/home/docker/data`，使其映射到容器的`/data`上，使数据能永久存储
+
+   不至于重启一次容器，数据就丢失了
 
 
 
+部署文件加完后，我们还要新建文件夹`/home/docker/data`,确保这个路径是能够访问
 
+最后一部呢？更新栈！
 
+`docker stack deploy {stack_name}`
 
+然后到浏览器`{ip of myvm1:4000}` 访问，看redis是不是正常可用了？
+
+看看可视化工具，是不是有redis服务啦？
+
+再看看栈的任务列表`docker stack ps {stajc_name}` 看看有没有redis服务
+
+OK，完毕，就酱紫啦
 
    
 
    
 
    
+
+
+
+
+
+# 十一：BUG
+
+## 11.1 docker-machine ls 命令unknown
+
+简而言之，就是执行这个命令时，显示的dockerMachine中docker版本是unknown
+
+一开始并不知道是什么原因，于是只能去找日期，搜了一下，发现docker引擎在windows的日志位置在
+
+`C:\Users\{user_name}\AppData\Local\Docker`   
+
+再查了一下，发现在`C:\Users\10835\.docker\machine\machines\myvm1l`虚拟机文件夹里面的
+
+`config.json`丢失了，不知道是不是傻子软件把它删了，这种情况，只能再创建虚拟机了
+
+# 十二： docker命令
+
+## 12.1 docker-machine 命令
+
+1. `docker-machine ls`
+
+   列出本机注册的docker机器，包括远程的，也包括虚拟机的，其实都一视同仁啦
+
+   值得注意的是，如果当前的shell是在列出的机器里面
+
+   则那个机器会标出`*`号(活动计算机)
+
+2. `docker-machine start <machine-name>`
+
+   开启远程机命令
+
+   就是说，如果你的远程机关了，执行这个命令，可以远程开启
+
+   这个非常666
+
+   但是，你这个槽老头子坏得很，我不信VPS也可以开机
+
+   实际上，我只是试了本地上面的虚拟机罢了
+
+   
+
+   
+
+   
+
+## 12.2 docker-stack  命令
+
+栈：是一组相关联的服务，它们共享依赖关系，同步协调和扩展
+
+> 一组相关的服务，能让你想到什么，没错，就是集群，分布式服务器
+>
+> 同一个意思的不同说法罢了
+
+栈相关的命令
+
+1. `docker-stack ps {stack_name}`
+
+   列出栈里面的任务
+
+2. `docker stack deploy {stack_name}`
+
+   部署一个栈，如果这个栈已存在，则更新。
+
+   一般情况下，都是改动`docker-compose.yml`文件后，再执行这个，就可以生效
+
+   
+
+   
+
+   
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
