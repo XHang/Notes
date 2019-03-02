@@ -489,6 +489,30 @@ WHERE id = 13
 
    里面的值随你调整
 
+## 8.2 修改表结构一直被卡
+
+嗯，就是执行alter语句一直卡住。如果看服务器线程，会发现`Waiting for table metadata lock`
+
+就是说，数据库一直在等待获取锁。
+
+这个时候，应该就能知道，肯定这个表的锁被其他线程拿了。
+
+其中一种场景就是事务执行中，未结束。
+
+解决办法很简单，要么找到事务未结束的原因，让它自动结束
+
+要么，KIll his
+
+```
+select trx_state, trx_started, trx_mysql_thread_id, trx_query from information_schema.innodb_trx 
+```
+
+可查询事务列表
+
+`trx_mysql_thread_id`即为线程ID
+
+可通过Kill 线程ID使其狗带
+
 
 
 
