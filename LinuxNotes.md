@@ -44,6 +44,10 @@
 
    	可以键入`man 命令` 来查看这个命令的手册,不过很长就是了
 
+> 如果man提示说没有这个实体，确保命令没敲错的情况下，尝试执行`yum install -y man-pages`
+>
+> 安装man手册
+
    ​	特别注意的是,man这个命令执行后在左上角会出现`man 数字`
 
    ​	不同的数字代表不同的含义
@@ -349,11 +353,17 @@ linux文件架构指的是linux系统都有哪些文件夹,代表的含义是什
 
    结果显示的是`/etc/sysconfig `
 
-   感觉有点白痴,但实际上,当完整档名非常长的时候,它还是有用武之地的
+   感觉有点白痴,但实际上,当完整档名非常长的时候,它还是有用武之地​
 
-   ​
+3. 查找文件
 
-1. 1. > 
+   通过find来查找文件，可以指定的参数如下
+
+   -name {fileName}以文件名查找
+
+   `/`  用法`find  / -name nginx.pid`  就是在根目录及子文件夹下面查找一个文件名为`nginx.pid`的文件
+
+   
 
 # 第三章：linun软件相关
 
@@ -698,15 +708,15 @@ mv [选项] 源文件或目录 目标文件或目录
      `systemctl start firewalld`and`systemctl stop firewalld`    
        永远禁用centos防火墙:
        `systemctl disable firewalld.service `  
-    
+        
      开放端口给其他机器访问
-    
+        
      `firewall-cmd --zone=public --add-port=80/tcp --permanent  `
-    
+        
      最后使用
-    
+        
      `firewall-cmd --reload`  
-    
+        
      立即生效
 
 12.   centos修改主机名:`hostnamectl set-hostname 主机名`
@@ -1521,7 +1531,7 @@ http链接转socket连接 polipo 自行搜索配置
 
 # 第六章 linux的命令
 
-# 6.1 时间相关命令
+## 6.1 时间相关命令
 
 1. 将当前时间以Unix时间戳表示  `date +%s`
 2. 将Unix时间戳转换为日期时间  `date -d @1361542596` 
@@ -1529,6 +1539,15 @@ http链接转socket连接 polipo 自行搜索配置
 4. 查看当前时间和时区信息  `timedatectl`
 5. 设置时区  `timedatectl set-timezone Asia/Shanghai`  
 6. `timedatectl list-timezones`  查看所有时区名
+
+
+
+## 6.2 线程和进相关命令
+
+1. 给进程发信号 ：`kill -s {信号} {pid}`
+2. 
+
+
 
 # 第X章:Linux的零碎知识点
 
