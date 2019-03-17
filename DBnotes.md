@@ -418,6 +418,13 @@ WHERE id = 13
 
 很少用就是了
 
+## Exists的特点
+
+使用exists的sql子句只会返回true或者false。例如  `select * from user where id=? and exists (select * from vip where user_id=?)`      
+这样的话，会先查找vip表里面是否有指定的用户id,如果有的话，把该用户从user表查出来.    
+所以exists是子查询如果包含行，返回true，否则返回false  
+注:值的一提的是，如果sql子句是:`where exists (null)` 那么这个子句会返回true。  
+
 
 
 # 第五节：decimal字段类型  
@@ -428,6 +435,8 @@ WHERE id = 13
 所以，你想插入11.4啊，10.0啊，统统行不通。
 然后，特殊的是，你却可以插入9.99999999 虽然你看到小数部分个数是4，但是它允许你小数部分不限制加。。。  
 不过，实际存到数据库里面的，其实是截断过的   
+
+
 
 
 
@@ -512,6 +521,13 @@ select trx_state, trx_started, trx_mysql_thread_id, trx_query from information_s
 `trx_mysql_thread_id`即为线程ID
 
 可通过Kill 线程ID使其狗带
+
+
+
+## 8.3 column ambiguously defined
+
+一般sql查询，不涉及到子查询的情况下，就算有重复的字段名也可查询出来。但是一旦执行了子查询，如果子查询后会有两个相同的字段。
+  则会查询失败，报`column ambiguously defined`
 
 
 
@@ -674,9 +690,170 @@ end
 
 
 
+# 第十一节：DAO框架共性
+
+1. 绝大多数dao框架，都不允许写这种sql语句  
+   `select * from user where userName like '%?%'`  
+   然后setString。  
+   这样会报错说栏目数不对，实际栏目数1，预期栏目数0   
+   这估计是因为占位符`?`写到了字符串里面  
+
+# 第十二节：PG数据库知识
+
+1. 如何查看pg数据库的版本  
+   `select version();`   
+
+2. 如何查看pg数据的连接资源  
+   `SELECT * FROM pg_stat_activity WHERE datname='postgres';`
+
+   > 条件的postgres指的数据库名  
+   > 另注：你没看错，就是datname，而不是dataname  
+
+   几个字段说下  
+
+   1. `state`:运行状态，可以为几种值：  
+   2. `active`:正在执行；  
+   3. `idle:`等待新的命令    
+   4. `idle in transaction`:后端是一个事务，但是尚未执行查询；  
+   5. idle in transaction(aborted):和idle in transaction类似，除了事务执行出错
+
+3. 连接资源太多，怎么kill
+   `SELECT pg_terminate_backend(PID);`  
+   pid的值需要从第二项的sql语句查询结果来寻找 
+
+4. 死锁了怎么搞？
+   什么情况下会死锁？当你发现一个DML语句总是卡住时，一个简单的select一次性通过的话，你就得考虑死锁的可能性了
+   用这个sql语句可以看到死锁的进程
+
+   ```
+     WITH t_wait AS (
+     SELECT
+     	A .locktype,
+     	A . DATABASE,
+     	A .relation,
+     	A .page,
+     	A .tuple,
+     	A .classid,
+     	A .objid,
+     	A .objsubid,
+     	A .pid,
+     	A .virtualtransaction,
+     	A .virtualxid,
+     	A,
+     	transactionid,
+     	b.query,
+     	b.xact_start,
+     	b.query_start,
+     	b.usename,
+     	b.datname
+     FROM
+     	pg_locks A,
+     	pg_stat_activity b
+     WHERE
+     	A .pid = b.pid
+     AND NOT A . GRANTED
+     ),t_run AS (
+     SELECT
+     	A . MODE,
+     	A .locktype,
+     	A . DATABASE,
+     	A .relation,
+     	A .page,
+     	A .tuple,
+     	A .classid,
+     	A .objid,
+     	A .objsubid,
+     	A .pid,
+     	A .virtualtransaction,
+     	A .virtualxid,
+     	A,
+     	transactionid,
+     	b.query,
+     	b.xact_start,
+     	b.query_start,
+     	b.usename,
+     	b.datname
+     FROM
+     	pg_locks A,
+     	pg_stat_activity b
+     WHERE
+     	A .pid = b.pid
+     AND A . GRANTED
+     ) SELECT
+     r.locktype,
+     r. MODE,
+     r.usename r_user,
+     r.datname r_db,
+     r.relation :: regclass,
+     r.pid r_pid,
+     r.xact_start r_xact_start,
+     r.query_start r_query_start,
+     r.query r_query,
+     w.usename w_user,
+     w.datname w_db,
+     w.pid w_pid,
+     w.xact_start w_xact_start,
+     w.query_start w_query_start,
+     w.query w_query
+     FROM
+     t_wait w,
+     t_run r
+     WHERE
+     r.locktype IS NOT DISTINCT
+     FROM
+     w.locktype
+     AND r. DATABASE IS NOT DISTINCT
+     FROM
+     w. DATABASE
+     AND r.relation IS NOT DISTINCT
+     FROM
+     w.relation
+     AND r.page IS NOT DISTINCT
+     FROM
+     w.page
+     AND r.tuple IS NOT DISTINCT
+     FROM
+     w.tuple
+     AND r.classid IS NOT DISTINCT
+     FROM
+     w.classid
+     AND r.objid IS NOT DISTINCT
+     FROM
+     w.objid
+     AND r.objsubid IS NOT DISTINCT
+     FROM
+     w.objsubid
+     ORDER BY
+     r.xact_start
+   ```
+
+   看到r_pid没，kill it！
+
+   其实吧，最重要的是建立死锁超时机制，死锁的线程一旦超时，就强制关闭，释放锁。
+   死锁并发数高的话，很容易发生。
+
+   什么情况下会死锁
+
+   A线程拿着表A的锁，要访问表B.  
+   B线程拿着表B的锁，要访问表A  
+
+5. 不要太依赖工具，比如说Navicat 。这货会把太大的数据变成科学计数法。实测，用pg数据库的shell工具查出来的数据是正常的。。
+   但是，比较坑的是，pg数据库支持用科学计数法表示的数字来作为查询语句的条件来查询数据。。
+
+# 第十三节 Oracle数据库知识
+
+1. 一般如果在执行DML语句出现这个错误：
+
+   `ora-00054:resource busy and acquire with nowait specified ` 
+   简而言之，就是数据库正在忙，待会再试吧。。
+   ..... 开玩笑，怎么可能待会再试，这种情况一般是数据库正在执行事务甚至死锁，这时候就要查询哪里正在执行事务了
+
+   ```
+   select t2.username,t2.sid,t2.serial#,t2.logon_time
+   from v$locked_object t1,v$session t2
+   where t1.session_id=t2.sid order by t2.logon_time;
+   ```
 
 
-
-
-
+   这个语句可以查出数据库有哪些锁
 

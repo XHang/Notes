@@ -145,9 +145,29 @@ Key3=Value
 
    > 如果Meter的类型是显示类型的话,比如说String
 
-## 4.3 字符串属性
+## 4.3 显示属性（仪表）
 
-什么是字符串属性，我想上面解释的很清楚了，就是属性下面键值对有`Meter = String`
+当一个select下面的Meter所配置的select 类型是用于显示的类型时(比如说,String)
+
+那么这个属性就是显示属性
+
+以下是显示属性的几个通用的键值对配置
+
+`MouseOverAction `  值是一个用`[]`包含的执行语句。顾名思义，就是鼠标移动到皮肤的时候，执行语句咯
+
+`MouseLeaveAction`这个就是鼠标离开啦
+
+`LeftMouseUpAction` 这个是鼠标点击啦 
+
+`x`和`y`对于整个皮肤，这个显示属性的相对位置
+
+`SolidColor=0,0,0,1` 将这个显示元素一个实心，不可见的框包含起来，以方便作为点击元素
+
+
+
+### 4.3.1 字符串属性
+
+这个属性要求属性下面的Meter键值对设置为String
 
 这个属性主要是用于显示字符串用的，因此，有自己特定的键值对配置
 
@@ -160,6 +180,28 @@ Key3=Value
 4. `Text` 用于配置显示的文字，一般用于显示静态文字，或者用其他`select`得到的数据再加上自己的数据组成新的数据，再用来显示
 
    如果只是单纯的显示`select`给的数据，则可不用Text，而是用`MeasureName=select名称`来直接显示就行
+
+### 4.3.2 图像属性
+
+这个属性要求属性下面的Meter键值对设置为Image 
+
+该属性拥有的键值对属性如下
+
+1. ImageName 可以指定一个图片路径
+
+   通常用相对路径表示
+
+   做法是在皮肤配置文件夹里面，创建一个`@Resources`文件夹
+
+   然后在配置的路径里面，就可以用`#@#`来代表资源文件夹了
+
+   给一个示例配置`ImageName=#@#Images\一本正经.jpg`
+
+2. `w`  `h`  设置图像的宽度高度，如果不设置的话，默认就是图像的大小
+
+3. `x`  `y`  相对位置
+
+4. 
 
 ## 4.4 全局的样式设置
 
@@ -180,17 +222,49 @@ AntiAlias=1
 
 `MeterStyle=样式名`即可
 
-## 4.5 用于测量的属性
+## 4.5 用于测量的属性（度量）
 
 该属性可用的键值对配置有
 
 1. `Measure` 测量的类型，比如说`Measure=Time`
+
 2. `Format`对测量出来的数据进行格式化,配置的示例是`Format=%A, %B %#d, %Y %#I:%M %p`
+
 3. `UpdateDivider` 可以配置此项以便在皮肤更新几遍后，再重新获取测量的值，而不是每次皮肤更新，都更新度量的值
 
-# 4.3 注释
+4. `IfCondition ` 值是一个布尔表达式，如` MeasureCPU> 60 `
+
+5. `IfTrueAction`的值是一个用`[]`包含起来的执行语句，当`IfCondition ` 判断的条件是true时，这个执行语句将生效
+
+   `IfFalseAction`同理，这里就不解释了
+
+   提几个执行语句
+
+   `!SetOption MeterCPU FontColor "255,0,0"`   设置MeterCPU 的select的字体颜色为红色
+
+## 4.6 注释
 
 在`ini`配置文件中，注释的语句用`;`开头
+
+## 4.7 命令
+
+在前文中，我们介绍了几个在配置文件中使用的命令。
+
+主要是用于`LeftMouseUpAction `  `MouseLeaveAction `  等动作的触发上
+
+可以触发的命令有几种，
+
+一种就是rainmeter的内部命令，被称为**Bangs**，它主要用于在皮肤上做各种各样的事情,比如说改字体颜色啦等等
+
+> 比如说前面提到的`!SetOption MeterCPU FontColor "255,0,0"`
+
+一种就是外部命令，比如说，打开记事本，或者打开网站
+
+> 举几个例子
+>
+> 打开某个应用程序：`MouseLeaveAction=[!SetOption MeterCPU FontColor "0,255,0"]`
+>
+> 打开某个网站`LeftMouseUpAction=["http://cnn.com"]`
 
 
 
