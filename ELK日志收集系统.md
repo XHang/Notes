@@ -5,7 +5,7 @@ ELK由三个组件组成
 1. E表示Elasticsearch，是日志分析引擎
 2. L表示Logstash 是日志搜集器，负责搜集服务器上面的日志，备选的其他搜集器还有Beats
 3. K表示Kibana 就是负责web页面展示的一款组件，支持扩展
-  建议安装顺序为Elasticsearch，kibana，Logstash
+    建议安装顺序为Elasticsearch，kibana，Logstash
 
 # 第一章：Elasticsearch快速入门
 
@@ -28,22 +28,22 @@ ELK由三个组件组成
 3. 运行
 
 4. 注意点1：
-  Elasticsearch开启过程中，你可以看到这个日志重复出现
+    Elasticsearch开启过程中，你可以看到这个日志重复出现
 
   `[INFO ][o.e.e.NodeEnvironment    ] [1xBUNqo]`
   告诉你，`1xBUNqo`就是自动生成的Elasticsearch节点名，嘛，你当然自定义一个节点名
   用这个命令启动`./elasticsearch -Ecluster.name=my_cluster_name -Enode.name=my_node_name`  
 
 5. 注意点2：
-  后台运行Elasticsearch后，可以键入`curl http://localhost:9200/` 查看运行结果  
+    后台运行Elasticsearch后，可以键入`curl http://localhost:9200/` 查看运行结果  
 
 6. 注意3：  
-  Elasticsearch启动后，默认开启的是9200来提供服务  
+    Elasticsearch启动后，默认开启的是9200来提供服务  
 
 7. 注意点4：
-  开启Elasticsearch过程中，注意这一行
-  `publish_address {127.0.0.1:9300}`它告诉你哪个ip地址和端口可以访问到Elasticsearch的服务。  
-  后面还有一个bound address。没设置的情况不能从其他主机访问Elasticsearch的服务（经验之谈）  
+    开启Elasticsearch过程中，注意这一行
+    `publish_address {127.0.0.1:9300}`它告诉你哪个ip地址和端口可以访问到Elasticsearch的服务。  
+    后面还有一个bound address。没设置的情况不能从其他主机访问Elasticsearch的服务（经验之谈）  
 
   > 用./elasticsearch >> 1.log & 可以将启动过程的日志存在1.log文件下，不用再输出到控制台了
 
@@ -661,7 +661,7 @@ curl -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_doc/_bulk?
 
 1. 解压
 2. 修改config里面的kibana配置文件，将
-  `elasticsearch.url: "http://192.168.21.254:9200/`修改为elasticsearch的服务器地址。
+    `elasticsearch.url: "http://192.168.21.254:9200/`修改为elasticsearch的服务器地址。
 3. 如果远程主机要访问kibana的服务，请把`#server.host: "localhost"`此行取消注释，并设置为非回环地址
 4. 运行bin里面的可执行文件  
 5. 如果一切正常的话，访问kibana的ip地址+端口，可以看到kibana为你展现的前端页面，不过，在食用之前，你需要在页面设置一个模式。。
@@ -840,6 +840,7 @@ Mapping divides the documents in the index into logical groups
 可以发现控制台先打印一串鬼画符，然后出现光标了。这时候，你输入什么，敲回车，就回显什么  
 SUCCESS！这表示你的logstash已经能正常工作了  
 解释：  
+
 1. -e 可以让你以命令行的方式给logstash指定配置。  
 2. 该示例的管道是从标准输入获取数据，并以结构化的数据输出到标准输出  
 
@@ -864,18 +865,18 @@ SUCCESS！这表示你的logstash已经能正常工作了
 作用：  
 1. 指定要使用的插件以及插件的配置
 2. 可以引用配置的事件字段，处理符合条件的事件。  
-  注： 运行logstash可执行文件时 用 -f参数来指定配置文件。
-  logstash配置文件的格式大概如下所示，这个配置主要是配置logstash的每一个插件。。   
-  包括：输入插件，输出插件，筛选器插件
+    注： 运行logstash可执行文件时 用 -f参数来指定配置文件。
+    logstash配置文件的格式大概如下所示，这个配置主要是配置logstash的每一个插件。。   
+    包括：输入插件，输出插件，筛选器插件
 
       input {
         ...
       }
-      
+     
       filter {
         ...
       }
-      
+     
       output {
         ...
       }
@@ -887,7 +888,7 @@ SUCCESS！这表示你的logstash已经能正常工作了
             path => "/var/log/messages"
             type => "syslog"
           }
-       
+           
           file {
             path => "/var/log/apache/access.log"
             type => "apache"
@@ -897,14 +898,14 @@ SUCCESS！这表示你的logstash已经能正常工作了
 RT 酱紫的话，就为这个输入插件配置了两个文件输入
 每一个文件输入都有路径和类型信息。
 4. 插件的值
-  插件的值，指的就是类似于上文的`type => "apache"`的值，这种值的支持一下几种类型
+    插件的值，指的就是类似于上文的`type => "apache"`的值，这种值的支持一下几种类型
 5. 数组
 6. Lists
 7. Boolean 
 8. Bytes 
 9. Codec  
-  .....   
-  要看更多的话，请点击[plugin-value-types](https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#plugin-value-types)
+    .....   
+    要看更多的话，请点击[plugin-value-types](https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#plugin-value-types)
 
 
 ## 5.4使用Grok Filter Plugin来解析log日志
@@ -1169,3 +1170,4 @@ output:
 	         "version" => "6.0.0"
 
    ```
+

@@ -85,8 +85,8 @@ OO Analysis → OO Design → OO implementation using OO languages
    这个对象应该确定它的责任，责任就是对象执行的功能，每一个对象都有一些类型的责任来执行
    当这些责任联合起来时，系统的目的就可以得以实现
 2. 接下来就是OO的设计，在这个阶段中，重点放在要求和实习上。
-  在这个阶段，对象是根据他们预期的联系来合作的，合作完成，设计也就是完成了
-  （也就是说，在这个阶段，要负责对象和对象之间，是怎么协作的，要想明白这一点）
+    在这个阶段，对象是根据他们预期的联系来合作的，合作完成，设计也就是完成了
+    （也就是说，在这个阶段，要负责对象和对象之间，是怎么协作的，要想明白这一点）
 3. 第三个阶段就是实施，在这个阶段，设计主要是通过面向对象的语言来实现的
    比如说JAVA，C++
 
@@ -135,18 +135,25 @@ Things是UML构建块中非常重要的部分，它可以是
 3. 分组
 4. 注释
 
-#### 6.2 Structurl Of Things
+#### 6.2 Structurl
 
 Structurl 定义了模型的静态部分，它代表了物理还有概念元素，以下是对Structurl的简要描述
 
 1. Class Class代表了代表一组具有相似职责的对象
+
+   
+
 2. Interface Interface定义了一组操作，它们指定了一个类的责任
+
 3. Collaboration Collaboration定义了元素之间的协作
+
 4. Use case UseCase代表了系统针对特定目标而执行的一系列操作
+
 5. Component  Component代表了系统的物理部分
+
 6. Node 一个Node可以定义为运行中存在的物理元素
 
-#### 6.3 Behavioral Of Things
+#### 6.3 Behavioral
 
 一个Behavioral thing 由模型的动态部分组成，下面这些就是Behavioral thing 
 
@@ -154,7 +161,7 @@ Structurl 定义了模型的静态部分，它代表了物理还有概念元素�
 2. state machine  state mechine在对生命周期中的对象状态非常有用
 3. 它定义了对象经过事件响应过程中的状态变化，而事件是造成对象状态变化的重要因素
 
-#### 6.4 Grouping Of Things
+#### 6.4 Grouping
 
 Grouping Of Things可以被定义为将UML模型中的元素组合在一起的机制，这样的话只有一个分组可用
 
@@ -190,7 +197,7 @@ Relationship 是UML一个重要的组成部分，它显示了元素是如何关�
 
    另一个元素则被执行，这种关系存在于接口的情况下
 
-   ### 8.1 UML设计
+### 8.1 UML图表分类
 
    UML是这篇文章讨论的最终结果
 

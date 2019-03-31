@@ -429,12 +429,30 @@ WHERE id = 13
 
 # 第五节：decimal字段类型  
 
+
+
+## 5.1 char和varchar类型
+
+这两个都可以存放字符串。
+
+但是char存储的是固定长度，如果你存储的数据不够这个长度，那么mysql会自动填充空格直到满足长度
+
+> 查询char字符出来时，mysql引擎会自动将填充的空格去掉。
+
+而varchar是可变长度，你存多少长度的数据，实际存储就是多长的数据（其实还要加1~2个字节存储长度）
+
+
+
+## 5.2 decimal
+
 这个类型比较特殊，比如说，它定义成decimal(5,4)  
 这个的意思，就是说，这个字段把整数部分和小数部分算在一起，其数字的个数不能超过5个，其中，小数的个数占了4个，也就意味着  
 整数部位只能一位。  
 所以，你想插入11.4啊，10.0啊，统统行不通。
 然后，特殊的是，你却可以插入9.99999999 虽然你看到小数部分个数是4，但是它允许你小数部分不限制加。。。  
-不过，实际存到数据库里面的，其实是截断过的   
+不过，实际存到数据库里面的，其实是截断过的 
+
+> mysql
 
 
 
@@ -857,3 +875,129 @@ end
 
    这个语句可以查出数据库有哪些锁
 
+# 第十四节：说一说优化
+
+关于数据库的优化，其实有两种，一种是数据库本身的优化，一种是sql语句的优化
+
+## 14.1 数据库本身的优化
+
+这里面包含了表的设计，数据库的一些配置
+
+首先解释一下，有哪些表的设计可以优化数据库的性能
+
+1. 选择合适的字段类型,比如说如果一个字段是固定长度,则使用char类型,如果一个字段长度可变,则使用varChar
+
+   长度在满足业务的情况下，尽量最短
+
+2. 至少要一个索引，索引虽然会降低DML语句的效率，但是对于查询的语句，是提高效率的
+
+## 14.2 sql语句本身的优化
+
+对于sql语句的调优，可以借助一个语句`explain `  后面直接跟原始的语句
+
+可以查看这个语句的效率
+
+比如`explain select customer_id, customer_name from customers where customer_id='140385';`
+
+返回如下
+
+| id   | select_type | table     | partitions | type  | possible_keys | key     | key_len | ref   | rows | filtered | Extra |
+| ---- | ----------- | --------- | ---------- | ----- | ------------- | ------- | ------- | ----- | ---- | -------- | ----- |
+| 1    | SIMPLE      | customers |            | const | PRIMARY       | PRIMARY | 4       | const | 1    | 100.00   |       |
+|      |             |           |            |       |               |         |         |       |      |          |       |
+|      |             |           |            |       |               |         |         |       |      |          |       |
+
+从以上我们可以看到
+
+1. key  PRIMARY  有主键可以用
+2. rows 1  只扫描了一行就拿到结果了（因为走的是索引）
+
+关于sql的效率可通过上面的`explain`来获知
+
+然后接下来，就是sql本身的调优经验了
+
+1. 尽可能在`where` `order` `group by`上面使用索引来优化性能
+
+2. 拆分多个或语句,用`union `语句来拆分组合
+
+   比如说，有一个sql
+
+   `select * from students where first_name like  'Ade%'  or last_name like 'Ade%' ;`
+
+   > last_name 和first_name 均已经加入索引
+
+   更快的做法是
+
+   ```
+   select * from students where first_name like  'Ade%'  union all select * from students where last_name  like  'Ade%'
+   ```
+
+3. 避免使用通配符的语句
+
+   比如`select * from students where first_name like  '%Ade'  ;`
+
+   这会导致使用全表扫描
+
+4. 如果一定要使用通配符，可以考虑mysql的全文搜索
+
+   但是首先需要对表进行一点修改
+
+   `alter table students ADD FULLTEXT (first_name, last_name);`
+
+   然后查询要这么查
+
+   `select * from students where match(first_name, last_name) AGAINST ('Ade');`
+
+   > 补缺点
+
+# 第十五节：mysql的安装
+
+这个安装教程适用于windows，zip归档的mysql。
+
+1. 首先解压文件到你喜欢的目录，这个目录即是安装目录
+
+2. 创建一个配置文件`my.ini`作为myql的配置文件
+
+   里面填
+
+   ```
+   [mysqld]
+   # mysql安装目录
+   basedir=P:\Program\mysql-5.6.43-winx64
+   # 设置mysql数据文件路径
+   datadir=P:\Program\mysql-5.6.43-winx64\data
+   ```
+
+   > 注意一点：数据文件路径一般不要改动，如果你需要自定义的话。。
+   >
+   > 先创建你那个自定义的数据文件路径，然后把安装目录下面的`data`所有文件复制到自定义的那个文件路径里。
+   >
+   > 因为默认情况下，安装目录下面的data文件夹就是默认的数据文件夹
+   >
+   > 自定义的话，当然要把人家旧的数据迁移过去了
+
+3. 安装mysql作为windows为服务
+
+   `.\mysqld --install mysql`
+
+   最后的参数`mysql`是服务名
+
+4. 去windows服务窗口，启动服务
+
+5. OK
+
+**出现BUG**
+
+1. 将mysql作为windows服务时，爆`Install/Remove of the Service Denied!`
+
+   解决办法，以系统管理员权限运行
+
+2. 启动服务失败，在数据文件夹里面找到一个err文件，看到这个报错
+
+   ```
+   Fatal error: Can't open and lock privilege tables: Table 'mysql.user' doesn't exist
+   ```
+
+   原因，自定义了数据文件夹，但是却没有把原来的数据文件夹的文件全部拷贝到新的数据文件夹里面
+
+   

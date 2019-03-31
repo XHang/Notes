@@ -348,17 +348,132 @@ Dockerfile 是用于创建镜像的配置文件
 先决条件
 
 1. 安装有docker，并能运行helloWorld镜像
-2. 有一个SpringBoot程序‘
+2. 有一个SpringBoot程序，能编译成jar独立运行，换言之，有个可以运行jar文件
 
 步骤
 
 1. 编写DockerFile文件
 
    ```
-   
+   FROM openjdk:8-jdk-alpine
+   VOLUME /tmp
+   ARG JAR_FILE
+   COPY ${JAR_FILE} app.jar
+   ENTRYPOINT ["java","-jar","/app.jar"]
+   ```
+
+   解释一下：
+
+   1. 所有docker文件上面都要包含父镜像，也就是`FROM xxx`
+
+      对这个应用而言，最合适的镜像，自然就是java运行环境的镜像了
+
+   2. VOLUME `/tmp`  将容器的`/tmp`映射到本机的一个文件中，使容器的`/tmp`能够永久保存
+
+   3. `ARG JAR_FILE`  声明一个构建参数，该构建参数用于指定jar文件的路径
+
+   4. `COPY ${JAR_FILE} app.jar` 拷贝本机的jar文件到容器里面
+
+   5. `ENTRYPOINT ["java","-jar","/app.jar"]` 在容器里面运行`java -jar /app.jar`命令
+
+2. 运行构建命令
+
+   `docker build --build-arg JAR_FILE=SpringBootExample.jar --tag springboot .`
+
+3. 运行构建出来的镜像`docker run springBoot`
+
+**问题**
+
+最后一步，运行run命令时，报`Error: Invalid or corrupt jarfile /app.jar`
+
+看意思就大致清楚是`app.jar`的问题
+
+于是就想从镜像中，把它拉出来，经过搜索引擎帮助，通过导出镜像文件的方法，成功将镜像文件内容导出
+
+发现。。。
+
+在镜像文件里面，app.jar是一个文件夹，不是熟悉的jar文件结构
+
+好吧，进一步发现
+
+我们的构建命令是错误的
+
+`docker build --build-arg=./xxx.jar --t springBoot`
+
+没加键值对鬼知道`xxx.jar`赋值到哪个变量
+
+而且其实有警告来着`One or more build-args [sdfhgdfjh] were not consumed`
+
+再吐槽一下：SpringBoot的docker给的示例构建命令是
+
+```
+$ docker build --build-args=build/libs/*.jar -t myorg/myapp .
+```
+
+简直误人子弟
+
+
+
+## 6.3 用docker部署war包
+
+前提
+
+1. 有一个war包
+2. 有一个docker运行环境，至少能运行helloWorld镜像
+
+步骤
+
+1. 编写Dockerfile文件
+
+   ```
+   FROM tomcat
+   # 如果你即将部署的应用恰好叫ROOT.war 那么需要把原tomcat的ROOT应用删除
+   run rm -rf /usr/local/tomcat/webapps/ROOT
+   COPY ROOT.war /usr/local/tomcat/webapps/ROOT.war
+   ENTRYPOINT ["catalina.sh","run"]
+   ```
+
+2. 构建镜像
+
+   `docker build --tag weixin .`
+
+3. 运行镜像
+
+   ` docker run --publish 10086:8080 weixin`
+
+4. 你的应用已经部署在宿主机的10086端口，赶紧访问下吧
+
+遇到的BUG
+
+1. 由于没有`run rm -rf /usr/local/tomcat/webapps/ROOT`
+
+   导致访问根目录还是tomcat默认提供的root应用
+
+2. 运行镜像报错，报一大堆错，最后在最底下发现是端口绑定问题
+
+3. 也不算BUG,就是构建镜像时，发现一句话
+
+   `Sending build context to Docker daemon  1.031GB`
+
+   卧槽，我的war包才几十M不到，怎么要发送这么大数据到docker守护程序里面
+
+   其实是因为docker映像构建时，会把当前文件夹以及子文件夹的数据发送给docker守护程序
+
+   有些文件可能我们并不需要，这时候只需要在Dockerfile同位置的文件夹下面建立一个`.dockerignore`文件
+
+   里面可参考的内容如下
+
+   ```
+   # 这是一个docker构建忽略文件
+   # 忽略classes文件夹
+   /*classes
+   #忽略tar类型文件
+   *.tar
    ```
 
    
+
+
 
 # 七：分享我们的镜像
 
@@ -944,6 +1059,18 @@ OK，完毕，就酱紫啦
 
    
 
+## 11.2 `cannot connect to the Docker daemon`
+
+在执行一个docker命令时，报这个错误了
+
+其实原本的错误，比这个错误，信息量更大
+
+但是，有用的，就这一句，就是没启用docker守护程序
+
+
+
+   
+
    
 
    
@@ -967,6 +1094,70 @@ OK，完毕，就酱紫啦
    部署一个栈，如果这个栈已存在，则更新。
 
    一般情况下，都是改动`docker-compose.yml`文件后，再执行这个，就可以生效
+
+   
+
+## 12.3 docker build命令
+
+   顾名思义，这个命令是专门用于构建镜像用的
+
+   搭配Dockerfile即可构建一个可用镜像
+
+   命令格式为` docker build [OPTIONS] [PATH | URL |...]`
+
+   可用参数有
+
+   1. `--build-arg`  设置构建参数
+
+      一般参数都定义在了Dockerfile文件里了
+
+      如
+
+      ```
+      FROM openjdk:8-jdk-alpine
+      VOLUME /tmp
+      ARG JAR_FILE
+      COPY ${JAR_FILE} app.jar
+      ENTRYPOINT ["java","-jar","/app.jar"]
+      ```
+
+      如上面所示，声明构建参数就是`ARG JAR_FILE` 我们在使用`--build-arg` 构建镜像时，可以使用这个命令
+
+      `docker build --build-args=target/*.jar`
+
+      指定参数
+
+   2. `--t ` 设置镜像的名称和标签
+
+      应该是必须的，因为我们需要这个名称作为镜像的标识符，从而加载运行镜像
+
+## 12.4 docker save命令（导出镜像文件）
+
+命令:`docker save -o ./spring.tar springboot`
+
+解释：`-o ./spring.tar` 指定输出文件
+
+最后一个参数固定是镜像名称
+
+
+
+## 12.5 docker run 命令
+
+很简单，这是一个运行镜像的命令，该命令会生成一个容器
+
+基本命令格式如下
+
+` docker run [OPTIONS] IMAGE [COMMAND] [ARG...]`
+
+`OPTIONS`也就是选项
+
+可用的选项如下
+
+` --publish xx:yy`  映射容器的端口yy到宿主机端口xx
+
+
+
+   
 
    
 
