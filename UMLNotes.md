@@ -139,18 +139,11 @@ Things是UML构建块中非常重要的部分，它可以是
 
 Structurl 定义了模型的静态部分，它代表了物理还有概念元素，以下是对Structurl的简要描述
 
-1. Class Class代表了代表一组具有相似职责的对象
-
-   
-
+1. Class Class代表了代表一组具有相似职责的对象![图示](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/class_structurl_things.jpg>)
 2. Interface Interface定义了一组操作，它们指定了一个类的责任
-
 3. Collaboration Collaboration定义了元素之间的协作
-
 4. Use case UseCase代表了系统针对特定目标而执行的一系列操作
-
 5. Component  Component代表了系统的物理部分
-
 6. Node 一个Node可以定义为运行中存在的物理元素
 
 #### 6.3 Behavioral
