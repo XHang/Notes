@@ -142,17 +142,19 @@ Structurl 定义了模型的静态部分，它代表了物理还有概念元素�
 1. Class Class代表了代表一组具有相似职责的对象![图示](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/class_structurl_things.jpg>)
 2. Interface Interface定义了一组操作，它们指定了一个类的责任![图示](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/interface_structural_things.jpg)
 3. Collaboration Collaboration定义了元素之间的协作![图示](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_collaboration.jpg)
-4. Use case UseCase代表了系统针对特定目标而执行的一系列操作![图示](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_node.jpg)
-5. Component  Component代表了系统的物理部分![图示](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_collaboration.jpg)
-6. Node 一个Node可以定义为运行中存在的物理元素![图示](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_collaboration.jpg)
+4. Use case UseCase代表了系统针对特定目标而执行的一系列操作![图示](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_usecase.jpg)
+5. Component  Component代表了系统的物理部分![图](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_component.jpg)
+6. Node 一个Node可以定义为运行中存在的物理元素![图](https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_node.jpg)
 
 #### 6.3 Behavioral
 
 一个Behavioral thing 由模型的动态部分组成，下面这些就是Behavioral thing 
 
-1. **Interaction ** Interaction 被定义为一种行为，由一组信息在元素中的交换以完成特定的任务
-2. state machine  state mechine在对生命周期中的对象状态非常有用
-3. 它定义了对象经过事件响应过程中的状态变化，而事件是造成对象状态变化的重要因素
+1. **Interaction(相互作用) ** Interaction 被定义为一种行为，由一组信息在元素中的交换以完成特定的任![图片](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_message.jpg>)
+
+2. state machine  state mechine在对生命周期中的对象状态非常有用![state machine](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_state.jpg>)
+
+   它定义了对象经过事件响应过程中的状态变化，而事件是造成对象状态变化的重要因素
 
 #### 6.4 Grouping
 
@@ -161,10 +163,14 @@ Grouping Of Things可以被定义为将UML模型中的元素组合在一起的�
 Grouping things 
 
 >  特别的：package :package是唯一可以用于搜集结构和行为的Grouping things 
+>
+>  ![package](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_package.jpg>)
 
 #### 6.5 Annotational Things
 
 Annotational things可以被定义备注，描述，和UML模型元素中的注释
+
+![note](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_note.jpg>)
 
 ### 7.1：Relationship（关系）
 
@@ -174,21 +180,21 @@ Relationship 是UML一个重要的组成部分，它显示了元素是如何关�
 
 1. Dependency(依赖)
 
-   依赖是两个元素之间的关系，其中一个元素的变化也会影响到另一个元素
+   依赖是两个元素之间的关系，其中一个元素的变化也会影响到另一个元素![依赖](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_dependency.jpg>)
 
 2. Association(关联)
 
-   关联也是描述两个元素之间的关系，不过这种联系比较弱
+   关联也是描述两个元素之间的关系，不过这种联系比较弱![association](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_association.jpg>)
 
 3. Generalization(概括，泛化)
 
-   Generalization基本定义了广义元素和特定元素之间的关系，它基本描述了对象世界的继承关系
+   Generalization基本定义了广义元素和特定元素之间的关系，它基本描述了对象世界的继承关系![generaliztion](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_generalization.jpg>)
 
 4. Realization(实现)
 
    实现可以被定义为两个元素之间的关系，其中一个元素描绘了一些责任，没有被执行
 
-   另一个元素则被执行，这种关系存在于接口的情况下
+   另一个元素则被执行，这种关系存在于接口的情况下![realization](<https://raw.githubusercontent.com/XHang/Notes/master/src/main/resources/UMLPicture/uml_realization.jpg>)
 
 ### 8.1 UML图表分类
 
@@ -240,7 +246,12 @@ Relationship 是UML一个重要的组成部分，它显示了元素是如何关�
 
    ### 8.1 结构建模
 
-   ​结构建模捕捉系统的静态部分。tao
+   ​结构建模捕捉系统的静态部分。它们包含以下内容
+
+1. 类图
+2. 对象图
+3. 部署图
+4. 
 
    ​
 
