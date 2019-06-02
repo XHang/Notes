@@ -342,6 +342,48 @@ Dockerfile 是用于创建镜像的配置文件
 2. `VOLUME  {path}`将容器里面的一个目录（路径是`/path`）映射到主机的一个文件
 
    使该目录里面的文件可以持久化存在
+   
+3. ARG  用于定义变量，变量可以赋值，也可以不赋值
+   
+   语法
+   
+   ```
+   ARG VERSION=latest
+   ARG GO_VERSION
+   ```
+   
+   不赋值的变量可以在执行构造镜像的时候再指定，详细可以看下面的build命令
+   
+   变量可以在Dockerfile直接引用到
+   
+   eg:
+   
+   ```
+   FROM golang:${GO_VERSION}
+   ```
+   
+   就是直接指定父镜像的版本了
+   
+4. RUN 简单的说，就是执行命令了，它有两种语法形式
+   
+   ```
+   RUN <command>
+   RUN ["executable", "param1", "param2"]
+   ```
+   
+   第一种就是单独的执行某个命令，不用带"<",">"号的
+   
+   第二种就是执行带参数的命令
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
 
 ## 6.2 用docker部署一个Springboot程序
 
