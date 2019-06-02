@@ -123,6 +123,33 @@ Oracle数据库的日期函数为  `SYSDATE`
     `select t.*,@rowno:=@rowno+1 as rownum from t,(select @rowno:=0) t1; `
     其中@rowno:=1是给行号赋予初值，然后每次记录查出来都执行,`@rowno:=@rowno+1`，就起到行数的作用了  
 
+3. Mysql引擎详解
+
+    1. InnoDB 引擎
+
+       该引擎是高可靠性，高性能的数据库引擎，也是Mysql的默认引擎
+
+       除非配置了不同的默认引擎，否则create语句不带engine的语句会创建InnDB数据库表
+
+       优点：高可靠性，高性能、支持事务，支持行锁、可处理大量数据
+
+       缺点：执行速度较**MyISAM**慢
+
+    2. Mylsam 引擎
+
+       该引擎基于lsam引擎，表存在文件中，数据文件具有 `.MYD`（`MYData`）扩展名。索引文件具有`.MYI`（`MYIndex`）扩展名。表定义在数据库字典中
+
+       优点：可以压缩表、速度比InnDB快
+
+       缺点：不支持事务、外键、数据库缓存
+
+    3. 
+
+       
+
+       
+
+
 #  第五节：神奇的SQL
 ## 连续性问题
 业务场景：小航，报表部门要你开发一个功能，能查询连续登录三个月及以上的登录用户。数据库表已经发给你了，最迟今晚完成。
@@ -427,6 +454,7 @@ WHERE id = 13
 
 
 
+> 以mysql为例，其他数据库不做保证
 # 第五节：字段类型  
 
 
@@ -474,11 +502,31 @@ WHERE id = 13
 
 当然，一般是填充空格啦，所以你在查询时并没有什么不同。
 
+## 5.3 日期类型
+
+1. date类型，该类型只存储具有日期部分，以`YYYY-MM-DD`格式检索和显示值
+2. DATETIME类型，用于包含日期和时间部分的值。 `DATETIME`以`'YYYY-MM-DD HH:MM:SS'`格式检索和显示 值
+3. TIMESTAMP数据类型，被用于同时包含日期和时间部分的值。 `TIMESTAMP`具有`'1970-01-01 00:00:01'`UTC到`'2038-01-19 03:14:07'`UTC 的范围
 
 
 
 
-# 第七节：神奇的DDL语句
+
+# 第七节：SQL语句
+
+## 7.1 DDL语句
+
+添加字段：alter table ${table_name} add column $(field_name) varchar(12)
+
+修改字段 alter table ${table_name} change ${field_name} ${new_field_name} int(12);
+
+删除语句： alter table ${table_name} drop column ${column_name}
+
+## 7.2 DML语句
+
+插入数据：insert into ${table} (column1,column2)  value (value1,value2);
+
+更新语句： update ${table_name} set column=value,column1=value2;
 
 # 第八节  Mysql BUG合集
 
