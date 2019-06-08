@@ -66,23 +66,64 @@ CLASS 变量名表达式 className()
 快速生成log声明
 ```
 
+第二个语法
 ```
  if ($parameter$.get$field$() !=null){
             $parameter$.set$field$( -$parameter$.get$field$()); 
 }
-
-
+```
+参数说明
+```
 $parameter$   as        groovyScript("_1[0]", methodParameters())
 field  as capitalize(camelCase(clipboard()))
+```
 效果
+```
 if (bill.getPayedfee() != null) {
             bill.setPayedfee(-bill.getPayedfee());
 }
 自动拿取方法的第一个参数，并填充到bill，然后从黏贴板拿到字符串，首先转驼峰，然后首字母大写。
 其实复制数据库字段名就是这类的用法了
- 
 
 ```
+
+## 5.1 给人以鱼，不如授人予渔
+
+其实`Live FileWater`难点只有一个，就是模板里面参数的使用
+
+一般来说哪，它里面的可变参数有以下几种
+
+1. `$END$` 代码生成后，鼠标跳转的位置
+
+2. `$custom_variable$`  这是可变变量，变量名自己定义，而且还要指定这个变量的值是什么
+
+   怎么操作自己摸索，重点是，变量的表达式有哪些，这才是本章的重点
+
+   > 啰嗦了半天。。
+
+好吧，直接介绍IDEA里面支持的表达式，
+
+> 与其说是表达，倒不如说是内部提供的函数，支持嵌套调用哦
+>
+> 以下统称结果，即为表达式的结果
+
+1. `clipboard()`    结果是系统剪贴板里面的内容
+
+2. `camelCase(arg)`  传入一个参数，转成驼峰
+
+3. `capitalize(arg)` 传入一个参数，将首字母改为大写
+
+4. ` methodParameters()` 返回当前函数参数的列表
+
+5. `fileName()` 返回当前文件名，包括扩展名
+
+6. `groovyScript("you script",input_parameter)`
+
+   这个是使用groovyScript脚本来处理变量，第二个参数即就是输入参数，支持内部的函数哦，比如说，传入
+
+   `fileName()`就是对文件名进行处理啦
+
+
 
 # 六：IDEA FileWater插件的使用
 
@@ -114,3 +155,9 @@ if (bill.getPayedfee() != null) {
 
 
 
+
+
+
+```
+
+```
