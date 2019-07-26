@@ -1,5 +1,7 @@
 # 英语学习过程笔记
 
+> 快捷搜索，标有`????`是还未懂的知识点
+
 # 1. 第一节课
 
 ## 1.1 单词一览
@@ -1397,7 +1399,276 @@ for ever `fɔː(r) 'evə`
 | --------------- | --------- |
 | /z/             | zoo，zero |
 
+# 十六:单词和语法
+
+## 16.1 单词
+
+| spell     | Chinese    | remark                                                       |
+| --------- | ---------- | ------------------------------------------------------------ |
+| alarm     | 闹钟       |                                                              |
+| America   | 美国       |                                                              |
+| backpack  | 背包       |                                                              |
+| briefcase | 公文包     |                                                              |
+| handbag   | 手提包     |                                                              |
+| excuse    | 原谅       | 用法<br />1. excuse me  用于陌生人搭话，礼貌用语，请再说一遍，借过，表明对说话人强烈的不满和反对（这个要有反问语气） |
+| Pardon    | 再说一遍？ |                                                              |
+|           |            |                                                              |
+| wallet    | 钱包       |                                                              |
+| Yes       | 是         | 用法：普通的`是`<br />加强语气：Oh Yes 太棒了<br />上扬语气：Yes?(怎么了，有什么事？) |
+|           |            |                                                              |
+
+### 16.1.1 词根
+
+### 16.1.2 词性前缀
+
+### 16.1.3 词性后缀
+
+词性有后缀来着，比如说名词有后缀，`-ion`
+
+### 16.1.4 各种缩写
+
+is not == Isn't
+
+例如：is not this  handbag == Isn't this handbag
+
+Let us ==let's
 
 
 
+
+## 16.2 短句
+
+| phrase          | translate      | remark |
+| --------------- | -------------- | ------ |
+| Go For is       | 加油           |        |
+| Thank a million | 一百分的感谢你 |        |
+| pick you up     | 接你           |        |
+|                 |                |        |
+
+## 16.2 口语对话
+
+对方说谢谢：
+
+Thank you
+
+Thanks
+
+Thank you very much
+
+Thanks a million
+
+回答
+
+you are welcome
+
+My pleasure 
+
+sure
+
+Anytime
+
+## 16.3 语法
+
+### 16.3.1 句子成分
+
+#### 16.3.1.1主语
+
+
+主语：我们造的所有句子，都需要有一个主语，主体。
+
+
+#### 16.3.1.2宾语
+
+又称受词，是指一个动作（动词）的接受者。
+
+#### 16.3.1.3谓语
+
+主体执行的动作。
+
+说明主语做什么，是什么，怎么样，一般放在主语后
+
+#### 16.3.1.4 表语
+
+描述主语的性质特点，补充说明主语的意义，因此，它也叫作主语补语。
+
+#### 16.3.1.4 副词
+
+在英语中，用于表示行为或状态特征的词，用以修饰动词、形容词，
+
+表示时间、地点、程度、方式等概念。
+
+比如说：very much 非常
+
+就是一个形容程度的副词。
+
+可以用在
+
+Thank you very much  非常感谢你
+
+very much就形容了修饰Thank you，表示Thank you的程度了
+
+### 16.3.2 人称代词的变格
+
+| 主格 | 宾格       |
+| ---- | ---------- |
+| i    | me         |
+| you  | you        |
+| he   | him(他)    |
+| she  | her(她)    |
+| it   | it(它)     |
+| they | them(他们) |
+| we   | us(我们)   |
+
+### 16.3.2 be动词
+
+is/am/are 英语的是统称为be动词
+虽然一点`动`的意思都没有
+#### 16.3.2.1  am
+am用于第一人称单数
+
+**示例.**
+
+ **如果主语是第一人称I（我）时，be动词用am。 **
+
+如：`I am a student`. 我是一名学生。
+
+>`I am` 还可缩写成`I'm`。如：
+>I'm David. 我是大卫。
+
+**注意**：am只能形容我。
+
+比如说，我是一个中国人，必须翻译为：I am a Chinese
+
+#### 16.3.2.2  are
+Are用于第二人称和第一人称的复数
+
+**示例：**
+
+ **如果主语是you (你,你们),they （他们，它们，她们）或名词复数 （两个以上的人或物）时，be动词必须用are **
+
+如：`Are you twelve?` 你是十二岁吗
+
+`Tom and Lily are good friends.` 汤姆和莉莉是好朋友。
+
+`They are at school.  `   他们在学校。
+
+**are与主语还可缩写。**
+
+如： We are= Were， They are =Theyre, You are = Youre。
+
+**are与 not可缩写成arent。**
+
+如：They arent students. 他们不是学生。但是am与not不能缩写。
+
+**注意：当表示一群人的时候，作为be动词，必须使用Are**
+
+比如说：我们是中国人 翻译为：We  are  Chinese
+
+#### 16.3.2.3:is
+
+is用于第二人称的单数
+
+比如说`she is`    `he is`    `It is`
+
+#### 16.3.2.4 Be动词总结
+
+be动词的连写：
+```
+I am=I'm    
+she is=she's    
+they are=they're   
+we are=we're  
+you are=you're
+He is = He's
+It is = It's
+Jake is = Jake's
+```
+巧记口诀：我用am，你用are，is连着他
+
+### 16.3.1 宾格
+
+当单词作为宾语时，要用它的宾格形式
+
+比如是：
+
+you love me
+
+这里的me作为宾语，就不能用主格`I`了，而是要用它的宾格`me`
+
+### 16.3.2 代词
+
+**This ，这**
+
+造句：This is handy web-site  这个网站很方便
+
+**these ，这些**
+
+造句：These are awesome movies
+
+这些电影很棒
+
+就这两个，以后由
+
+#### 物主代词
+
+用于表示所有关系的代词
+
+再说的清楚点的话，这个东西，是为了能替代中文的`的`
+
+你的，他的，我的，在英语中，没有对应的单词翻译，
+
+所以物主代词，就是要表示`的`
+
+> 望文生义：物主代词，物品主人的代词。
+>
+> 要表示这个物品的主人，使用的代词就必须是物主代词
+
+| 主格 | 物主代词 | 翻译 |
+| --- | --- | --- |
+| I | my | 我的 |
+| you | your | 你的 |
+| he | his | 他的 |
+| she | her | 她的 |
+| they | their | 他们的 |
+| it | its | 它的 |
+
+**???? 形容词性物主代词**
+
+## 句式变化
+
+### 陈述句改成一般疑问句
+
+把陈述句的be动词提在句子前面
+
+例如：This is your handbag  这是你的手提包
+
+变成疑问句：
+
+Is this your handbag  这是你的手提包吗？
+
+### 陈述句改成否定句
+
+在陈述句的be动词后面加上not 
+
+例如：This is your handbag
+
+变成否定句：
+
+This is not your handbag
+
+### 否定句改疑问句
+
+同样是把否定句的be动词提在句子前面
+
+This is not your handbag  这不是你的手提包
+
+Is not this your handbag == Isn't this your handbag 这不是你的手提包吗？
+
+## 疑问句回答
+
+### 一般疑问句回答
+
+question：Is this your handbag?
+
+answer:Yes it is /not it's no
 
