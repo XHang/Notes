@@ -9,10 +9,10 @@
     假设现在有项目A,项目A1,项目A2，要求项目A是负责聚合项目A1和A2，实现多个模块联合编译，实现起来很简单
     只需要在A的pom文件中，添加这么一段配置
 ```
-			<modules> 
-   				<module>A1</module>
-   				<module>A2</module>
-			</modules>
+   <modules> 
+       <module>A1</module>
+       <module>A2</module>
+   </modules>
 ```
 
 这样，编译A项目，就会把A1和A2项目一起编译
@@ -21,21 +21,21 @@
    以上叫做模块聚合，接下来就是模块间的继承，这继承，第一个就是能子项目继承父项目引用的依赖包  
    假设父项目的pom文件是这样的
    ```
-   	<modelVersion>4.0.0</modelVersion>  
-   	<groupId>com.Example.main</groupId>              
-   	<artifactId>Parent-Moduel</artifactId>       
-   	<version>1.0.2</version>            
-   	<packaging>pom</packaging>  
-   	<name>Simple-main</name>
+    <modelVersion>4.0.0</modelVersion>  
+    <groupId>com.Example.main</groupId>              
+    <artifactId>Parent-Moduel</artifactId>       
+    <version>1.0.2</version>            
+    <packaging>pom</packaging>  
+    <name>Simple-main</name>
    ```
    那么子项目就可以这么写：
 ```
-		<parent>
-   			<groupId>com.Example.main</groupId>
-   			<artifactId>Parent-Moduel</artifactId>
-   			<version>1.0.2</version>
-   			<relativePath>../pom.xml</relativePath>  <!--本例中此处是可选的-->
-	   </parent>
+  <parent>
+      <groupId>com.Example.main</groupId>
+      <artifactId>Parent-Moduel</artifactId>
+      <version>1.0.2</version>
+      <relativePath>../pom.xml</relativePath>  <!--本例中此处是可选的-->
+    </parent>
 ```
 值得注意的是`<relativePath>`标签，如果pom的层次关系就像本例中的那样只隔一层，则可以省略这个。  
 maven同样可以找到子pom。  
@@ -43,41 +43,41 @@ maven同样可以找到子pom。
 父类添加这样的依赖：
 ```
      <dependencyManagement>
-    		   <dependencies>
-    		      <dependency>
-    		           <groupId>javax.servlet</groupId>
-    		          <artifactId>servlet-api</artifactId>
-    		          <version>2.5</version>
-    		      </dependency>
-    		   </dependencies>
-    	</dependencyManagement>
+         <dependencies>
+            <dependency>
+                 <groupId>javax.servlet</groupId>
+                <artifactId>servlet-api</artifactId>
+                <version>2.5</version>
+            </dependency>
+         </dependencies>
+     </dependencyManagement>
 ```
 子pom如果需要引用该jar包，则直接引用即可！不需要加入<version>，便于统一管理。当然如果你加version的话，表明这个依赖是子项目特有的
-​		然后插件也可以这么管理
-​		主项目：
-​	
-​	<build>
-​		   <pluginManagement>
-​		      <plugins>
-​		          <plugin>
-​		               <groupId>org.apache.maven.plugins</groupId>
-​		               <artifactId>maven-source-plugin</artifactId>
-​		               <version>2.1.1</version>
-​		          </plugin>
-​		      </plugins>
-​		   </pluginManagement>
-​		</build>
-
+​  然后插件也可以这么管理
+​  主项目：
+```
+ <build>
+​     <pluginManagement>
+​        <plugins>
+​            <plugin>
+​                 <groupId>org.apache.maven.plugins</groupId>
+​                 <artifactId>maven-source-plugin</artifactId>
+​                 <version>2.1.1</version>
+​            </plugin>
+​        </plugins>
+​     </pluginManagement>
+​  </build>
+```
 子项目：
 
-		<build>   
-		   <plugins>
-		      <plugin>
-		           <groupId>org.apache.maven.plugins</groupId>
-		           <artifactId>maven-source-plugin</artifactId>
-		      </plugin>
-		   </plugins>
-		</build>
+  <build>   
+     <plugins>
+        <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-source-plugin</artifactId>
+        </plugin>
+     </plugins>
+  </build>
 
 不用加version了，便于管理。  
 
@@ -119,22 +119,22 @@ maven同样可以找到子pom。
 但是Maven打包只打包`src/main/java`文件夹里面的java文件，xml配置文件不会打包。  
 所以我们需要这个配置  
 
-	<resource>
-	          <directory>src/main/java</directory>
-	          <includes>
-	              <include>**/*.properties</include>  
-	                <include>**/*.xml</include>  
-	          </includes>
-	          <filtering>false</filtering>
-	      </resource>
-	      <resource>  
-	        <directory>src/main/resources</directory>  
-	            <includes>  
-	                <include>**/*.properties</include>  
-	                <include>**/*.xml</include>  
-	            </includes>  
-	            <filtering>false</filtering>  
-	        </resource>   
+ <resource>
+           <directory>src/main/java</directory>
+           <includes>
+               <include>**/*.properties</include>  
+                 <include>**/*.xml</include>  
+           </includes>
+           <filtering>false</filtering>
+       </resource>
+       <resource>  
+         <directory>src/main/resources</directory>  
+             <includes>  
+                 <include>**/*.properties</include>  
+                 <include>**/*.xml</include>  
+             </includes>  
+             <filtering>false</filtering>  
+         </resource>   
  这下就可以把实体类的映射文件一起打包了，爽不？ 
 
 ### 1.3.4:  17/12/23BUG
@@ -173,33 +173,34 @@ maven同样可以找到子pom。
 ## 1.4: maven全局或者局部设置java编译版本
 
 在setting文件中，补上这份代码  
-​	
-​	<profile>   
-​	    <id>jdk1.6</id>
-​	    <activation>   
-​	    <activeByDefault>true</activeByDefault>
-​	    <jdk>1.6</jdk>   
-​	    </activation>
-​	    <properties>   
-​	        <maven.compiler.source>1.6</maven.compiler.source>
-​	        <maven.compiler.target>1.6</maven.compiler.target>
-​	        <maven.compiler.compilerVersion>1.6</maven.compiler.compilerVersion>   
-​	    </properties>   
-​	</profile>  
+``` 
+ <profile>   
+     <id>jdk1.6</id>
+     <activation>   
+     <activeByDefault>true</activeByDefault>
+     <jdk>1.6</jdk>   
+     </activation>
+     <properties>   
+         <maven.compiler.source>1.6</maven.compiler.source>
+         <maven.compiler.target>1.6</maven.compiler.target>    <maven.compiler.compilerVersion>1.6</maven.compiler.compilerVersion> 
+     </properties>   
+ </profile>
+```
+
 保存即可  
 如果全局设置失败，试下局部设置  
 在pom 文件中补上这个代码  
-
-	<plugin>
-	    <groupId>org.apache.maven.plugins</groupId>
-	    <artifactId>maven-compiler-plugin</artifactId>
-	    <configuration>
-	        <source>1.6</source>
-	        <target>1.6</target>
-	        <encoding>${project.build.sourceEncoding}</encoding>
-	    </configuration>
-	</plugin>
-
+```
+ <plugin>
+     <groupId>org.apache.maven.plugins</groupId>
+     <artifactId>maven-compiler-plugin</artifactId>
+     <configuration>
+         <source>1.6</source>
+         <target>1.6</target>
+         <encoding>${project.build.sourceEncoding}</encoding>
+     </configuration>
+ </plugin>
+```
 ## 1.5 指定打包路径
 
 
@@ -219,13 +220,13 @@ maven同样可以找到子pom。
 ```
 -src/main/resources/ 
 
-	-dev
-
-	-local
-
-	-prd
-
-	-test
+ -dev
+ 
+ -local
+ 
+ -prd
+ 
+ -test
 
 ```
 
@@ -285,7 +286,7 @@ maven同样可以找到子pom。
 
 ```
 <build>
-	 <resources>
+  <resources>
         <resource>
             <directory>src/main/resources</directory>
             <excludes>
@@ -345,9 +346,9 @@ maven同样可以找到子pom。
 目前最新阶段的最新版本的依赖  
 ​```xml
 <dependency>
-​	<groupId>org.apache.httpcomponents</groupId>
-​	<artifactId>httpclient</artifactId>
-​	<version>4.5.2</version>
+​ <groupId>org.apache.httpcomponents</groupId>
+​ <artifactId>httpclient</artifactId>
+​ <version>4.5.2</version>
 </dependency>
 ​```
 其HttpPost对象可以设置实体内容。而get不行！  
@@ -445,8 +446,8 @@ NOSQL意为非关系型数据库，分为几种
 
 1：多web项目中共享一个session  
 2：分布式缓存，由于redis提供了几大语言的接口，比如java，.net,c等语言。  
-​		因此对于异质平台间进行数据交换起到了作用，因此它可以用作大型系统的分布式缓存，  
-​		并且其setnx的锁常被用于”秒杀“，”抢红包“这种电商活动场景中。  
+​  因此对于异质平台间进行数据交换起到了作用，因此它可以用作大型系统的分布式缓存，  
+​  并且其setnx的锁常被用于”秒杀“，”抢红包“这种电商活动场景中。  
 
 # 第六章：Spring的杂项
 
@@ -499,8 +500,8 @@ Springmvc控制器方法上的produces 要注意一下，仅当Accept请求头�
 
 2. 问题描述 ：改了项目的jre和编译jdk版本，但是一执行maven update 全都打回解放前了。  
      经查，settting.xml配置了jre版本，pom文件也设置了jre版本，仍是不见效。
-     已知：本人用的Eclipse不支持jdk1.8.所以pom文件即使追加了jre版本，也依然无效		
-     最后改了jdk版本为1.7.重新update。版本恢复为1.7了。。		
+     已知：本人用的Eclipse不支持jdk1.8.所以pom文件即使追加了jre版本，也依然无效  
+     最后改了jdk版本为1.7.重新update。版本恢复为1.7了。。  
      付代码
 
 ```
@@ -551,8 +552,8 @@ Springmvc控制器方法上的produces 要注意一下，仅当Accept请求头�
 
 1. 目前测试得知，java1.7 不支持捕获组里面写无限匹配量词，也就是'+'和'{2,}' 不能用
      eg:(?<=package\\s{1,})  or  (?<=package\\s+)  可以匹配'package   '后面的位置，但是java不支持这种写法
-     	考虑可以换成(?<=package\\s{1,10000})
-     	顺便贴上msg：Look-behind group does not have an obvious maximum length near index {num}
+      考虑可以换成(?<=package\\s{1,10000})
+      顺便贴上msg：Look-behind group does not have an obvious maximum length near index {num}
 
 2. 常用的正则表达式
 
@@ -606,8 +607,8 @@ YAML是新一代的配置文件，其文件名的后缀是`yml`
 
 ```
   <dependency>
-  ​	<groupId>org.springframework.boot</groupId>
-  ​	<artifactId>spring-boot-starter-test</artifactId>
+  ​ <groupId>org.springframework.boot</groupId>
+  ​ <artifactId>spring-boot-starter-test</artifactId>
   </dependency>
 ```
 
@@ -677,9 +678,9 @@ public class  Test{
 
 ### 14.2.1垂直划分
 
-​	垂直分库：如果是因为数据库里面表太多，而导致数据多的话。可以将关联性高的表单独分在一个库中。
+ 垂直分库：如果是因为数据库里面表太多，而导致数据多的话。可以将关联性高的表单独分在一个库中。
 
-​	垂直分表：如果是因为某个表的字段多，可以将多的字段、不常用的字段抽取出来，形成一张扩展表
+ 垂直分表：如果是因为某个表的字段多，可以将多的字段、不常用的字段抽取出来，形成一张扩展表
 
 > 因为数据库是以表为单位，加载到内存中，分表之后，常用的字段都在同一个内存区域内，可以使查询命中率提示
 
@@ -710,3 +711,4 @@ public class  Test{
    优点：业务相近的数据在同一张表中，不太容易出现热点数据的访问问题
 
    缺点：数据迁移遭老罪了。不能按照自己喜欢分隔指定的数据进行迁移。
+

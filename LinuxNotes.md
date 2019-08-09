@@ -617,7 +617,7 @@ UUID=f57d075a-9c72-413e-bb25-646f5cf430cc
 DEVICE=enp0s3
 ONBOOT=yes
 ```
-​
+
 其中你需要改的是BOOTPROTO这个配置和ONBOOT这个配置
 ​
 BOOTPROTO：值有static和dhcp 分别代表本机ip地址的取得是静态的还是动态的（dhcp）
@@ -708,15 +708,15 @@ mv [选项] 源文件或目录 目标文件或目录
      `systemctl start firewalld`and`systemctl stop firewalld`    
        永远禁用centos防火墙:
        `systemctl disable firewalld.service `  
-        
+     
      开放端口给其他机器访问
-        
+     
      `firewall-cmd --zone=public --add-port=80/tcp --permanent  `
-        
+     
      最后使用
-        
+     
      `firewall-cmd --reload`  
-        
+     
      立即生效
 
 12.   centos修改主机名:`hostnamectl set-hostname 主机名`
@@ -814,7 +814,7 @@ nproc(单个用户可用的最大进程数量)
 
 ## Linux线程
 
-​
+
 技能1： 查看端口占用的线程
 
 命令`lsof -i:端口`
@@ -911,6 +911,7 @@ vi /etc/sysconfig/network-scripts/ifcfg-网络接口名
 
 文件大致如下
 
+```
 TYPE=Ethernet
 BOOTPROTO=dhcp
 DEFROUTE=yes
@@ -928,6 +929,11 @@ NAME=enp0s3
 UUID=f57d075a-9c72-413e-bb25-646f5cf430cc
 DEVICE=enp0s3
 ONBOOT=yes
+IPADDR=xxx.xxx.xxx
+NETMASK=255.255.255.0 
+GATEWAY=xxx.xxx.xxx
+```
+
 其中你需要改的是BOOTPROTO这个配置和ONBOOT这个配置
 
 BOOTPROTO：值有static和dhcp 分别代表本机ip地址的取得是静态的还是动态的（dhcp）
@@ -960,9 +966,12 @@ rm -rf 文件夹路径
 解压命令 tar -xzvf file.tar.gz
 
 设置linux的环境变量
-vi /etc/proifle 在其末尾添加这几句 ``` export JAVA_HOME="xxx" export PATH="PATH:PATH:JAVA_HOME/bin" export JRE_HOME="JAVA_HOME/jre" export CLASSPATH=".:JAVA
-H
-​ OME/jre"exportCLASSPATH=".:JAVA_HOME/lib:$JRE_HOME/lib"
+vi /etc/proifle 在其末尾添加这几句 
+
+``` 
+export JAVA_HOME="xxx" export PATH="PATH:PATH:JAVA_HOME/bin" export JRE_HOME="JAVA_HOME/jre" export CLASSPATH=".:JAVA
+HOME/jre"exportCLASSPATH=".:JAVA_HOME/lib:$JRE_HOME/lib"
+```
 
 即可设置jdk的环境变量。 
 `source /etc/profile`更新一下。。  
@@ -977,14 +986,13 @@ H
     `ls -lrt+路径2`就ok了  
     默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
 
-11. 
-      centos查看网络端口占用:
+11.   centos查看网络端口占用:
       ` firewall-cmd --zone=public --list-ports`  
       开启或者关闭firewalld（centos7的防火墙）:
     `systemctl start firewalld`and`systemctl stop firewalld`    
       永远禁用centos防火墙:
       `systemctl disable firewalld.service `  
-
+    
 12. 
       centos修改主机名:`hostnamectl set-hostname 主机名`
       `hostnamectl --static` 可以查看主机名
@@ -1094,14 +1102,13 @@ H
        `ls -lrt+路径2`就ok了  
        默认情况下，用rpm安装后的java在`/usr/java/jdk1.8.0_144/`  
 
-3. 
-    centos查看网络端口占用:
+3. centos查看网络端口占用:
     ` firewall-cmd --zone=public --list-ports`  
     开启或者关闭firewalld（centos7的防火墙）:
       `systemctl start firewalld`and`systemctl stop firewalld`    
     永远禁用centos防火墙:
     `systemctl disable firewalld.service `  
-
+    
 4. 
     centos修改主机名:`hostnamectl set-hostname 主机名`
     `hostnamectl --static` 可以查看主机名
@@ -1219,7 +1226,7 @@ linux上的分区就类似与windows上面的C盘，D盘。
 
    注意了，划重点了，分区号就是上面的分区名最后的一个数字，千万别选错了，否则你就等着哭吧
 
-   ​
+   
 
 ## weblogic的安装和使用
 
