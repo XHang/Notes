@@ -47,102 +47,7 @@ ELK由三个组件组成
 
   > 用./elasticsearch >> 1.log & 可以将启动过程的日志存在1.log文件下，不用再输出到控制台了
 
-## 2 映射
 
-为您的数据设置恰当的映射是非常有必要的，这可以让你的数据变得结构化，可视化，而不必看那么乱糟糟的数据结构。
-
-虽然Elastic会自动对你的数据进行自动映射，但有谁比你更了解数据的组成结构呢？
-
-总的来说，映射能做的事有
-
-1. 哪些字符串字段应该被看做是全局字段
-
-2. 哪些字段包含地理，数字，日期信息？
-
-3. 是否应该将文档所有字段的值编入`_all`字段中？
-
-   > 这个_all字段在elasticsearch 6.0.0 已经被弃用了
-
-4. 日期的格式化形式
-
-### 2.1 映射的类型
-
-要创建一个映射，先得确定你要创建什么类型的映射
-
-映射分为两类
-
-1. `Meat_Field`映射，TODO :这货不知道干嘛的
-
-2. Fields 或者properties 映射
-
-   这个就是文档中的字段映射了.
-
-   Elastic支持许多数据类型，可以在映射中为字段指定数据类型，主要有
-
-   字符串类：text和keyWord
-
-   数据类型：`long`, `integer`, `short`, `byte`, `double`, `float`, `half_float`, `scaled_float`
-
-   日期类型：`date`
-
-   布尔数据类型：`boolean`
-
-   二进制数据类型`binary`
-
-   范围式的数据类型：`integer_range`, `float_range`, `long_range`, `double_range`, `date_range`
-
-   以及还有复杂的数据类型，如对象，数组
-
-   GEO即地理数据类型：` Geo-point` 经纬度
-
-   还有特殊的数据类型，比如说IP之类的。。
-
-所以，这章，我们要学习如何手动创建映射。
-
-### 2.2 需要注意的点
-
-1. 小心映射爆炸，BOOB~,就是定义的映射太多了，服务器撑不住了。
-
-   你需要限制一下映射的数量
-
-   `index.mapping.total_fields.limit` 指定索引中最大映射的值
-
-   `index.mapping.depth.limit` 一个字段的最大深度，如果这个字段是在根对象级别定义的，则深度为1，如果  这个字段有一个对象映射，则深度为2.
-
-   TODO 雾里看花，不是很懂
-
-   `index.mapping.nested_fields.limit`  索引中嵌套字段的最大数量
-
-   TODO 不理解
-
-2. 更新索引的映射是不可能的，tan 90 只有删除映射才能过日子这样子。
-
-   因为修改映射也就意味着已经索引的文档全部失效。
-
-   所以，创建映射的时候要三思而后行
-
-### 2.3 创建映射的小栗子
-
-```
-PUT my_index    							//创建一个索引-名字叫my_index
-{
-  "mappings": {
-    "doc": { 								//添加一个名叫doc映射类型
-      "properties": { 						//指定映射类型为properties
-        "title":    { "type": "text"  }, 	//指定title的字段的数据类型为text
-        "name":     { "type": "text"  }, 	//指定name的字段的数据类型为text
-        "age":      { "type": "integer" },  //指定age的字段的数据类型为integer
-        "created":  {
-          "type":   "date", 
-          "format": "strict_date_optional_time||epoch_millis"
-        }
-      }
-    }
-  }
-}
-```
-
-这段代码完全可以复制到kibana网页的控制台上，执行之，就会将请求发送到Elastic
 
 ## 3: 索引
 
@@ -205,7 +110,7 @@ or  `PUT /customer`
 
    > 之所以健康状态是黄色：默认情况下，elasticsearch会为索引创建一个副本`replica ` 
    >
-   > 这个副本原本是应该分配到另一个节点上的，但是我们现在只有一个节点在运行。所以这个副本是分配不了的。如果此时再有一个节点加入群集，使得这个副本能分配，那么健康状态就会变成绿色了
+   > 这个副本原本是应该分配到另一个节点上的，但是我们现在只有一个节点在运行。所以这个副本是分配不了的。如果此时再有一个节点加入群集，使得这个副本能分配，那么健康状态就会变成绿色了、
 
 ### 3.3 往索引放东西
 
@@ -499,6 +404,105 @@ POST /customer/_doc/1/_update?pretty
 
 不过使用ID删除，肯定是效率最高的。
 
+
+
+## 2 映射
+
+为您的数据设置恰当的映射是非常有必要的，这可以让你的数据变得结构化，可视化，而不必看那么乱糟糟的数据结构。
+
+虽然Elastic会自动对你的数据进行自动映射，但有谁比你更了解数据的组成结构呢？
+
+总的来说，映射能做的事有
+
+1. 哪些字符串字段应该被看做是全局字段
+
+2. 哪些字段包含地理，数字，日期信息？
+
+3. 是否应该将文档所有字段的值编入`_all`字段中？
+
+   > 这个_all字段在elasticsearch 6.0.0 已经被弃用了
+
+4. 日期的格式化形式
+
+### 2.1 映射的类型
+
+要创建一个映射，先得确定你要创建什么类型的映射
+
+映射分为两类
+
+1. `Meat_Field`映射，TODO :这货不知道干嘛的
+
+2. Fields 或者properties 映射
+
+   这个就是文档中的字段映射了.
+
+   Elastic支持许多数据类型，可以在映射中为字段指定数据类型，主要有
+
+   字符串类：text和keyWord
+
+   数据类型：`long`, `integer`, `short`, `byte`, `double`, `float`, `half_float`, `scaled_float`
+
+   日期类型：`date`
+
+   布尔数据类型：`boolean`
+
+   二进制数据类型`binary`
+
+   范围式的数据类型：`integer_range`, `float_range`, `long_range`, `double_range`, `date_range`
+
+   以及还有复杂的数据类型，如对象，数组
+
+   GEO即地理数据类型：` Geo-point` 经纬度
+
+   还有特殊的数据类型，比如说IP之类的。。
+
+所以，这章，我们要学习如何手动创建映射。
+
+**需要注意的点** 
+
+1. 小心映射爆炸，BOOB~,就是定义的映射太多了，服务器撑不住了。
+
+   你需要限制一下映射的数量
+
+   `index.mapping.total_fields.limit` 指定索引中最大映射的值
+
+   `index.mapping.depth.limit` 一个字段的最大深度，如果这个字段是在根对象级别定义的，则深度为1，如果  这个字段有一个对象映射，则深度为2.
+
+   TODO 雾里看花，不是很懂
+
+   `index.mapping.nested_fields.limit`  索引中嵌套字段的最大数量
+
+   TODO 不理解
+
+2. 更新索引的映射是不可能的，tan 90 只有删除映射才能过日子这样子。
+
+   因为修改映射也就意味着已经索引的文档全部失效。
+
+   所以，创建映射的时候要三思而后行
+
+### 2.3 创建映射的小栗子
+
+```
+PUT my_index    							//创建一个索引-名字叫my_index
+{
+  "mappings": {
+    "doc": { 								//添加一个名叫doc映射类型
+      "properties": { 						//指定映射类型为properties
+        "title":    { "type": "text"  }, 	//指定title的字段的数据类型为text
+        "name":     { "type": "text"  }, 	//指定name的字段的数据类型为text
+        "age":      { "type": "integer" },  //指定age的字段的数据类型为integer
+        "created":  {
+          "type":   "date", 
+          "format": "strict_date_optional_time||epoch_millis"
+        }
+      }
+    }
+  }
+}
+```
+
+这段代码完全可以复制到kibana网页的控制台上，执行之，就会将请求发送到Elastic
+
 ## 4 批量处理
 
 除了能够索引(查找)，更新，和删除单个文件档外.
@@ -568,7 +572,21 @@ curl -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_doc/_bulk?
 
 得符合这种格式的文档，才能被`elasticsearch`识别。
 
-## 6：搜索API
+
+
+
+
+## 7: API
+
+以下APi均适用于kibana的控制台。
+
+### 7.1 健康API
+
+`GET /_cat/indices?v`
+
+查看elasticsearch集群的节点健康状态
+
+### 7.2：搜索API
 
 `elasticsearch`就是为搜索而生的，没有搜索APi，怎么能行呢？
 
@@ -576,60 +594,212 @@ curl -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_doc/_bulk?
 
 使用搜索API，有两种方式
 
-1. 将搜索参数附加在REST URL的参数上，就是喜闻乐见的键值对参数啦
+#### 7.2.1 将搜索条件加载请求头，也就是URL上
 
-   eg：`GET /bank/_search?q=*&sort=account_number:asc&pretty`
+将搜索参数附加在REST URL的参数上，就是喜闻乐见的键值对参数啦
 
-   作用是
+eg：`GET /bank/_search?q=*&sort=account_number:asc&pretty`
 
-   1. 查询`bank`索引下面的所有的文档，根据参数`q=*`
-   2. 根据文档里面的`account_number`字段进行升序(从小到大)排序
-   3. 漂亮的打印响应数据，根据参数`pretty`
+作用是
+
+1. 查询`bank`索引下面的所有的文档，根据参数`q=*`
+2. 根据文档里面的`account_number`字段进行升序(从小到大)排序
+3. 漂亮的打印响应数据，根据参数`pretty`
+
+```
+{
+  "took": 15,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 1000,
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "bank",
+        "_type": "_doc",
+        "_id": "0",
+        "_score": null,
+        "_source": {
+          "xxx": 0,
+          "xxx": 16623
+        },
+        "sort": [
+          0
+        ]
+      },
+....
+```
+
+响应数据的字段部分解释如下
+
+1. `took` elasticsearch执行搜索所花费的时间，单位是毫秒
+2. 告诉我们搜索是否超时了
+3. 告诉我们搜索了多少碎片？以及搜索碎片成功/失败的次数
+4. `hits`
+
+#### 7.2.2 将搜索参数放在请求体
+
+也就是把请求参数构造成json，放在请求体中，现在基本用的都是这种方式
+
+示例
+
+请求头
+
+```
+GET / bank / _search
+```
+
+请求体（复杂）
+
+```
+{
+	"query": {
+		"match": {
+			"host": "www.elastic.co"
+		}
+	}
+	, "size": 20
+  ,"sort": [
+    {
+      "bytes": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
+
+请求体里面的数据也被称为查询DSL。
+
+稍微介绍下
+
+##### 7.2.2.1 query 
+
+query 里面是查询的定义
+
+1. match_all 在该索引的目录下查询所有数据
+
+   > ```
+   > {
+   >   "query": {"match_all": {}},"size": 1
+   > }
+   > ```
+
+2. match 和`match_all `有所不同，这个针对特定条件的查询
+
+   就如同上面的，匹配host是`www.elastic.co`的记录
+
+3. `bool` 使用并/或逻辑将几个小条件组合起来
+
+   **使用`must`,并逻辑组合条件**
 
    ```
    {
-     "took": 15,
-     "timed_out": false,
-     "_shards": {
-       "total": 5,
-       "successful": 5,
-       "skipped": 0,
-       "failed": 0
-     },
-     "hits": {
-       "total": 1000,
-       "max_score": null,
-       "hits": [
-         {
-           "_index": "bank",
-           "_type": "_doc",
-           "_id": "0",
-           "_score": null,
-           "_source": {
-             "xxx": 0,
-             "xxx": 16623
-           },
-           "sort": [
-             0
-           ]
-         },
-   ....
+   	"query": {
+   		"bool": {
+   			"must": [{
+   				"match": {
+   					"host": "cdn.elastic-elastic-elastic.org"
+   				}
+   			}, {
+   				"match": {
+   					"ip": "175.165.156.162"
+   				}
+   			}]
+   		}
+   	}
+   }
    ```
 
-   响应数据的字段部分解释如下
+   查询字段host的值为xxx且ip的值为xxxx的字段
 
-   1. `took` elasticsearch执行搜索所花费的时间，单位是毫秒
-   2. 告诉我们搜索是否超时了
-   3. 告诉我们搜索了多少碎片？以及搜索碎片成功/失败的次数
-   4. `hits`
+   **使用`should`,或逻辑组合条件**
 
-2. 将搜索参数构造成可读的json格式，放在请求主体中。强势推荐。
+   ```
+   {
+   	"query": {
+   		"bool": {
+   			"should": [{
+   				"match": {
+   					"host": "cdn.elastic-elastic-elastic.org"
+   				}
+   			}, {
+   				"match": {
+   					"ip": "175.165.156.162"
+   				}
+   			}]
+   		}
+   	}
+   }
+   ```
 
-> 因为第二种很好很强大，所以第一种搜索的方式只是大概了解下，之后的示例都是以第二种来进行的。
+   查询字段host的值为xxx或ip的值为xxxx的字段
+
+   条件不仅局限于match，还有
+
+   1. `must_not`  非条件判断，使用方式和match一样
+
+   **使用`filter`,对值进行范围过滤**
+
+   举例：
+
+   ```
+   {
+   	"query": {
+   		"bool": {
+   			"should": [{
+   				"match": {
+   					"host": "cdn.elastic-elastic-elastic.org"
+   				}
+   			}
+   			],"filter": {"range": {
+   			  "bytes": {
+   			    "gte": 6981,
+   			    "lte": 10000
+   			  }
+   			}}
+   		}
+   	}
+   }
+   ```
+
+   查询字段host的值为xxx并且bytes的值介于xx和xx之间
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+4. sort 里面是排序的定义
+   1. FIELD 要排序的字段
+   2. order以及后面的值是指明对应的字段是用于降序还是升序？（字段串的字段默认无法排序哦）
+
+5. ` _ source`里面可以定义仅返回几个字段
+
+6. size  查询出来的条数，嗯，示例没给出，但是是有的
+
+7. form  从头几个数据开始往后查询，为实现分页用的
 
 
 
-## xx 问题
+
+
+
+
+## 8: 问题
 
 1. 运行时报`failed error='Cannot allocate memory' (errno=12)`,可能的原因是elasticsearch运行要分配的内存太大，java虚拟机扛不住  
    解决办法： 修改elasticsearch的`jvm.options`,将
@@ -795,10 +965,6 @@ Mapping divides the documents in the index into logical groups
 >
 > 例如，在之前的例子中，有一些索引名称就包含YYYY.MM.DD格式的日期，比如说`logstash-2015.05 *`
 
-
-
-
-
 解释：为什么在加载数据之前要设置映射
 
 设置映射是定义如何存储和索引文档以及所包含字段的过程。例如，用映射来定义
@@ -872,11 +1038,11 @@ SUCCESS！这表示你的logstash已经能正常工作了
       input {
         ...
       }
-     
+    
       filter {
         ...
       }
-     
+    
       output {
         ...
       }
@@ -1078,13 +1244,13 @@ logstash处理事件有三个阶段：输入生成事件，过滤修改事件，
 
 3. 配置logstash来使用beats的输出插件
 
-   ​
+   
 
    其中1不解释，看log4j2的官方文档教你如何将服务器产生的日志写到文件中
 
    2的配置如下
 
-​```yaml
+```yaml
 filebeat:
   prospectors:
     -
@@ -1094,7 +1260,7 @@ filebeat:
 output:
   logstash:
     hosts: ["your-logstash-host:5000"]
-   ```
+```
 3 的配置，请查看上文
 
 ### filebea
@@ -1126,7 +1292,7 @@ output:
 #### 为  Filebeat Input 配置logstash
 接下来，我们要创建一个Logstash的pipeline配置，该pipeline可以从Beats input plugin接受来自Beats的事件
 以下文本就是配置pipeline的基本格式
-	
+
 	input {
 	}
 	# filter {
@@ -1151,10 +1317,10 @@ output:
 
 解释：input部分是配置了一个beats的输入插件，output部分是配置了一个输出，将输出打印到stdut  
 3. 把以上的代码，创建一个`first-pipeline.conf`文件，并复制进去。  
-  然后执行： `bin/logstash -f config/first-pipeline.conf --config.test_and_exit &`  
-  如果打出的日志没有带fail字样，恭喜你，配置是有效的。  顺便告诉你`--config.test_and_exit`是专门用来校验配置文件是否有效的  
-  那么，真正运行Logstash的命令应该是下面那个
-  `bin/logstash -f config/first-pipeline.conf --config.reload.automatic &`
+    然后执行： `bin/logstash -f config/first-pipeline.conf --config.test_and_exit &`  
+    如果打出的日志没有带fail字样，恭喜你，配置是有效的。  顺便告诉你`--config.test_and_exit`是专门用来校验配置文件是否有效的  
+    那么，真正运行Logstash的命令应该是下面那个
+    `bin/logstash -f config/first-pipeline.conf --config.reload.automatic &`
 > `--config.reload.automatic`是自动配置重新加载。改了配置文件，无需重启即可生效  
 > 在启动过程中，你可能会看到多个关于`pipelinelines.yml 被忽略的警告`，你可以大胆的无视它，因为这个文件其实是用于在单个Logstash实例中运行多个管道，在刚才的操作中，你只是在运行一个管道而已。  
 > 笔者注：这个警告我没碰上，真是太幸运了？
@@ -1171,3 +1337,5 @@ output:
 
    ```
 
+
+   ```

@@ -261,8 +261,39 @@ sql填写sql语句后，直接执行，就可以查询到相关信息了，如
 | id   | select_type | table | partitions | type  | possible_keys | key     | key_len | ref   | rows | filtered | Extra |
 | ---- | ----------- | ----- | ---------- | ----- | ------------- | ------- | ------- | ----- | ---- | -------- | ----- |
 | 1    | SIMPLE      | site  |            | const | PRIMARY       | PRIMARY | 4       | const | 1    | 100.00   |       |
-|      |             |       |            |       |               |         |         |       |      |          |       |
-|      |             |       |            |       |               |         |         |       |      |          |       |
+
+解释如下：
+
+1. id:用于标识每一个执行select的动作，一个sql语句可能有多条记录，多个id，因为一个sql语句里面可能不止执行一次select，比如说包含子查询的sql语句，数据库会先执行子查询，再执行主查询
+
+2. select_type，顾名思义，就是select的类型，有以下几种类型
+
+   1. SIMPLE(简单SELECT，不使用UNION或子查询等)
+
+   2. PRIMARY，一般是这个sql里面有子查询，则最外面的查询会被标记为`PRIMARY`
+
+      举例：
+
+      `explain select * from A where A.id = (select B.id from B where B.id=1)`
+
+      | id   | select_type | table | partitions | type  | possible_keys | key     | key_len | ref   | rows | filtered | Extra |
+      | ---- | ----------- | ----- | ---------- | ----- | ------------- | ------- | ------- | ----- | ---- | -------- | ----- |
+      | 1    | PRIMARY     | A     |            | All   |               |         |         |       | 5    | 20       |       |
+      | 2    | SUBQUERY    | B     |            | const | PRIMARY       | PRIMARY | 4       | const | 1    | 100      |       |
+
+   3. 有没有使用UNION语句
+
+3. table 很明显就是表名，有时候是表名的简写
+
+4. type 对表的访问类型
+
+   | 访问类型 | 解释                                                      | sql举例                                                      |
+   | -------- | --------------------------------------------------------- | ------------------------------------------------------------ |
+   | system   | 表只有一行记录，这个是const的特例，一般不会出现，可以忽略 | 实际上只有一个记录也出不来这个访问类型（暂时忽略）           |
+   | const    | 表示通过索引一次就找到了                                  | select * from r_user where id = 1                            |
+   | eq_ref   | 唯一性索引扫描                                            | 很多教程都是用表连接，连接条件是id相等。但实际测试的时候，发现不是`eq_ref`，而是`const` |
+   
+   
 
 
 

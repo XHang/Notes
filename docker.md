@@ -1075,6 +1075,12 @@ OK，完毕，就酱紫啦
 
 `config.json`丢失了，不知道是不是傻子软件把它删了，这种情况，只能再创建虚拟机了
 
+
+
+
+
+
+
 # 十二： docker命令
 
 ## 12.1 docker-machine 命令
@@ -1108,6 +1114,14 @@ OK，完毕，就酱紫啦
 其实原本的错误，比这个错误，信息量更大
 
 但是，有用的，就这一句，就是没启用docker守护程序
+
+## 11.3 docker启动elasticsearch隔一段时间就挂了
+
+看了一下日志，docker挂之前的遗言是
+
+`Native controller process has stopped - no new native processes can be started`
+
+废话不多说，直接查谷歌，
 
 
 
@@ -1195,7 +1209,17 @@ OK，完毕，就酱紫啦
 
 可用的选项如下
 
-` --publish xx:yy`  映射容器的端口yy到宿主机端口xx
+` --publish xx:yy`  映射容器的端口yy到宿主机端口xx,简写可以为`-p`可以在run里面写多个，意味着这个镜像将暴露多个端口到宿主机上
+
+`-e "key=value"` 设置环境变量的
+
+`--net` 使用各种网络配置，不提供此参数以默认配置运行
+
+```
+$ docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:tag
+```
+
+> 启动elasticsearch时，设置discovery.type=single-node将使elastic以单机模式运行
 
 
 
