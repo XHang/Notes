@@ -176,6 +176,14 @@ cmd命令行`docker image ls`
 
 可以通过`docker container ls`看到，`CONTAINER ID  `那一栏就是
 
+## 2.8 启动一个已经停止的容器
+
+命令:` docker container start {container_id}`
+
+关于容器ID，可以从容器列表中观察到
+
+以上
+
 
 
 
@@ -1220,6 +1228,38 @@ $ docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300
 ```
 
 > 启动elasticsearch时，设置discovery.type=single-node将使elastic以单机模式运行
+
+
+
+## 12.6 docker exec 命令
+
+这个命令可以向docker的容器发一条命令让它执行
+
+用法：
+
+` docker exec [OPTIONS] CONTAINER COMMAND [ARG...]`
+
+解释：
+
+1. OPTIONS是可选的选项，有以下选项
+
+   1. -i  打开标准输入流，可以往控制台录入命令了，即使连接没打开也是如此
+   2. -t 分配一个假的tty窗口给你
+   
+2. CONTAINER  一般是容器ID
+
+3. COMMAND 要执行的命令是？
+
+4. [ARG...]  如果要执行的命令有参数，从这里面录入
+
+示例：向容器发送一条命令，执行bash，也就是打开Shell，并且打开一个tty和标准输出流，以便控制。
+命令：
+
+`docker exec -ti d97ea7a4b9f2 /bin/bash`
+
+   
+
+
 
 
 

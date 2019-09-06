@@ -1,13 +1,18 @@
 # ELK日志收集系统
 
-ELK日志收集系统是一个分布式的，收集服务器上面的日志，并将其展示的一款服务器软件  
+ELK日志收集系统是一个分布式的搜索和数据分析引擎将其展示的一款服务器软件 
 ELK由三个组件组成  
+
 1. E表示Elasticsearch，是日志分析引擎
 2. L表示Logstash 是日志搜集器，负责搜集服务器上面的日志，备选的其他搜集器还有Beats
 3. K表示Kibana 就是负责web页面展示的一款组件，支持扩展
     建议安装顺序为Elasticsearch，kibana，Logstash
 
+
+
 # 第一章：Elasticsearch快速入门
+
+>  注意：以下文档基于elastic7.3.1 ，是笔者编写时，最新的elastic的版本了
 
 首先，我们为什么要使用Elasticsearch
 
@@ -19,7 +24,17 @@ ELK由三个组件组成
 2. 收集，汇总，分析日志。以便挖掘你感兴趣的信息
 3. 分析/商业需求
 
-## 1 安装和配置
+> 查询和分析的效率在近实时，大致几秒的时间
+>
+> 当然要视数据量大小而定。
+>
+> 比如说：从数据的插入到可检索这段时间，大致是1s左右
+
+
+
+
+
+## 1.1 安装和配置
 
 1. 下载Elasticsearch组件
 
@@ -27,29 +42,67 @@ ELK由三个组件组成
 
 3. 运行
 
-4. 注意点1：
-    Elasticsearch开启过程中，你可以看到这个日志重复出现
+    > 运行会打印大量日志，这里挑选几个关键信息进行解释
+    >
+    > 1. `[INFO ][o.e.e.NodeEnvironment ] [1xBUNqo]` :`1xBUNqo`就是自动生成的Elasticsearch节点名
+    >
+    >    > ./elasticsearch -Ecluster.name=my_cluster_name -Enode.name=my_node_name  可以自定义节点
+    >
+    > 2. `publish_address {127.0.0.1:9z300}`  哪个ip地址和端口可以访问到Elasticsearch的服务
+    >
+    > 3. `bound address`   没设置的情况不能从其他主机访问Elasticsearch的服务
 
-  `[INFO ][o.e.e.NodeEnvironment    ] [1xBUNqo]`
-  告诉你，`1xBUNqo`就是自动生成的Elasticsearch节点名，嘛，你当然自定义一个节点名
-  用这个命令启动`./elasticsearch -Ecluster.name=my_cluster_name -Enode.name=my_node_name`  
+    > 用./elasticsearch >> 1.log & 可以将启动过程的日志存在1.log文件下，不用再输出到控制台了
 
-5. 注意点2：
-    后台运行Elasticsearch后，可以键入`curl http://localhost:9200/` 查看运行结果  
+    > 如果你是用docker开启的，那么。。。启动命令是这个
+    >
+    > > $ docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.3.1
 
-6. 注意3：  
-    Elasticsearch启动后，默认开启的是9200来提供服务  
+4.  启动完后，可以键入`curl http://localhost:9200/` 查看运行结果 
 
-7. 注意点4：
-    开启Elasticsearch过程中，注意这一行
-    `publish_address {127.0.0.1:9300}`它告诉你哪个ip地址和端口可以访问到Elasticsearch的服务。  
-    后面还有一个bound address。没设置的情况不能从其他主机访问Elasticsearch的服务（经验之谈）  
+## 1.2 概念
 
-  > 用./elasticsearch >> 1.log & 可以将启动过程的日志存在1.log文件下，不用再输出到控制台了
+1. doc 文档：是elastic里面最小的数据单元，类比于数据库的一条记录
 
+   在elastic通常是json数据，而json里面的字段就相当于数据库的字段
 
+2. index 索引，这里的索引跟你认识的索引可能还不太一样。
 
-## 3: 索引
+   这里的索引类似于数据库的表，它里面存放了很多文档。
+
+   这些文档都是相同或者类似的。
+
+   比如说商品索引，订单索引。
+
+3. type(过时)，在elastic7.0被去除，type的出现，是为了解决同一索引下的某些文档，某个字段是它独有的。
+
+   假如说，有一个商品的index，这个index里面既有生鲜商品的数据，也有电器的数据。
+
+   而电器，就有一个特别的字段：保修期。为了使这个字段是电器这类商品所独有的，所以搞了一个type。
+
+   所以elastic的数据组成其实是：index->type->doc
+
+   type其实才应该算是类比数据库的表。
+
+   不过话说回来，type已经凉凉了，所以老大只能由index来当了
+
+4. shard 碎片，指的是索引数据的分块。
+
+   数据为什么要分块，因为一整块数据太大的话，单台服务器存不下，所以要分块，存在不同的服务器里面。
+
+   那么也就是，一个索引可能会分成几个数据块，存在不同的服务器中，每一块，就称为一块shard。
+
+5. replica 副本，其实是另一个shard ，只不过里面存的数据是另一块shard的复制本。这样可以防止shard数据丢失，即使丢失了也会恢复。另外，也提升了shard里面数据读取的吞吐量。
+
+   因为replica 作为一个特别的shard ，也是可以对外提供服务的，这样就可以把请求分担给replica 那边，降低shard 并发量
+   
+   一般来说，一个index有5个shard ，而一个shard ，有一个replica 
+   
+   这样就需要两个es节点，而这是最小高可用配置。
+   
+   
+
+## 1.2: 索引
 
 索引是一类相似文档的集合，类比于数据库。
 
@@ -59,7 +112,7 @@ ELK由三个组件组成
 
 在对文档执行索引，搜索，更新和删除操作时也会用到这个索引名称
 
-### 3.1 建立索引
+### 1.2.1 建立索引
 
 创建索引的方法很简单,只需要执行这个put命令
 
@@ -79,7 +132,7 @@ or  `PUT /customer`
 
 上面的，就是响应数据了
 
-### 3.2 显示当前所有的索引
+### 1.2.2 显示当前所有的索引
 
 `GET /_cat/indices?v`  or  `curl -X GET "localhost:9200/_cat/indices?v"`
 
@@ -95,8 +148,6 @@ or  `PUT /customer`
 
 > 为了方便查看，做成表格形式的，实际上没有表格格式
 
-
-
 这个结果告诉我们
 
 1. 我们现在有三个索引，分别是`customer`,`shakespeare`, `bank`
@@ -104,21 +155,33 @@ or  `PUT /customer`
 
 > 主分片和副本的值默认情况就是这样的
 
-3. 它包括0个文档
+3. docs.count 它包括多少个文档
 
 4. 它的健康状态是黄色
 
    > 之所以健康状态是黄色：默认情况下，elasticsearch会为索引创建一个副本`replica ` 
    >
-   > 这个副本原本是应该分配到另一个节点上的，但是我们现在只有一个节点在运行。所以这个副本是分配不了的。如果此时再有一个节点加入群集，使得这个副本能分配，那么健康状态就会变成绿色了、
+   > 这个副本原本是应该分配到另一个节点上的，但是我们现在只有一个节点在运行。所以这个副本是分配不了的。如果此时再有一个节点加入群集，使得这个副本能分配，那么健康状态就会变成绿色了
+   
+5. store.size 索引占了多大的空间
 
-### 3.3 往索引放东西
+6. pri.store.size 索引中主要的shard块占据了多大的空间
+
+7. docs.deleted 索引删除了几个文档?
+
+### 1.2.3 往索引放东西
 
 我们要把一些简单的客户文档编入`customer`索引中,这个客户文档的ID为1.
 
 放置的命令是
 
-`PUT /customer/_doc/1?pretty{  "name": "John Doe"}`
+`PUT /customer/_doc/1?pretty`
+
+```
+{  "name": "John Doe"}
+```
+
+
 
 预期得到的响应数据是
 
@@ -142,8 +205,18 @@ or  `PUT /customer`
 从上面的响应数据，可以知道
 
 1. ` "result" : "created" &&  "successful" : 1` 恭喜你，放置成功了
+
 2. `  "_id" : "1"`  这个其实就是我们请求URL的那个`1`，这个是一个restful格式的请求
+
 3. "_version" : 1 表示文档的修改次数，目前是新创建，当然就是1了
+
+4. _shards.total 总共本来要写入两个shard
+
+5. _shards.successful 但是只成功了一个，成功的是主shard。
+
+   没写入的是replica
+
+   
 
 值得注意的是：`elasticsearch`在将文档编入索引之前，不一定需要先创建索引。
 
@@ -176,7 +249,7 @@ POST /customer/_doc?pretty
 >
 > 使用的场景比较多，容易造成滥用就是了。
 
-### 3.4 检索文档
+### 1.2.4 检索文档
 
 `GET /customer/_doc/1?pretty`
 
@@ -203,7 +276,7 @@ POST /customer/_doc?pretty
 2. ` "_id": "1"`你要检索ID为1的文档，不是吗？这个文档的ID就是1
 3. `_source":xxx`这就是上一步往索引放入的东西，它是一个完整的json文档
 
-### 3.5 删除索引
+### 1.2.5 删除索引
 
 在`elasticsearch`中，你也可以做到删库跑人，只要你掌握了这个技能。。笑~
 
@@ -223,7 +296,7 @@ POST /customer/_doc?pretty
 
 怎么验证是否成功删除,看看当前所有的索引吧，
 
-### 3.6 小小的总结
+### 1.2.6 小小的总结
 
 在这里，你应该掌握了索引的增删查了吧。
 
@@ -256,7 +329,7 @@ REST动词/索引名/类型/ID
 3. DELETE 删除数据用的
 4. POST
 
-### 3.7 修改数据
+### 1.2.7 修改数据
 
 这里说的修改数据可不是指修改索引，而是指修改索引中的文档。
 
@@ -308,13 +381,16 @@ PUT /customer/_doc/1?pretty
 更新命令还可以这么写
 
 ```
-POST /customer/_doc/1/_update?pretty
+POST /test/_update/1?pretty
 {
-  "doc": { "name": "Jane Doe", "age": 20 }
+  "doc":{"sex":"程序"}
 }
+
 ```
 
-这个命令做了一件事，就是添加了一个age字段。。仅此而已。
+这个命令做了一件事，就是修改了文档里面sex的字段值
+
+只是更新用，不是替换，更适合业务开发。
 
 用上面的PUT命令也可以实现哦。
 
@@ -337,7 +413,7 @@ POST /customer/_doc/1/_update?pretty
 
 事实上，还有一种命令可以给定一个条件，更新多个文档。类似于sql语句的`update-wehere`语句
 
-### 3.8 使用条件批量更新文档
+### 1.2.8 使用条件批量更新文档
 
 可以使用`_update_by_query  `api   来对索引的每一个文档进行先查询，再更新，而不更改整个源文件
 
@@ -394,7 +470,7 @@ POST /customer/_doc/1/_update?pretty
 
 其实这个命令只是简单的检测有没有导致`_update_by_query`的版本冲突
 
-### 3.9 删除文档
+### 1.2.9 删除文档
 
 命令：`DELETE /customer/_doc/2?pretty`
 
@@ -406,7 +482,7 @@ POST /customer/_doc/1/_update?pretty
 
 
 
-## 2 映射
+## 1.3 映射
 
 为您的数据设置恰当的映射是非常有必要的，这可以让你的数据变得结构化，可视化，而不必看那么乱糟糟的数据结构。
 
@@ -424,13 +500,13 @@ POST /customer/_doc/1/_update?pretty
 
 4. 日期的格式化形式
 
-### 2.1 映射的类型
+### 1.3.1 映射的类型
 
 要创建一个映射，先得确定你要创建什么类型的映射
 
 映射分为两类
 
-1. `Meat_Field`映射，TODO :这货不知道干嘛的
+1. `Meat_Field`类型  就是元字段类型，元字段就是elastic里面内置的字段，比如说`_index`,`_type`,`_id`
 
 2. Fields 或者properties 映射
 
@@ -439,6 +515,14 @@ POST /customer/_doc/1/_update?pretty
    Elastic支持许多数据类型，可以在映射中为字段指定数据类型，主要有
 
    字符串类：text和keyWord
+
+   > text :表示这个字段是一个全文类型的字段，比如说文章，或者商品的描述之类的,这种字段的数据被编入索引之前，通常会被分析器分析里面的术语列表，也就是还会继续细分字段。
+>
+   > 特别的，由于这种字段的数据一般比较大，所以不用它来聚合和排序。
+>
+   > 当然，某些重要的数据可能还是会用来聚合的，这又是一个值得大书特书的教程了。。
+>
+   > 
 
    数据类型：`long`, `integer`, `short`, `byte`, `double`, `float`, `half_float`, `scaled_float`
 
@@ -480,7 +564,7 @@ POST /customer/_doc/1/_update?pretty
 
    所以，创建映射的时候要三思而后行
 
-### 2.3 创建映射的小栗子
+### 1.3.2 创建映射的小栗子
 
 ```
 PUT my_index    							//创建一个索引-名字叫my_index
@@ -503,7 +587,90 @@ PUT my_index    							//创建一个索引-名字叫my_index
 
 这段代码完全可以复制到kibana网页的控制台上，执行之，就会将请求发送到Elastic
 
-## 4 批量处理
+### 1.3.3  查找索引设置的映射
+
+**得到一个索引里面所有的字段映射**
+
+简单的一个查询URL就可以
+
+`GET /{index}/_mapping/`
+
+这样可以获取这个索引所有的映射
+
+得到的东西如下·
+
+```
+{
+  "bank" : {
+    "mappings" : {
+      "properties" : {
+        "account_number" : {
+          "type" : "long"
+        },
+        "address" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "state" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**得到该索引某字段的映射**
+
+请求的URL变成了酱紫了
+
+`GET /bank/_mapping/field/state`
+
+这就是请求bank索引里面state字段设置的映射，返回的结果如下
+
+```
+{
+  "bank" : {
+    "mappings" : {
+      "state" : {
+        "full_name" : "state",
+        "mapping" : {
+          "state" : {
+            "type" : "text",
+            "fields" : {
+              "keyword" : {
+                "type" : "keyword",
+                "ignore_above" : 256
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+
+
+
+
+
+
+
+
+## 1.4 批量处理
 
 除了能够索引(查找)，更新，和删除单个文件档外.
 
@@ -552,7 +719,7 @@ PS:唔，就是这个API如果批量操作中，有一个操作失败了，不�
 
 最后返回的响应数据会为每一个操作(按照发送的顺序)提供一个状态，我们可以根据这个状态来判断特定操作是否失败了。
 
-## 5:批量导入
+## 1.5:批量导入
 
 其实就是将符合规范的json文档导入到索引里面。
 
@@ -576,17 +743,13 @@ curl -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_doc/_bulk?
 
 
 
-## 7: API
+## 1.6: API
 
 以下APi均适用于kibana的控制台。
 
-### 7.1 健康API
+### 1.6.1 索引API
 
-`GET /_cat/indices?v`
-
-查看elasticsearch集群的节点健康状态
-
-### 7.2：搜索API
+### 1.6.2 搜索API
 
 `elasticsearch`就是为搜索而生的，没有搜索APi，怎么能行呢？
 
@@ -594,7 +757,7 @@ curl -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_doc/_bulk?
 
 使用搜索API，有两种方式
 
-#### 7.2.1 将搜索条件加载请求头，也就是URL上
+#### 1.6.2.1 将搜索条件加载请求头，也就是URL上
 
 将搜索参数附加在REST URL的参数上，就是喜闻乐见的键值对参数啦
 
@@ -639,11 +802,32 @@ eg：`GET /bank/_search?q=*&sort=account_number:asc&pretty`
 响应数据的字段部分解释如下
 
 1. `took` elasticsearch执行搜索所花费的时间，单位是毫秒
-2. 告诉我们搜索是否超时了
-3. 告诉我们搜索了多少碎片？以及搜索碎片成功/失败的次数
-4. `hits`
 
-#### 7.2.2 将搜索参数放在请求体
+2. timed_out 告诉我们搜索是否超时了
+
+3. 告诉我们搜索了多少碎片？以及搜索碎片成功/失败的次数
+
+   对于某索引的搜索请求，会打到该索引所有的主/备shard上
+
+   所以这次查询查了5个shard
+
+4. `hits` 查询击中的记录详情
+
+   1. total 击中数
+
+   2. max_score：score是一个文档对于搜索，它是一个相关性的匹配，score值越大，表明该文档对于此搜索越相关。
+
+      而max_score，自然就是这次查询，最相关的那个文档的score了。
+      
+   3. hits 查询结果的文档数据
+   
+      
+   
+      
+   
+      
+
+#### 1.6.2.2 将搜索参数放在请求体
 
 也就是把请求参数构造成json，放在请求体中，现在基本用的都是这种方式
 
@@ -675,11 +859,11 @@ GET / bank / _search
 }
 ```
 
-请求体里面的数据也被称为查询DSL。
+请求体里面的数据也被称为查询DSL（domain-specific language）
 
 稍微介绍下
 
-##### 7.2.2.1 query 
+##### 1.6.2.2.1 query 
 
 query 里面是查询的定义
 
@@ -771,18 +955,6 @@ query 里面是查询的定义
 
    查询字段host的值为xxx并且bytes的值介于xx和xx之间
 
-   
-
-   
-
-   
-
-   
-
-   
-
-   
-
 4. sort 里面是排序的定义
    1. FIELD 要排序的字段
    2. order以及后面的值是指明对应的字段是用于降序还是升序？（字段串的字段默认无法排序哦）
@@ -793,15 +965,164 @@ query 里面是查询的定义
 
 7. form  从头几个数据开始往后查询，为实现分页用的
 
+#####　1.6.2.2.2 聚合查询
+
+这里的聚合查询相当于了sql的group by查询，基本都是查询诸如统计某个字段相同的记录有多少个之类的。
+
+现在假设你有一些银行账户存储在elasticsearch里面。银行账户里面有好几个省的数据，
+
+现在你要统计一下，每一个省有多少个银行账户。
+
+**用法1：将相同字段值进行分组，并查看每个分组的大小**
+
+查询DSL如下所示
+
+```
+GET /bank/_search
+{
+  "size": 0,
+  "aggs": {
+    "group_by_state": {
+      "terms": {
+        "field": "state.keyword"
+      }
+    }
+  }
+}
+```
+
+解释
+
+1. size 为0表示只展示聚合结果，实际查询的记录不要显示出来
+2. aggs是聚合搜索的关键字
+3. group_by_state  暂时没找到实际含义，乱填也可以，最后会显示在响应里面
+4. terms  精确匹配字段和值的关系，也就是下面的field必须是state
+5. /bank/_search  表示查询的范围是bank这个索引
+
+响应如下
+
+```
+{
+  "took" : 1,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 1,
+    "successful" : 1,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : {
+      "value" : 1000,
+      "relation" : "eq"
+    },
+    "max_score" : null,
+    "hits" : [ ]
+  },
+  "aggregations" : {
+    "group_by_state" : {
+      "doc_count_error_upper_bound" : 0,
+      "sum_other_doc_count" : 743,
+      "buckets" : [
+        {
+          "key" : "TX",
+          "doc_count" : 30
+        },
+        {
+          "key" : "MD",
+          "doc_count" : 28
+        }
+      ]
+    }
+  }
+}
+
+```
+
+解释响应
+
+1. sum_other_doc_count  表示还有743的分组情况没有在这个响应中体现。
+
+**用法2：对相同字段值的记录进行分组，并对组内的所有元素的某个字段求一个平均值**
+
+查询DSL
+
+```
+GET /bank/_search
+{
+  "size": 0,
+  "aggs": {
+    "group_by_state": {
+      "terms": {
+        "field": "state.keyword"
+      },
+      "aggs": {
+        "average_balance": {
+          "avg": {
+            "field": "balance"
+          }
+        }
+      }
+    }
+  }
+}
+
+```
+
+解释：
+
+1. 第二个aggs的意思是在第一个aggs的基础上，在执行下面的聚合操作
+2. average_balance  ，作为一个有业务含义的字段名，将聚合操作的结果放在该字段并返回
+3. avg  求平均的聚合操作
+4.  "field": "balance"  指定balance字段进行聚合操作（就是上面的取平均数）
+
+
+
+**用法3：对相同字段值的记录进行分组，并对组内的所有元素的某个字段求一个平均值，最后得到的结果按指定字段排序**
+
+查询DSL
+
+```
+GET /bank/_search
+{
+  "size": 0,
+  "aggs": {
+    "group_by_state": {
+      "terms": {
+        "field": "state.keyword",
+        "order": {
+          "average_balance": "desc"
+        }
+      },
+      "aggs": {
+        "average_balance": {
+          "avg": {
+            "field": "balance"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+解释：
+
+1. order表示对聚合匹配的结果，里面的balance字段进行降序排序
+
+
+
+## 1.6.3 未归类的API
 
 
 
 
 
 
-## 8: 问题
 
-1. 运行时报`failed error='Cannot allocate memory' (errno=12)`,可能的原因是elasticsearch运行要分配的内存太大，java虚拟机扛不住  
+## 1.7: 问题
+
+1. 运行时报`failed error='Cannot allocate memory' (errno=12)`,可能的原因是elasticsearch运行要分配的内存太大，java虚拟机扛不住  
    解决办法： 修改elasticsearch的`jvm.options`,将
 
    -Xms2g
@@ -811,7 +1132,7 @@ query 里面是查询的定义
    -Xms512m
    -Xmx512m
 
-2. 运行时报org.elasticsearch.bootstrap.StartupException: java.lang.RuntimeException: can not run elasticsearch as root  
+2. 运行时报org.elasticsearch.bootstrap.StartupException: java.lang.RuntimeException: can not run elasticsearch as root  
    意思就是说，不能用root用户来运行elasticsearch服务器。所以我们要为其创建一个用户和用户组。关于这个内容，请参考上面的linux部分
 
 3. 切换了用户运行报：
@@ -827,6 +1148,103 @@ query 里面是查询的定义
       这个是虚拟内存的`vm.max_map_count [65530]`太低了，至少设置到262144
       用`sysctl`命令即可实现
 
+## 1.8 elasticSerach 原理剖析
+
+注意：随着时间的流逝，原有原理可能会被替代，所以这里原理剖析，不一定代表elastic源码就是这么做的。
+
+这一章主要起到扫盲的作用
+
+### 1.8.1 elastic是怎么优化全文检索的
+
+关键字技术：分词+倒排索引
+
+首先将数据里面的全文进行分词，然后归类建立索引。就这样。
+
+举例
+
+现在有一批电影数据，数据里面电影名被视为全文数据类型。
+
+里面的数据大致是
+
+1. 生化危机电影
+2. 生化危机海报
+3. 生化危机音乐
+4. 生化危机新闻
+5. 逆转裁判全版本下载
+
+那么，elastic会对这些数据进行分词，然后合并相同的数据，标记相同的数据的来源，最后结果类似于
+
+| 关键词   | ids     |
+| -------- | ------- |
+| 生化     | 1,2,3,4 |
+| 危机     | 1,2,3,4 |
+| 电影     | 1       |
+| 海报     | 2       |
+| 音乐     | 3       |
+| 新闻     | 4       |
+| 逆转裁判 | 5       |
+| 全版本   | 5       |
+| 下载     | 5       |
+
+如果现在进行全文检索，检索的关键字是`生化机`，则elastic会将关键字进行拆分，变成`生化`  `机`
+
+然后分别去上面的全文索引去查关键字，很明显，1，2，3，4的记录都包含`生化`
+
+虽然后面的`机`是匹配不到的，但是至少匹配到数据了，由于有索引，搜索的速度也不会低到哪去。
+
+比数据库不知道高哪去了。
+
+## 1.9 elastic 集群管理
+
+1. 首先是健康管理，请求这个rest API就可以查看集群内部的节点监控情况
+
+   `GET _cluster/health`
+
+   主要关注里面的status状态
+
+   如果是red：说明不是所有索引的shard都是可用的。
+
+   ​	有些shard数据可能丢失了
+
+   如果是yellow：说明每个索引的shard都是active，
+
+   ​	但是有部分replica是不可用的
+
+   如果是green：说明所有索引的replica和replica都是可用的
+
+   特别的，当elastic 第一次安装并请求这个API时，
+
+   总是能到到yellow的结果。这是因为一般elastic第一次安装是，总是单机启动的，也就是只有一个节点shard，没有节点能存放replica，所以replica不可用。所以yellow了
+
+返回值大致如下所示
+
+```
+{
+  "cluster_name" : "docker-cluster",
+  "status" : "yellow",
+  "timed_out" : false,
+  "number_of_nodes" : 1,
+  "number_of_data_nodes" : 1,
+  "active_primary_shards" : 4,
+  "active_shards" : 4,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 1,
+  "delayed_unassigned_shards" : 0,
+  "number_of_pending_tasks" : 0,
+  "number_of_in_flight_fetch" : 0,
+  "task_max_waiting_in_queue_millis" : 0,
+  "active_shards_percent_as_number" : 80.0
+}
+
+```
+
+解释：
+
+1. number_of_nodes 节点数
+
+
+
 # 第二章：kibana快速入门
 
 1. 解压
@@ -839,7 +1257,7 @@ query 里面是查询的定义
 
 这么简单的吗？当然不是，接下来让我们加载一些简单的数据集。。。。。
 
-## 2.1 加载一些简单的数据集
+## 2.1 加载2.1些简单的数据集
 
 **前提，kibana和elasticelasticsearch能互通有无**
 
@@ -957,7 +1375,7 @@ Mapping divides the documents in the index into logical groups
 
 并且指定字段的特征，比如字段的可搜索性，是否被标记,哪些字段包含数字，日期，地理位置信息。。。
 
-# 第四章 定义你的索引模式
+# 第三章 定义你的索引模式
 
 加载到Elasticsearch 的每一组数据都有索引模式
 
@@ -992,14 +1410,14 @@ Mapping divides the documents in the index into logical groups
 3. 运行 `bin/logstash -f logstash.conf` 命令  
 
 
-# 第五章：Logstash日志存储管道
+# 第四章：Logstash日志存储管道
 
 先不管`管道`是什么鬼，总之，它是Logstash存储日志的一个过程。这个过程需要二个必须的元素，还有一个可选的元素
 1. input：这个其实是一个插件，负责从源收集，消费数据  
 2. filter：这个可以根据你自己的指定来修改数据  
 3. output：将数据写到目的地，一般是Elasticsearch  
 
-## 5.1hello world
+## 4.1hello world
 
 首先要看下你的logstash是否安装成功了，简单的话，执行这个命令  
 `bin/logstash -e 'input { stdin { } } output { stdout {} }'`  
@@ -1012,7 +1430,7 @@ SUCCESS！这表示你的logstash已经能正常工作了
 
 > PS： 小贴士，按ctrl-d 可以断开shell哦  
 > ps:  如果执行以上命令抛了一个异常，说找不到这个文件`logstash-plain.log`请尝试用超级管理员执行命令  
-## 5.2在logstash中分析日志
+## 4.2在logstash中分析日志
 
 在现代社会中，日志的处理可不是上面的简单hello world,现实的日志的处理可能有更多的input,filter,output插件
 在下面的教程中，将教你怎么从web项目中取出日志并送进管道，解析这些日志，用来创建指定的特点fields，并将这些已经解析好的数据传到Elasticsearch集群中。当然，你不用在从控制台输入配置了，多累啊，现在开启配置文件时代
@@ -1025,7 +1443,7 @@ SUCCESS！这表示你的logstash已经能正常工作了
 > Beats input plugin 使logstash能从Elastic Beats框架接受事件  
 > PS：对于 Filebeat在另一个章节讲述，这里不说了
 
-## 5.3 logstash.conf文件格式
+## 4.3 logstash4.3conf文件格式
 
 这个文件其实就是logstash的配置文件
 作用：  
@@ -1074,7 +1492,7 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
     要看更多的话，请点击[plugin-value-types](https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#plugin-value-types)
 
 
-## 5.4使用Grok Filter Plugin来解析log日志
+## 4.4使用Grok Filter Plugin来解析log日志
 
 以上的例子中，虽然我们成功的将日志信息事件打印到控制台了但是格式太乱了，我们有必要整治这货，怎么办呢？
 这时候就需要Grok Filter Plugin来帮忙过滤日志信息了  
@@ -1114,7 +1532,7 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
 8. 接下来，重启filebeat吧.再等待几分钟等filebeat自动加载配置文件，就可以把新的日志结构体打印出来了，厉害吧。  
    然而我还是感觉像鬼画符  
 
-## 5.5 Geoip过滤器插件为你的数据补充细节
+## 4.5 Geoip过滤器插件为你的数据补充细节
 
 除了分析日志以达到更好的搜索结果外，还有一个插件可以在已存在的数据中获取补充信息
 比如说，从现有数据获取ip地址信息，再从地址信息获取地理位置，并将该位置信息添加到日志中  
@@ -1136,7 +1554,7 @@ RT 酱紫的话，就为这个输入插件配置了两个文件输入
 1. 删除注册文件，然后重启Filebeat 。等logstash重新加载配置文件完毕，你就可以看到控制台打印出来的日志信息了
 2. 这一步什么都不用做，看下打印出来的日志json数据，里面有一个`city_name`或者`country_name`就OK了
 
-## 5.6 将你的数据编入Elasticsearch
+## 4.6 将你的数据编入Elasticsearch
 
 **前提：Elasticsearch必须，在9200端口上运行，处于运行状态**  
 在上面的几步中，我们已经将web日志分割成几个特定的字段，但是仅仅只是把数据输出到控制台是不是有点不爽，嗯，接下来，我们就要把数据送到
@@ -1176,14 +1594,14 @@ Elasticsearch了
 
 > 如果你学会为`Filebeat`加载Kibana索引模式,你可以在kibana的web页面中看到日志信息，有关信息，请参阅filebeat的入门教程
 
-## 5.7在logstash使用多个输入和输出插件
+## 4.7在logstash使用多个输入和输出插件
 
 在实际开发中，你的日志来源通常有多个地方，要输出的目的地也可能有多个，这个时候，单个input和output肯定不能满足需求。
 在这一节中。你将创建一个logstash的管道，该管道从推特简讯和filebeat的client获取输入，也就是说，有两个输入。  
 然后将信息发送到Elasticsearch集群，并且还会写入到文件。也就是说，有两个输出。  
 那么问题来了，在中国，你怎么能访问到推特简讯？？？WTF！
 
-## 5.8 logstash 是如何工作的？
+## 4.8 logstash 是如何工作的？
 
 logstash处理事件有三个阶段：输入生成事件，过滤修改事件，输出将事件运往其他地方.
 
@@ -1191,7 +1609,7 @@ logstash处理事件有三个阶段：输入生成事件，过滤修改事件，
 
 来简单介绍下输入，输出，过滤，编解码。
 
-### 5.8.1输入插件
+### 4.8.1输入插件
 
 输入插件将数据传到logstash，一些常见的输入插件是
 
@@ -1213,7 +1631,7 @@ logstash处理事件有三个阶段：输入生成事件，过滤修改事件，
 4. **clone** 复制一个事件，可能会添加或者修改字段
 5. **geoip** 从ip地址获取地理信息添加到数据中
 
-### 5.8.2输出插件
+### 4.8.2输出插件
 
 输出是logstash管道的最后阶段，一个事件可以有多个输出，但是一旦所有输出处理完成，这个事件就结束了，一些常见的输出插件如下  
 
@@ -1222,7 +1640,7 @@ logstash处理事件有三个阶段：输入生成事件，过滤修改事件，
 3. **graphite** 将事件数据发送给graphite，这是一个开源的工具，可以存储和绘制指标
 4. **statsd** 将事件数据发送给statsd
 
-### 5.8.3 编解码器
+### 4.8.3 编解码器
 
 编解码器一般是作为输出或者输出过程的一部分，作为流过滤器而存在的
 
@@ -1232,7 +1650,7 @@ logstash处理事件有三个阶段：输入生成事件，过滤修改事件，
 - **multiline** 将多行文本事件（例如java的堆栈异常）合并到单个事件中
 
 
-### 5.8.4 log4j的输入插件
+### 4.8.4 log4.8.4j的输入插件
 
 注：logstash的log4j插件其实已经过时了，现在推荐使用的是搭配filebeat来使用
 

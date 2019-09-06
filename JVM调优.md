@@ -221,7 +221,7 @@ CPU使用率分为两种
 
    也可以用ｔｏｐ监控ＣＰＵ使用率使用率
 
-   ​
+   
 
 ##　5.2:番外篇
 
@@ -690,13 +690,13 @@ java堆内存的大小受限于HotSpot版本和操作系统
 
       完毕!
 
-      ​
+      
 
-   ​
+   
 
-   ​
+   
 
-   ​
+   
 
 而这个过程需要hotspot vm和java se 类加载库来共同协作.
 
@@ -1823,7 +1823,7 @@ Full GC的话，看看下面的日志吧
 
    看见没，上面的`System.gc()`几个大字闪闪发亮(大雾～)
 
-   ​
+   
 
 
 ### 10.4 JIT编译器监控
@@ -2218,9 +2218,9 @@ itor entry [0x00000000583ff000]
 
    打开转储文件也超简单，只要在菜单的File-OpenFile 选择转储文件即可
 
-   ​
+   
 
-   ​
+   
 
 ### 12.3.2 如何VisuaIVM下监控远程主机
 
@@ -2265,11 +2265,11 @@ itor entry [0x00000000583ff000]
 
 首先，远程主机上面运行的java程序需要在启动时，追加这几个参数
 
-`com.sum.management.jmxremote.prot=<port number>`
+`-Dcom.sun.management.jmxremote.port=<port number>`
 
-`com.sum.management.jmxremote.ssl=<true |  false >`
+`-Dcom.sun.management.jmxremote.ssl=<true |  false >`
 
-`com.sum.management.jmxremote.authenticate=<true |  false >`
+`-Dcom.sun.management.jmxremote.authenticate=<true |  false >`
 
 其次，在VisuaIVM的菜单File>add JMX Connection里面
 
@@ -2428,7 +2428,7 @@ Collect命令行参数
 
    除非应用是计算性密集型应用，否则还是先尽量分析其他要素吧
 
-### ​12.2.3 查看性能数据
+### 12.2.3 查看性能数据
 
    其实就是用Analyzer载入之前`Collect`命令生成的样本文件。
 

@@ -501,7 +501,45 @@ OK，拿到数据了，但是仔细一看，，不科学啊，本来`group by` �
 
 
 
+## mysql distinct的特性
 
+都应该知道，distinct的作用是保证数据的唯一性，你指定一个字段，那么查询出来的记录，里面的字段就是唯一的。
+
+不过有几点尴尬的地方
+
+1. select只能显示被distinct限定的字段，也就是说，如果你要展现整个表的所有字段，那么所有字段都得经过distinct处理
+2. distinct和count的组合有个特性，如果被distinct的字段，在查询出来的结果集里面，该字段值都是空的，那么，count 查询出来的结果就是0
+
+第2点特性实在是太丧心病狂了，按理来说，都是空的字段就都视为相同的记录不就行了,为了达到这一点，我们可以对distinct里面的字段进行处理
+
+假设你的sql如下：
+
+```
+SELECT
+	count( DISTINCT field1,field2, field3 ) 
+FROM
+	`table` 
+WHERE
+	`field1` IN ( 'xxxx','xxxx' ) 
+```
+
+不巧，你要查的几条记录里面的field2字段值全是空的。
+
+那么这条sql会得到一个荒唐的结论，0
+
+正确改法：
+
+```
+SELECT
+	count( DISTINCT field1, CASE WHEN field2 IS NULL THEN 1 ELSE field2 END, field3 ) 
+FROM
+	`table` 
+WHERE
+	`field1` IN ( 'xxxx','xxx' ) 
+
+```
+
+实际上就是让数据库在查询的时候，如果遇见field2是空的情况，那么就给它一个默认值1，否则就是原值
 
 
 
