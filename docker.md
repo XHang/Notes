@@ -383,14 +383,28 @@ Dockerfile 是用于创建镜像的配置文件
    
    第二种就是执行带参数的命令
    
+5. CMD 这个也是用于执行命令的，所不同的是，一个Dockerfile  只能有一个CMD命令，如果有多个，则会生效最后一个
+   
+   举例子：
+   
+   ```
+   CMD ["elasticsearch"]
+   ```
+   
+6. USER xxx 可以使下面的命令以指定的用户运行，或者直到run命令时再指定用户名也可以，不过，如果这两种方式都没有指定的话，默认是以root用户来运行的
+   
+7. 
+
    
    
    
+
    
+
    
+
    
-   
-   
+
    
 
 ## 6.2 用docker部署一个Springboot程序
@@ -1112,7 +1126,9 @@ OK，完毕，就酱紫啦
    但是，你这个槽老头子坏得很，我不信VPS也可以开机
 
    实际上，我只是试了本地上面的虚拟机罢了
-
+3. `docker-machine ssh` 登录安装docker的机子
+   
+   
    
 
 ## 11.2 `cannot connect to the Docker daemon`
@@ -1223,6 +1239,18 @@ OK，完毕，就酱紫啦
 
 `--net` 使用各种网络配置，不提供此参数以默认配置运行
 
+` --privileged` 使用真正的特权模式，不是默认的残废特权模式，那个模式执行不了`sysctl`  会告诉你它是只读的
+
+
+
+后面的`COMMAND`和`ARG...`是容器开始运行是要执行的命令，如果有指定，则dockerfile里面的CMD指令会被忽略
+
+`COMMAND`和`ARG...`  可以执行多个命令
+
+举例：
+
+`docker run customer-elastic /bin/bash -c "sysctl -w vm.max_map_count=262144;elasticsearch"`
+
 ```
 $ docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:tag
 ```
@@ -1245,6 +1273,7 @@ $ docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300
 
    1. -i  打开标准输入流，可以往控制台录入命令了，即使连接没打开也是如此
    2. -t 分配一个假的tty窗口给你
+   3. `-u` 后面带用户名，表示以这个用户名的权限运行这个命令，比如说`-u root `就是以root权限运行命令
    
 2. CONTAINER  一般是容器ID
 
@@ -1257,21 +1286,149 @@ $ docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300
 
 `docker exec -ti d97ea7a4b9f2 /bin/bash`
 
+# 十三： docker容器
+
+概念：Docker容器是镜像运行的实例
+
+容器里面的配置一般而言，是与宿主机一致的，也就是说，谁通过docker运行了这个镜像，所产生的容器的配置就和这个机器是一致的
+
+> 目前用dockerfile生成镜像后运行容器，得到的结论就是这样的
+
+这个特性可以用来适配应用的一些高配置要求，比如说elastic，就要求`vm.max_map_count`为262144。
+
+少一个子都不行，所以推荐的做法是在宿主机上修改该值，然后再重新创建容器
+
+
+
    
 
+# 十四： docker容器里面的数据
 
+一般来说，容器产生的数据，都是放在容器的可写层里面，一旦容器被删除，则意味着数据将丢失
 
+如果我们要持久化存储我们的数据，使容器即使删除了，也不会丢失数据。
 
+那么我们就需要使用docker的两个功能
 
+1. *volumes*
+2. *bind mounts*
+
+这两种方式的区别如下
+
+1. *volumes*将数据存储在主机的文件系统里面，对于linux，是`/var/lib/docker/volumes/`
+
+   非docker进程的程序不应该修改这部分的数据
+
+   *volumes*由docker 创建和管理，可以显式的使用命令创建或者，或者docker可以在容器创建的时候创建它。
+
+   *volumes*可以同时被其他容器使用，并且在没有容器使用时，也不会被自动移除，当然你可以使用
+
+   `docker volume prune`来移除未使用的*volumes*
+
+   *volumes*可以是命名的或者是匿名的，后者发生在未指定*volumes*的名称下，docker会随机给一个名称，保证是唯一的
+
+2. **Bind mounts**  可以将数据存在在主机的任何位置上
+
+   任何进程都可以修改它
+
+   它依赖docker主机上面的特定目录结构。
+
+   使用**Bind mounts** 时，主机上的特定目录结构会被装载到容器中。
+
+   它的一个副作用是，容器里面的进程可以任意修改主机上面的敏感文件，可能会对进程造成影响
+
+3. tmpfs mounts  
+
+   这个是linux有的，这种方式不会将数据存储在磁盘里，而是内存中
+   
+4. named pipes: 这个用于容器和主机之间的通讯
    
 
    
+## 14.1 *volumes*
 
-   
+*volumes*是docker官方推荐的一种持久化保持数据的方式，比起Bind mounts更好用，更安全。
 
-   
+它的特点有几个
 
-   
+1. 可以在多个容器之间共享*volumes*，可以是只读，也可以只读只写
+
+2. 可以很方便的备份*volumes*，方便从一台docker主机将数据迁移到另一台docker主机
+
+3. 如果没有显式的创建它，也就是，dockerfile没有指定，docker run也没有指定，那么在容器创建的时候就会创建一个匿名的*volumes*
+
+   > 实际测试就是如此
+
+   这会导致，你在dockerfile明明用了*volumes*指令，但是没有指定*volumes*名字，每次运行这个镜像生成的容器时，总会创建一个新的*volumes*，之前运行镜像所产生的数据，保存在另一个*volumes*了
+
+   看起来就好像*volumes*没有起作用似得
+
+4. 不用考虑*volumes*在主机系统里面具有什么特定的目录结构，让docker主机和容器之间耦合度降低
+
+**volumes的几个命令**
+
+1. 创建*volumes*
+
+```
+docker volume create  ${name}
+```
+
+2. 列出*volumes*的列表
+
+   `docker volume ls`
+
+3. 查看*volumes*的详情
+
+   `docker volume inspect ${name}`
+
+4. 移除volumes
+
+   `docker volume rm my-vol`
+
+**启动具有volumes的容器**（命令行指定）
+
+```docker run -d --name devtest --mount source=myvol2,target=/app nginx:latest```
+
+这个命令以分离模式启动了一个nginx的镜像，容器的名字叫做`devtest `,挂载了一个叫做`myvol2`的volumes
+
+映射到容器的`/app`目录下
+
+>  --mount 是一个基本通用的挂载命令参数，后面跟着键值对，用逗号分开。
+>
+>  可选的键值对有
+>
+>  1. type  默认应该是volumes，当然可以显式指定其他的，比如说`bind`  `tmpfs`
+>  2. source 指定volumes的名称，这个volumes的名称不一定存在，如果不存在，在容器创建时，会自动创建，也可以连这个参数都不指定，那么docker会生成一个匿名的volumes
+>  3. destination，映射到容器的哪个目录，可以使用别名，比如说·`dst`   `target`
+>  4. readonly ,对这个容器是否只读
+>
+>  做一下
+>
+>  1. 首先用上面的命令创建一个容器
+>  2. 进入这个容器的挂载目录`/app`下
+>  3. 在`/app`目录下新建一个文件夹和文件
+>  4. 停止并删除容器
+>  5. 重新再用上面的命令创建容器
+>  6. 进入容器的挂载目录下
+>  7. 查看文件是否存在
+>
+>  预期结果：文件存在
+>
+>  证明结论：处于挂载目录下的文件，即使容器删除，数据也不会丢失，可以再次读取到
+
+**启动具有volumes的容器**（dockerfile指定）
+
+过程就不讲了，请参照上面的dockerfile解释
+
+值得一说的是，dockerfile并不能指定volumes的名字，这意味着，如果你不在run命令指定volumes的名子，将会创建一个匿名volumes。
+
+在dockerfile设计这个目的原因，据说是因为担心执行人执行run命令时，没有给volumes名字，这样起码数据还能保持在一个匿名volumes里面，不至于丢失。
+
+反正就是酱紫
+
+
+
+
 
 
 

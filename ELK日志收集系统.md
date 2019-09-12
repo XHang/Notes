@@ -58,7 +58,41 @@ ELK由三个组件组成
     >
     > > $ docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.3.1
 
-4.  启动完后，可以键入`curl http://localhost:9200/` 查看运行结果 
+4. 启动完后，可以键入`curl http://localhost:9200/` 查看运行结果 
+
+**几个小问题**
+
+1. 启动过程中报了这个错误
+
+   ```
+   [1]: the default discovery settings are unsuitable for production use; at least one of [discovery.seed_hosts, discovery.seed_providers, cluster.initial_master_nodes] must be configured
+   ```
+
+   这个问题大致是讲你的es正在用生产模式运行，而生产模式必须配置几个配置项
+
+   所以解决办法是
+
+   1. 不要用生产模式运行，用开发模式运行，只需要在elastic的配置文件加上这个配置项
+
+      ```
+      discovery.type : single-node
+      ```
+
+   2. 它说加，那就加,同样在你的elastic加上这段配置
+
+      ```
+      cluster.initial_master_nodes: ["node-1"]
+      ```
+
+**配置文件解释**
+
+elastic的配置文件就放在config目录下一个叫`elasticsearch.yml`的文件
+
+里面可以配置的有
+
+1. `discovery.type : single-node`  不要校验集群配置，以单机运行
+2. `path.data : /elastic-data`  数据存放的目录
+3. 
 
 ## 1.2 概念
 
@@ -73,6 +107,8 @@ ELK由三个组件组成
    这些文档都是相同或者类似的。
 
    比如说商品索引，订单索引。
+
+   索引的名词必须是小写的，不能以下划线开头，且不能包含逗号
 
 3. type(过时)，在elastic7.0被去除，type的出现，是为了解决同一索引下的某些文档，某个字段是它独有的。
 
@@ -92,6 +128,12 @@ ELK由三个组件组成
 
    那么也就是，一个索引可能会分成几个数据块，存在不同的服务器中，每一块，就称为一块shard。
 
+   primary shard数量在创建索引的时候，就已经固定了，后面是无法更改的，即使再增加服务器，也不会增加shard的数量
+
+   但是这样的话增加服务器就无法提升性能，那有个毛线用？
+
+   其实还可以增加replica的数量来提升性能的，毕竟replica是也是可以承担请求的
+
 5. replica 副本，其实是另一个shard ，只不过里面存的数据是另一块shard的复制本。这样可以防止shard数据丢失，即使丢失了也会恢复。另外，也提升了shard里面数据读取的吞吐量。
 
    因为replica 作为一个特别的shard ，也是可以对外提供服务的，这样就可以把请求分担给replica 那边，降低shard 并发量
@@ -100,7 +142,17 @@ ELK由三个组件组成
    
    这样就需要两个es节点，而这是最小高可用配置。
    
-   
+6. id ：用来标识唯一doc的一个字段，在插入新doc时，可以手动指定，也可以让es自动生成
+
+   手动指定的情况：迁移旧系统的数据到es中，需要保留旧系统的数据完整性，此时就需要手动指定id
+
+   自动生成的情况：从头开发一个新组件，数据直接插入到es中，可以使用es自动生成的id.
+
+   es自动生成的id使用GUID 算法，可以保证在分布式系统下不会冲突
+
+   关于如何手动和自动让es处理ID
+
+   请参阅下面的**1.2.3 往索引放东西**
 
 ## 1.2: 索引
 
@@ -131,6 +183,25 @@ or  `PUT /customer`
 ```
 
 上面的，就是响应数据了
+
+如果你想指定新索引的shard和replica
+
+则请求如下
+
+```
+{
+	"settings": {
+		"number_of_shards": 5,
+		"number_of_replicas": 1
+	}
+}
+```
+
+解释，该索引需要分成5个shard，每个shard有一个replica
+
+
+
+
 
 ### 1.2.2 显示当前所有的索引
 
@@ -249,6 +320,24 @@ POST /customer/_doc?pretty
 >
 > 使用的场景比较多，容易造成滥用就是了。
 
+**特别说明一下：**
+
+新增文档和全量替换文档restAPI，甚至请求参数都是一样，而记录的有无决定了操作是更新，还是插入。
+
+但是如果我一定要执行的是插入呢？
+
+可以用这个restAPI
+
+`POST /index/_create/_id`  或者`PUT /index/_doc/_id?op_type=create`
+
+请求体和上面的示例一模一样
+
+所不同的是，如果要插入的记录id已存在，会无法插入，报
+
+`[2]: version conflict, document already exists (current version [1])`
+
+
+
 ### 1.2.4 检索文档
 
 `GET /customer/_doc/1?pretty`
@@ -357,6 +446,10 @@ PUT /customer/_doc/1?pretty
 
 其实与其说是修改命令，倒不如说是替换，把旧数据替换成新数据，不就是修改了嘛。
 
+所以，**上面的修改数据，实际上是用替换方式**
+
+> es 内部对于这种替换式的更新数据，是先把目标doc置为delete，但并没有物理删除，然后再新增一条数据，id就是被物理删除的那个
+
 此外，执行这个替换的命令之后，响应数据也是会变的
 
 ```
@@ -390,17 +483,34 @@ POST /test/_update/1?pretty
 
 这个命令做了一件事，就是修改了文档里面sex的字段值
 
-只是更新用，不是替换，更适合业务开发。
+这次更新数据就只是局部更新而已，不需要全量替换
+
+> 这种修改数据的方式被称为partial update
+>
+> 相较于全量替换
+>
+> 1. 它减少了网络请求所花费的实际
+> 2. 减少了查询和修改的时间间隔，有效的降低了并发冲突
+>
+> 其实这些部分替换的方式·，在es内部，也是先load出所有数据，再全量替换的。
 
 用上面的PUT命令也可以实现哦。
 
-最后，你还可以用脚本来修改数据
+
+
+最后，你还可以**用脚本来修改数据**
+
+1. 直接在请求体塞脚本代码
 
 ```
 POST /customer/_doc/1/_update?pretty
 {
   "script" : "ctx._source.age += 5"
 }
+或者
+"script": {
+    "source": "ctx._source.likes++"
+ }
 ```
 
 作用是将ID为1的json文档中的age属性的加上5
@@ -408,6 +518,15 @@ POST /customer/_doc/1/_update?pretty
 其中，命令中的`ctx._source`指的是即将要更新的源文档。
 
 > 前提是要有age这个字段
+
+2. 预先定义脚本，然后使用脚本的标识符，更新数据
+
+   步骤
+
+   1. 首先要写一个脚本文件，然后放在es安装目录下/config/scripts目录下
+   2. 
+
+   
 
 以上的命令都是只更新一个文档用的。
 
@@ -480,6 +599,14 @@ POST /customer/_doc/1/_update?pretty
 
 不过使用ID删除，肯定是效率最高的。
 
+**内部删除的机制**
+
+es对于删除操作并没有真正把目标从磁盘中物理删除，
+
+而是将删除的目标记录置为delete，外部查是查不到的。
+
+当es发现可用磁盘空间不够时，。就会来一波垃圾清除，把这些delete的记录全都物理删除。
+
 
 
 ## 1.3 映射
@@ -522,7 +649,6 @@ POST /customer/_doc/1/_update?pretty
 >
    > 当然，某些重要的数据可能还是会用来聚合的，这又是一个值得大书特书的教程了。。
 >
-   > 
 
    数据类型：`long`, `integer`, `short`, `byte`, `double`, `float`, `half_float`, `scaled_float`
 
@@ -821,6 +947,8 @@ eg：`GET /bank/_search?q=*&sort=account_number:asc&pretty`
       
    3. hits 查询结果的文档数据
    
+5. _source  就是新增文档时传入的json串，再原封不动的返回回来
+   
       
    
       
@@ -861,19 +989,24 @@ GET / bank / _search
 
 请求体里面的数据也被称为查询DSL（domain-specific language）
 
-稍微介绍下
+稍微介绍下几个用法
 
-##### 1.6.2.2.1 query 
+##### 1.6.2.2.1 查询所有数据
+
+DSL示例
+
+```
+{
+	"query": {
+		"match_all": {}
+	},
+	"size": 1
+}
+```
 
 query 里面是查询的定义
 
 1. match_all 在该索引的目录下查询所有数据
-
-   > ```
-   > {
-   >   "query": {"match_all": {}},"size": 1
-   > }
-   > ```
 
 2. match 和`match_all `有所不同，这个针对特定条件的查询
 
@@ -881,29 +1014,28 @@ query 里面是查询的定义
 
 3. `bool` 使用并/或逻辑将几个小条件组合起来
 
-   **使用`must`,并逻辑组合条件**
+##### 1.6.2.2.1 只用一个条件简单查询
 
-   ```
-   {
-   	"query": {
-   		"bool": {
-   			"must": [{
-   				"match": {
-   					"host": "cdn.elastic-elastic-elastic.org"
-   				}
-   			}, {
-   				"match": {
-   					"ip": "175.165.156.162"
-   				}
-   			}]
-   		}
-   	}
-   }
-   ```
+DSL举例
 
-   查询字段host的值为xxx且ip的值为xxxx的字段
+```
+GET /kibana_sample_data_logs/_search
+{
+	"query": {
+		"match": {
+			"host": "cdn.elastic-elastic-elastic.org"
+		}
+	}
+}
+```
 
-   **使用`should`,或逻辑组合条件**
+
+
+
+
+##### 1.6.2.2.1 使用should或组合逻辑条件
+
+DSL示例
 
    ```
    {
@@ -923,18 +1055,40 @@ query 里面是查询的定义
    }
    ```
 
-   查询字段host的值为xxx或ip的值为xxxx的字段
+解释： 查询字段host的值为xxx或ip的值为xxxx的字段
 
-   条件不仅局限于match，还有
+##### 1.6.2.2.2 使用must并组合逻辑条件
 
-   1. `must_not`  非条件判断，使用方式和match一样
+DSL示例
 
-   **使用`filter`,对值进行范围过滤**
+```
+{
+	"query": {
+		"bool": {
+			"should": [{
+				"match": {
+					"host": "cdn.elastic-elastic-elastic.org"
+				}
+			}, {
+				"match": {
+					"ip": "175.165.156.162"
+				}
+			}]
+		}
+	}
+}
+```
 
-   举例：
+解释：查询字段host的值为xxx且ip的值为xxxx的字段
 
-   ```
-   {
+> 条件不仅局限于must，还有`must_not`  非条件判断，使用方式和match一样
+
+##### 1.6.2.2.2 使用`filter`,对值进行范围过滤
+
+DSL示例
+
+```
+  {
    	"query": {
    		"bool": {
    			"should": [{
@@ -951,19 +1105,213 @@ query 里面是查询的定义
    		}
    	}
    }
-   ```
+```
 
-   查询字段host的值为xxx并且bytes的值介于xx和xx之间
+解释： 查询字段host的值为xxx并且bytes的值介于xx和xx之间
 
-4. sort 里面是排序的定义
-   1. FIELD 要排序的字段
-   2. order以及后面的值是指明对应的字段是用于降序还是升序？（字段串的字段默认无法排序哦）
+##### 1.6.2.2.2 对查询结果进行排序
 
-5. ` _ source`里面可以定义仅返回几个字段
+DSL 示例
 
-6. size  查询出来的条数，嗯，示例没给出，但是是有的
+```
+GET /bank/_search/
+{
+	"query": {
+	  "match_all": {}
+	}
+	, "size": 20
+  ,"sort": [
+    {
+      "account_number": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
 
-7. form  从头几个数据开始往后查询，为实现分页用的
+解释：查询所有数据，并根据account_number字段进行降序排序
+
+##### 1.6.2.2.2 对查询结果进行分页
+
+查询DSL示例
+
+```
+GET /bank/_search/
+{
+	"query": {
+	  "match_all": {}
+	}, 
+	"size": 20,
+	"from": 2
+}
+```
+
+解释：查询所有数据，但是提取前两行后面的数据，并且提取20条数据
+
+##### 1.6.2.2.2 指定只查询几个字段
+
+查询DSL举例
+
+```
+GET /bank/_search/
+{
+	"query": {
+	  "match_all": {}
+	}, 
+	"_source": ["account_number","balance"]
+}
+```
+
+解释：查询所有数据，但是只提取account_number和balance字段
+
+##### 1.6.2.2.2 全文检索
+
+查询DSL
+
+```
+GET /test/_search
+{
+  "query": {
+    "match": {
+      "content": "I game"
+    }
+  }
+}
+```
+
+查询结果（仅显示hits.hits）
+
+```
+ {
+        "_index" : "test",
+        "_type" : "_doc",
+        "_id" : "3",
+        "_score" : 2.8399353,
+        "_source" : {
+          "title" : "myGame",
+          "content" : "I love psp game,sony big da fa hao "
+        }
+      },
+      {
+        "_index" : "test",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_score" : 1.0511023,
+        "_source" : {
+          "title" : "mystory",
+          "content" : "I love xxxx ,but her Don't love me"
+        }
+```
+
+解释：这个索引test里面的content是一些句子
+
+比如说
+
+1. This is My Test content
+2. I love xxxx ,but her Don't love me
+3. I love psp game,sony big da fa hao 
+
+elastic 会对这些句子进行分词，我们搜索的时候，也用空格给单词分词，当执行搜索时，elastic就会进行全文检索。
+
+这个是默认行为，我们在查询的时候不用做指明说该查询是全文检索，不需要的
+
+##### 1.6.2.2.2 短句搜索
+
+这个刚好和全文搜索相反
+
+全文搜索是将搜索词拆解，然后查询倒排索引找对应单词
+
+而短句搜索则是不拆解搜索词，拿整个搜索词去匹配目标字段
+
+DSL 示例
+
+```
+GET /test/_search
+{
+  "query": {
+    "match_phrase": {
+      "content": "I love"
+    }
+  }
+}
+```
+
+响应示例
+
+```
+ {
+        "_index" : "test",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_score" : 2.1022046,
+        "_source" : {
+          "title" : "mystory",
+          "content" : "I love xxxx ,but her Don't love me"
+        }
+      },
+      {
+        "_index" : "test",
+        "_type" : "_doc",
+        "_id" : "3",
+        "_score" : 2.0752437,
+        "_source" : {
+          "title" : "myGame",
+          "content" : "I love psp game,sony big da fa hao "
+        }
+```
+
+##### 1.6.2.2.2 高亮搜索
+
+就是在搜索结果里面，对匹配的数据进行突出处理。
+
+不会影响到搜索条件
+
+DSL举例
+
+```
+{
+	"query": {
+		"match": {
+			"content": "I love"
+		}
+	},
+	"highlight": {
+		"fields": {
+			"content": {}
+		}
+	}
+}
+```
+
+解释：对content字段进去全文检索，检索关键字是`I love`
+
+并对检索的结果content字段进行关键字标亮
+
+响应示例
+
+```
+"hits" : [
+      {
+        "_index" : "test",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_score" : 2.2955391,
+        "_source" : {
+          "title" : "mystory",
+          "content" : "I love xxxx ,but her Don't love me"
+        },
+        "highlight" : {
+          "content" : [
+            "<em>I</em> <em>love</em> xxxx ,but her Don't <em>love</em> me"
+          ]
+        }
+      },
+```
+
+看见没，在highlight里面，关键字用`<em></em>` 标出来了
+
+
 
 #####　1.6.2.2.2 聚合查询
 
@@ -995,8 +1343,8 @@ GET /bank/_search
 
 1. size 为0表示只展示聚合结果，实际查询的记录不要显示出来
 2. aggs是聚合搜索的关键字
-3. group_by_state  暂时没找到实际含义，乱填也可以，最后会显示在响应里面
-4. terms  精确匹配字段和值的关系，也就是下面的field必须是state
+3. group_by_state   给聚合查询的结果起一个名字
+4. terms  精确匹配字段和值的关系，也就是下面的field必须是state，或者说根据state进行分组
 5. /bank/_search  表示查询的范围是bank这个索引
 
 响应如下
@@ -1110,6 +1458,126 @@ GET /bank/_search
 
 1. order表示对聚合匹配的结果，里面的balance字段进行降序排序
 
+**用法4：对某字段进行范围划分，将并分组**
+
+DSL示例
+
+```
+{
+
+	"aggs": {
+		"group_by_state": {
+			"range": {
+				"field": "balance",
+				"ranges": [{
+						"from": 1000,
+						"to": 2000
+					},
+					{
+						"from": 2000,
+						"to": 100000
+					}
+				]
+			},
+			"aggs": {
+				"avg_balace": {
+					"avg": {
+						"field": "balance"
+					}
+				}
+			}
+		}
+	}
+}
+```
+
+解释：就是将balance按照1000-2000，2000-100000分组
+
+并对分组内的balance求平均值，得到该平均值和分组后的大小
+
+结果如下
+
+```
+{
+	"aggregations": {
+		"group_by_state": {
+			"buckets": [{
+					"key": "0.0-50.0",
+					"from": 0.0,
+					"to": 50.0,
+					"doc_count": 0,
+					"avg_balace": {
+						"value": null
+					}
+				},
+				{
+					"key": "50.0-1000.0",
+					"from": 50.0,
+					"to": 1000.0,
+					"doc_count": 0,
+					"avg_balace": {
+						"value": null
+					}
+				}
+			]
+		}
+	}
+}
+```
+
+
+
+
+
+
+##### 1.6.2.2.2 DSL参数解释
+
+1. query 
+
+2. sort 里面是排序的定义
+   1. FIELD 要排序的字段
+   2. order以及后面的值是指明对应的字段是用于降序还是升序？（字段串的字段默认无法排序哦）
+
+3. ` _source`里面可以定义仅返回几个字段，值可以是
+
+   字符串数组
+
+4. size  查询出来的条数
+
+5. form  从头几个数据开始往后查询，为实现分页用的
+
+##### 1.6.2.2.2 小知识
+
+###### 1.6.2.2.2.1:text类型进行聚合和排序查询
+
+一般来说，text类型的字段进行聚合查询和排序查询无太大含义，且消耗服务器资源巨大，默认情况下，elastic是禁用此类操作的，但是如果你偏要进行作死的话。
+
+elastic就会提醒你
+
+```
+ {
+        "type": "illegal_argument_exception",
+        "reason": "Fielddata is disabled on text fields by default. Set fielddata=true on [content] in order to load fielddata in memory by uninverting the inverted index. Note that this can however use significant memory. Alternatively use a keyword field instead."
+      }
+```
+
+解决办法，修改content字段映射的fielddata为true
+
+修复方法
+
+```
+PUT /test/_mapping
+{
+  "properties":{
+    "content":{
+      "type":"text",
+      "fielddata":true
+    }
+  }
+}
+```
+
+> 话说回来，官方文档好像说不允许修改字段的mapping，但这个执行还是成功的
 
 
 ## 1.6.3 未归类的API
@@ -1146,7 +1614,81 @@ GET /bank/_search
 
    1. `max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]`
       这个是虚拟内存的`vm.max_map_count [65530]`太低了，至少设置到262144
-      用`sysctl`命令即可实现
+      用`sysctl`命令即可实
+
+### 1.7.1 更新数据的脏读
+
+假设一种场景：
+
+线程AB同时对es的某个字段进行修改，他们同时获取到这个字段的值都是5
+
+但是线程A修改后提交了，该值在es中变成了6
+
+线程B比人家晚一步，但是也修改值变成了6，这一更新，就会导致数据出错。
+
+原本预计字段值是7，但是最后变成了6.
+
+这就是es存在的脏读现象
+
+一般来说，对于数据的并发操作问题通常用两种解决方案来解决
+
+1. 悲观锁
+2. 乐观锁
+
+关于这两种锁的原理这里就不多讲，原理很简单。
+
+需要说的是，elastic支持的锁是乐观锁，它用一个元字段`_version`来作为版本号，这个版本号在修改和删除的情况下都会自增。
+
+> 在现今的版本内，已经不再用`_version`作为外部乐观锁控制了，它已变成了内部的乐观锁控制了
+>
+> 在外部的乐观锁控制里，使用的是另外两个字段：`_seq_no`和`_primary_term`
+>
+> `_primary_term`在每一次primary shard重新分配时，都会自增
+>
+> `_seq_no` 在每一次修改，删除数据时都会自增。
+>
+> 当每次修改或者删除数据时，都要带这两个字段上去，这样才能实现乐观锁控制
+
+如果要使用乐观锁的版本号进行并发控制的话，只需要在修改和删除的restAPI带上两个参数
+
+1. if_seq_no   
+
+2. if_primary_term
+
+   或者
+
+1. version
+
+4. version_type=external
+
+   > 举个例子：
+   >
+   > 1. `PUT /test/_doc/1?if_seq_no=9&if_primary_term=5`
+   > 2. `PUT /test/_doc/1?version=10&version_type=external`
+
+对于`if_seq_no   `和`if_primary_term`
+
+这两个参数的值从查询的API请求即可拿到，并且要保证是最新的，否则的话，可能会爆如下错误
+
+```
+[1]: version conflict, required seqNo [9], primary term [5]. current document has seqNo [11] and primary term [5]
+```
+
+这意味着发起修改的数据不是最新的，需要重新组织请求数据
+
+对于`version和version_type=external`
+
+第一个参数要比当前文档的version要大，第二个参数使用固定值`external`
+
+这个方式可以自定义自己的version生成方式，而不是es默认的递增。
+
+
+
+
+
+
+
+
 
 ## 1.8 elasticSerach 原理剖析
 
@@ -1177,7 +1719,7 @@ GET /bank/_search
 | 关键词   | ids     |
 | -------- | ------- |
 | 生化     | 1,2,3,4 |
-| 危机     | 1,2,3,4 |
+| 危机z    | 1,2,3,4 |
 | 电影     | 1       |
 | 海报     | 2       |
 | 音乐     | 3       |
@@ -1193,6 +1735,22 @@ GET /bank/_search
 虽然后面的`机`是匹配不到的，但是至少匹配到数据了，由于有索引，搜索的速度也不会低到哪去。
 
 比数据库不知道高哪去了。
+
+## 1.8.2 elastic  shard 和replica 同步
+
+elastic的shard和replica之间的同步是异步多线程的执行。
+
+为了避免异步数据并发请求问题，elastic内部也是有自己的一套version，这个version可能并不为外界所知。
+
+总之它是为了实现乐观锁而设定的。
+
+关于shard和replica之间的同步，有一个很有趣的场景。
+
+就是说，有可能primary shard和replica shard之间的同步是针对同一条记录，并发去执行同步（修改）请求的。并且有可能后修改先执行了，那么对于先修改的请求，elastic会丢掉。
+
+关于里面的实现机制，暂时仍不明朗，但是这个结论，目前应该是没问题的
+
+
 
 ## 1.9 elastic 集群管理
 
@@ -1245,6 +1803,126 @@ GET /bank/_search
 
 
 
+### 1.9.1  elastic分布式机制和隐藏特性
+
+分布式机制
+
+1. 分片机制，就是数据分片
+
+2. cluster discovery  集群发现
+
+3. shard 负载均衡，就是将要分配的shard，均匀分配到已有的节点上
+
+4. shard副本
+
+5. 增加和减少节点时，数据会发生Rebalance（再平衡）
+
+   举例子，假设之前集群有5个节点，但承受6T的数据量，那么总有一个节点它承受的负载更重一点。
+
+   当有新节点加入进来时，那么负载重的节点，就会将一部分负载，转移到新加入的那个节点。
+
+   使整个集群的数据重新均衡，这就是Rebalance
+
+6. master节点
+
+   master节点的作用：管理es的元数据，比如说索引的创建和市场，节点的增加和移动
+
+   注意：master不会处理所有的请求，所有的请求是打到各个节点上面去的。
+
+   所以master不会成为一个单点瓶颈
+
+7. 节点对等，也就是，所有节点都能做同样的事，都能处理来自客户端的请求。
+
+   里面的机制是这样的
+
+   请求通过负载均衡发送到集群的的某个节点上，这个节点就会搜索所需要的数据存在哪些节点上，
+
+   并且请求它们获取数据，再经过整合，发给客户端。
+
+扩容方案
+
+1. 垂直扩容，就是该配置的服务器替换旧服务器
+
+   举例子，elastic的集群有6台服务器，每台1T的容量，也就是，总共可容纳6T的容量。
+
+   然而，随着业务发展，数据量已经快突破6T，保守估计，最大可能增长到8T.
+
+   那么，垂直扩容给出的解决方案是再买两台,每台2T容量，将集群中的旧两台服务器替换掉
+
+   那么，新配置的集群最大容量就是：`1*4+2*2=8t`了
+   
+2. 水平扩容，其实和垂直扩容类似，只不过新买的服务器不是替换，而是作为新节点加入集群中，
+
+   这样只需要买 两台1T容量的服务器，最终新集群可容纳的最大容量是：1*8 = 8T 
+
+   
+
+   当然，目前最流行的是水平扩容
+
+   
+
+### 1.9.2  elastic集群灾难恢复
+
+举个灾难恢复的例子：
+
+**背景：**
+
+假设现在有一个索引，包含3个primary shard（(P0,P1,P2) ）和3个replica shard(R0,R1,R2)
+
+它们均匀分布在三个节点里。
+
+它们是这么分布的
+
+1节点（master）：P0,P1
+
+2节点：R0,R2
+
+3节点：P2,R1
+
+**灾难过程：**
+
+1节点表示自己要挂了，然后就gg了
+
+此时在挂的一瞬间，
+
+整个集群的状态变成red，因为1节点上的两个primary shard丢失了，不是所有的primary shard 都处于active
+
+**恢复过程：**
+
+1. 自动选举新的master节点
+
+2. 将丢失的primary shard的replica shard 提升为primary shard。
+
+   > 这个步骤完成后，整个集群的状态变成了yellow。
+   >
+   > 因为提升后，所有的primary shard都active。
+   >
+   > 但消耗了replica shard，导致不是所有的replica都可用
+
+3. 尝试启动GG的1节点，并将故障后的数据变更同步到GG的1节点。
+
+   1节点的shard还是那两个shard，只不过数据被替换成最新的，并且从primary shard 降级为replica shard。
+
+   该步骤完成后，集群的状态变成为green。
+
+   （所有的primary shard 和 replica shard都active）
+
+   
+
+
+
+
+
+
+
+   
+
+   
+
+
+
+
+
 # 第二章：kibana快速入门
 
 1. 解压
@@ -1253,6 +1931,12 @@ GET /bank/_search
 3. 如果远程主机要访问kibana的服务，请把`#server.host: "localhost"`此行取消注释，并设置为非回环地址
 4. 运行bin里面的可执行文件  
 5. 如果一切正常的话，访问kibana的ip地址+端口，可以看到kibana为你展现的前端页面，不过，在食用之前，你需要在页面设置一个模式。。
+
+> 如果是docker的话，只需要执行这个命令：
+>
+> ```
+> docker run -d --name kibana --net somenetwork -p 5601:5601 kibana:7.3.1
+> ```
 
 
 这么简单的吗？当然不是，接下来让我们加载一些简单的数据集。。。。。
