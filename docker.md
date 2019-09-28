@@ -1131,22 +1131,6 @@ OK，完毕，就酱紫啦
    
    
 
-## 11.2 `cannot connect to the Docker daemon`
-
-在执行一个docker命令时，报这个错误了
-
-其实原本的错误，比这个错误，信息量更大
-
-但是，有用的，就这一句，就是没启用docker守护程序
-
-## 11.3 docker启动elasticsearch隔一段时间就挂了
-
-看了一下日志，docker挂之前的遗言是
-
-`Native controller process has stopped - no new native processes can be started`
-
-废话不多说，直接查谷歌，
-
 
 
    
@@ -1239,6 +1223,10 @@ OK，完毕，就酱紫啦
 
 `--net` 使用各种网络配置，不提供此参数以默认配置运行
 
+默认情况下，容器的网络配置是通过虚拟的网卡实现的，需要配置发布主机映射到容器的端口，才能从主机访问到容器的端口，不过，也有配置，让容器使用主机所有的网络配置。
+
+`--net=host  ` 使容器和主机使用相同的网络配置
+
 ` --privileged` 使用真正的特权模式，不是默认的残废特权模式，那个模式执行不了`sysctl`  会告诉你它是只读的
 
 
@@ -1285,6 +1273,14 @@ $ docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300
 命令：
 
 `docker exec -ti d97ea7a4b9f2 /bin/bash`
+
+## 12.7 docker start 命令
+
+可以在命令的后面指定一个容器的id,以启动容器，比如说
+
+docker start xxxx
+
+
 
 # 十三： docker容器
 

@@ -197,9 +197,27 @@ or  `PUT /customer`
 }
 ```
 
+如果你想创建索引并且指定好mapping，可以在请求体里面继续补上mapping
+
+关于mapping的内容，可以看对应的章节，这里就不再多讲了
+
 解释，该索引需要分成5个shard，每个shard有一个replica
 
+### 1.2.2 修改索引
 
+讲解下修改索引，比如说修改索引，每个primary shard拥有的replica shard数据
+
+请求体是这样的
+
+```
+PUT /kibana_sample_data_logs/_settings
+{
+  "number_of_replicas":1
+}
+
+```
+
+修改number_of_shards是不可能的，因为这货和routing的算法息息相关，只能修改number_of_replicas才能过的了日子
 
 
 
@@ -493,6 +511,14 @@ POST /test/_update/1?pretty
 > 2. 减少了查询和修改的时间间隔，有效的降低了并发冲突
 >
 > 其实这些部分替换的方式·，在es内部，也是先load出所有数据，再全量替换的。
+>
+> 由于这种更新不是原子性的，所以es内部也是会自动用乐观锁来控制并发的。
+>
+> 当内部load出到更新的这个过程中，数据被其他线程写了，就会导致并发冲突，然后并发失败。
+>
+> 不过，我们可以在API上面追加一个·参数：`retry_on_conflict=number`
+>
+> 指定发生冲突时，再重复更新操作，重复指定的次数后，数据仍然没写成功，才会报错。
 
 用上面的PUT命令也可以实现哦。
 
@@ -607,7 +633,31 @@ es对于删除操作并没有真正把目标从磁盘中物理删除，
 
 当es发现可用磁盘空间不够时，。就会来一波垃圾清除，把这些delete的记录全都物理删除。
 
+### 1.2.10 写一致性
 
+这个机制主要是在数据修改时，指明活跃的shard数量，
+
+不满足指定的数量时，修改数据会失败。
+
+只要在修改操作的API追加一个参数,consistency.
+
+就可以指定你想要什么写一致性了
+
+写一致性总共有三种
+
+1. one 要求写操作，只需要有一个活跃的shard即可
+
+2. all 要求写操作，要求所有的shard都是可用的情况下才能写
+
+3. quorum 要求活跃的shard数量，必须满足一个公式(默认)
+
+   
+
+   
+
+   
+
+   
 
 ## 1.3 映射
 
@@ -626,6 +676,10 @@ es对于删除操作并没有真正把目标从磁盘中物理删除，
    > 这个_all字段在elasticsearch 6.0.0 已经被弃用了
 
 4. 日期的格式化形式
+
+一般来说，当你创建索引的文档后，如果没指定mapping，ES会自动帮你创建mapping。
+
+当然，也可以在创建文档之前，先设置好index的mapping
 
 ### 1.3.1 映射的类型
 
@@ -654,6 +708,16 @@ es对于删除操作并没有真正把目标从磁盘中物理删除，
 
    日期类型：`date`
 
+> 当设置日期类型后却没有设置日期格式化形式，则默认推数据时接受的日期格式是
+>
+> `strict_date_optional_time ` 也就是形如`2018-08-31T14:56:18.000+08:00`
+>
+> 或者是
+>
+> `epoch_millis`  也就是形如`1515150699465`
+>
+> 如果推送的日期格式不是酱紫，则ES会抱怨无法解析日期
+
    布尔数据类型：`boolean`
 
    二进制数据类型`binary`
@@ -661,6 +725,14 @@ es对于删除操作并没有真正把目标从磁盘中物理删除，
    范围式的数据类型：`integer_range`, `float_range`, `long_range`, `double_range`, `date_range`
 
    以及还有复杂的数据类型，如对象，数组
+
+> 对象类型一般在创建文档时，如果文档包含嵌套对象，那么这个嵌套对象的字段，就是对象类型，ES会自动给他推断为这种类型
+>
+> 至于数组的话，最新的ES文档，不承认有数组类型，所有数组类型一概视为Text.
+>
+> 因为Text本来就能进行分词倒排索引，处理数组这种数据类型，当然也在分词器的工作范围内了
+>
+> 不过，据ES文档说，文档数组类型里面的元素，类型必须一样，然而我试的时候并没有此限制
 
    GEO即地理数据类型：` Geo-point` 经纬度
 
@@ -693,25 +765,83 @@ es对于删除操作并没有真正把目标从磁盘中物理删除，
 ### 1.3.2 创建映射的小栗子
 
 ```
-PUT my_index    							//创建一个索引-名字叫my_index
+PUT /test
 {
-  "mappings": {
-    "doc": { 								//添加一个名叫doc映射类型
-      "properties": { 						//指定映射类型为properties
-        "title":    { "type": "text"  }, 	//指定title的字段的数据类型为text
-        "name":     { "type": "text"  }, 	//指定name的字段的数据类型为text
-        "age":      { "type": "integer" },  //指定age的字段的数据类型为integer
-        "created":  {
-          "type":   "date", 
-          "format": "strict_date_optional_time||epoch_millis"
-        }
-      }
-    }
-  }
+	"mappings": {
+		"properties": {
+			"inner_field": {
+				"type": "keyword",
+				"index": false,
+				"include_in_all": false"
+			},
+			"title": {
+				"type": "keyword"
+			},
+			"content": {
+				"type": "text",
+				"analyzer": "english"
+				 "fields":{
+                     "raw":{
+                       "type":"keyword"
+                     }
+			},
+			"author_id": {
+				"type": "long"
+			},
+			"post_date": {
+				"type": "date"
+				, "format": ["yyyy-MM-dd mm:ss"]
+			},
+			"evaluate": {
+				"type": "double"
+			}
+		}
+	},
+	"_source":{"enabled": false},
+	"_all":{"enabled": false}
 }
 ```
 
-这段代码完全可以复制到kibana网页的控制台上，执行之，就会将请求发送到Elastic
+这段代码完全可以复制到kibana网页的控制台上，执行之，就会将请求发送到Elastic创建映射
+
+解释：
+
+1. PUT /test 创建了一个index，名字叫做test
+
+2. mappings 表示下面的数据是用于定义映射
+
+3. "type": "keyword", 表示上下文的字段类型属于keyword，ES不会对这种类型的字段进行分词倒排索引
+
+4. "index": false 表示ES不会对上下文的字段建立索引，ES仅存该字段，不能搜索该字段
+
+5. "type": "text", 表示上下文字段类型是Text类型，ES会对这种字段的值进行分词倒排索引
+
+6. "analyzer": "english" 表示会使用english这个分词器对该字段的值进行分词处理
+
+7. "type": "date"&"type": "long"&"type": "double"  表示类型是日期类型/长整形/浮点类型
+
+8. "format": ["yyyy-MM-dd mm:ss"] 表示日期格式化符是酱紫的。这不仅是ES返回给客户端的日期格式，也是推数据给ES的日期格式，不是这个格式的日期字符串，ES识别不了，会报错的
+
+9. fields 可以为上下文的字段再建一个索引，如上所示，这次是为content字段再建一个名为raw的索引，存储content的全文本信息
+
+10. `"_source":{"enabled": false}`
+
+    不需要存储文档的原始数据`_source`.减轻存储压力，不过去掉`_source`你会享受不到以下好处
+
+    1. 部分更新了
+    2. 查询时可以直接拿到原始文档数据，而不需要先查出文档ID，再根据文档ID查询出文档
+    3. 可以查询数据并更新
+    4. debug更容易，因为可以直接看到源文档
+
+11. `"_all":{"enabled": false}`  不要把文档的所有字段都编到`_all`里面
+
+12. `"include_in_all": false"`该上下文的字段不要编到_all字段里面
+
+    > 在es6，`_all`字段被弃用了，所以，其实不用怎么去学他的
+
+    
+
+    
 
 ### 1.3.3  查找索引设置的映射
 
@@ -787,6 +917,26 @@ PUT my_index    							//创建一个索引-名字叫my_index
   }
 }
 ```
+
+### 1.3.4  新增字段的映射
+
+restAPI
+
+```
+PUT /test/_mapping
+{
+  "properties":{
+    "author_ip":{
+      "type":"ip"
+    }
+  }
+}
+
+```
+
+这样就往test这个索引新增一个字段author_ip的映射类型，对应的数据类型是ip
+
+
 
 
 
@@ -881,6 +1031,13 @@ curl -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_doc/_bulk?
 
 这一节，我们将使用搜索API，把想要的数据搜索出来。
 
+首先介绍一下搜索的restAPI
+
+1. `GET /index/_search`   针对某index进行查询
+2. `GET /_search`   查询所有index的数据
+3. `GET /index1,index2/_search`  搜索索引index1和index2的数据
+4. `GET /*kibana*,tes*/_search`  使用通配符对index进行检索
+
 使用搜索API，有两种方式
 
 #### 1.6.2.1 将搜索条件加载请求头，也就是URL上
@@ -888,6 +1045,16 @@ curl -H "Content-Type: application/json" -XPOST "localhost:9200/bank/_doc/_bulk?
 将搜索参数附加在REST URL的参数上，就是喜闻乐见的键值对参数啦
 
 eg：`GET /bank/_search?q=*&sort=account_number:asc&pretty`
+
+> 特别的
+>
+> GET /bank/_search?q=xxxx
+>
+> 这个是对文档的所有字段的值进行匹配搜索
+>
+> 不过，实际在es内部是根据文档的元字段`_all`进行匹配搜索的
+>
+> 元字段`_all`其实就是将文档的每一个字段的值都拼接起来了。
 
 作用是
 
@@ -931,9 +1098,23 @@ eg：`GET /bank/_search?q=*&sort=account_number:asc&pretty`
 
 2. timed_out 告诉我们搜索是否超时了
 
-3. 告诉我们搜索了多少碎片？以及搜索碎片成功/失败的次数
+   > 默认情况下，没有超时机制
+   >
+   > 如果一个搜索在es要花1小时查询，那用户只能等1小时。
+   >
+   > 用户等的想骂街
+   >
+   > 所以，es就用一个参数timeout，加载查询的url上。
+   >
+   > 可以指定在每一个shard的超时时间。超过这个超时时间，如果数据还没拿全，就直接把已经搜到的数据直接返回。
+   >
+   > 举例子
+   >
+   > `GET test/_search?timeout=1s`.
+   >
+   > 当然这种情况下，返回的timeout就是true咯
 
-   对于某索引的搜索请求，会打到该索引所有的主/备shard上
+3. 告诉我们搜索了多少shard？以及搜索shard成功/失败的次数
 
    所以这次查询查了5个shard
 
@@ -946,13 +1127,13 @@ eg：`GET /bank/_search?q=*&sort=account_number:asc&pretty`
       而max_score，自然就是这次查询，最相关的那个文档的score了。
       
    3. hits 查询结果的文档数据
-   
+
 5. _source  就是新增文档时传入的json串，再原封不动的返回回来
-   
+
       
-   
+
       
-   
+
       
 
 #### 1.6.2.2 将搜索参数放在请求体
@@ -1083,7 +1264,7 @@ DSL示例
 
 > 条件不仅局限于must，还有`must_not`  非条件判断，使用方式和match一样
 
-##### 1.6.2.2.2 使用`filter`,对值进行范围过滤
+##### 1.6.2.2.2 使用range,对值进行范围过滤
 
 DSL示例
 
@@ -1109,6 +1290,35 @@ DSL示例
 
 解释： 查询字段host的值为xxx并且bytes的值介于xx和xx之间
 
+> filter 对查询结果的score不影响，同时也不会去进行相关度排序，还会对查询条件一样的结果进行缓存
+>
+> 可以说效率比query高上不少
+>
+> 所以，如果你对查询不需要相关度排序，建议还是用filter
+>
+> 举例子
+>
+> ```
+> GET /test/_search
+> {
+>   "query": {
+>     "bool": {
+>       "filter": {
+>         "bool": {
+>           "must_not":{
+>             "term":{
+>               "title":"My First article"
+>             }
+>           }
+>         }
+>       }
+>     }
+>   }
+> }
+> ```
+>
+> 
+
 ##### 1.6.2.2.2 对查询结果进行排序
 
 DSL 示例
@@ -1132,6 +1342,70 @@ GET /bank/_search/
 
 解释：查询所有数据，并根据account_number字段进行降序排序
 
+Text类型的字段无法排序，必须设置这个字段的fielddata=true才可以
+
+但即使如此，使用Text分页仍然不能达到你想要的结果，因为Text字段在ES存储是分词后的结果，所以这就造成了，使用Text进行排序，使用的排序字段值不是一整个Text，而是里面的某个单词。
+
+要想让Text字段类型使用完整的文本进行排序
+
+需要为这个字段再建一个索引，类型为keyword，然后实际排序时，用这个新索引去排序
+
+给个DSL例子
+
+```
+{
+	"query": {
+		"match_all": {}
+	},
+	"sort": [{
+		"content.raw": {
+			"order": "desc"
+		}
+	}]
+}
+```
+
+raw就是content字段的一个新索引，存放content字段原始的文本
+
+关于怎么建立content字段的raw索引，可以查看映射的那一章
+
+
+
+排序还有一个问题
+
+**跳跃结果**
+
+举个例子，我有个搜索请求，根据field进行降序排序。
+
+文档1和文档2field的value都是一样（这意味着他们都有相同的位置，然而实际上，显示的结果总要有主次之分）
+
+第一次查询时，文档1在文档2前面
+
+第二次查询时，文档1在文档2后方。
+
+> 之所以出现这个原因，是因为第一次和第二次查询的请求被拥有不同的replica shard接受了
+>
+> 而不同的replica  shard上，尽管数据是一样的，但是排列的顺序却不一样，这就导致了具有相同排序值的文档在多次搜索请求中，位置一再变更
+
+这个结果有些人不接受，作为开发者，你就得保证文档1和文档2，不管多少次搜索，他们在搜索结果的位置，都是一样的。
+
+怎么做到？
+
+在ES中，可以指定每次搜索时，搜索请求会打到哪个shard。从而避免跳跃结构的出现
+
+通过`preference`参数来指定，这个参数要写在请求头上面，可以选择的值有
+
+1. _only_local
+2. _local
+3. _prefer_nodes:abc,xyz
+4. _shards:2,3
+
+....
+
+
+
+
+
 ##### 1.6.2.2.2 对查询结果进行分页
 
 查询DSL示例
@@ -1148,6 +1422,32 @@ GET /bank/_search/
 ```
 
 解释：查询所有数据，但是提取前两行后面的数据，并且提取20条数据
+
+> 如果不传分页参数，默认是查前10条记录
+>
+> 且size+from不能超过10,000，否则会导致deep paging问题
+>
+> 还有，由于某种特殊原因，你可能会看到两次排序查询的结果中，相同排序值的记录，位置却会发生变更。
+
+**deep paging的性能问题**
+
+所谓deep paging，就是当数据量很大，而你又要对这么大的数据量进行分页，当分页的页数足够大时，这个场景，就是deep paging。
+
+会耗费大量的cpu，内存，网络资源。
+
+为什么？
+
+还是分布式的锅，由于一个索引的全部数据并不是存储在单独一个机子里，而是分成多个shard存放在不同的机子里，每个shard分页的结果并不能作为最终分页的结果，所以要实现分页效果，每个shard只能传输前面所有的数据，然后由协调节点进行汇总排序，最后筛选出符合条件的数据出来。
+
+举个栗子：
+
+某索引有10000条数据，要求查前1000条数据后，10条记录出来
+
+那么每个shard实际会先把前1000+10条记录查出来，全部返回给协调节点，协调节点再对这些数据再进行排序，然后从中再取出前1000条数据后，10条记录返回给客户端。
+
+这个过程要传输大量的数据给协调节点（网络资源），协调节点要存储这么大的数据（内存资源），然后进行排序（cpu资源）。
+
+所以，实际业务中，要尽量避免深度查询，也就是说，页数不能太大，
 
 ##### 1.6.2.2.2 指定只查询几个字段
 
@@ -1546,6 +1846,110 @@ DSL示例
 
 5. form  从头几个数据开始往后查询，为实现分页用的
 
+##### 1.6.2.2.3 将搜索词应用在多个字段上
+
+```
+GET /test/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "This is query words",
+      "fields": ["title","content"]
+    }   
+  }
+}
+```
+
+##### 1.6.2.2.3 使用terms进行精确匹配
+
+```
+GET /test/_search
+{
+  "query": {"term": {
+    "title": {
+      "value": "My First article"
+    }
+  }}
+}
+
+```
+
+使用match也是一种字符串匹配方式，。不过term的匹配方式是专门用于精确匹配字符串的
+
+对了，还有terms,这个是专门用于将多个值匹配同一个字段用的，格式就不解释了
+
+嗯，其实term的查询还是比较少用的，因为如果你的字段类型是keyword，ES不会对它进行分词建立倒排索引，搜索时自然用的就是精确匹配了。你不用term也能达到这个效果。
+
+而字段类型如果是Text,就算你使用的是term进行精确匹配，也是不能匹配到你想要的结果的。
+
+##### 1.6.2.2.3 使用exist令字段不能为空
+
+```
+GET /test/_search
+{
+  "query": {
+    "exists": {"field": "inner_field"}
+  }
+}
+```
+
+##### 1.6.2.2.2 search_type
+
+在搜索时，可以在请求体里面指定这个参数，该参数有两个选项
+
+1. **query_then_fetch**
+2. **dfs_query_then_fetch**.
+
+默认不指定的话，搜索类型就是第一种，不过第二种的话，得到的score会更准确。
+
+##### 1.6.2.2.3 scoll技术一批批搜索数据
+
+如果你把数据全部检索出来，那么你可能首先想到的是分页，但是之前我们介绍过了，ES有深度分页的性能问题。
+
+你说我只是想批量把数据全部查出来，咋就做不了呢？
+
+其实是做的了的。
+
+使用的是scoll的技术，可以将文档的数据一批批查出来，而且没有深度分页的性能问题。
+
+怎么实现？
+
+1. 首先定义好查询体
+
+   ```
+   GET /kibana_sample_data_logs/_search?scroll=1m
+   {
+   	"query": {
+   		"match_all": {}
+   
+   	},
+   	"sort": ["_doc"],
+   	"size": 10
+   }
+   ```
+
+   这样就定义了一个查询体
+
+   要求排序是`_doc`，就是根据实际存储的顺序，这样ES不用特别处理排序分数
+
+   要求scroll=1m，就是把scroll请求的状态保留1分钟
+
+   执行这个查询之后，会返回一个_scroll_id和第一批结果集过来。
+
+   拿到这个_scroll_id后，可以用这个值进行批量查询
+
+2. 使用_scroll_id进行批量查询
+
+   ```
+   POST /_search/scroll
+   {
+   	"scroll":"1m",
+     "scroll_id":"DXF1ZXJ5QW5kRmV0Y2gBAAAAAAAAevEWNHIzUkx4OFBUSDJhTml6U0xITTdYQQ=="
+   }
+   ```
+
+   这样会请求下一批数据，并且重置scroll的请求状态，重新保留一分钟
+
 ##### 1.6.2.2.2 小知识
 
 ###### 1.6.2.2.2.1:text类型进行聚合和排序查询
@@ -1579,12 +1983,366 @@ PUT /test/_mapping
 
 > 话说回来，官方文档好像说不允许修改字段的mapping，但这个执行还是成功的
 
+###### 6.2.2.2.2:ES内的搜索类型
 
-## 1.6.3 未归类的API
+大体来说，ES的搜索类型分为两种
+
+1. extra value 精确查询，就是值和目标完全匹配，区分大小写。
+
+2. full text 全文检索，当使用了这种搜索方式，ES会将搜索词拆分，拆分的规则不局限了空格，连接符如`-`也是可以的，然后匹配拆分词后的单词硬性匹配，ES还会根据词语的词性，找匹配或许相似的词语。
+
+   举例子，拆词后拆出了like这个单词，ES不仅会拿like去匹配记录，还会那likes 或者Like去匹配。
+
+   就是会进行语义分析啦
+
+有时候，全文检索会查询出一些很神奇的结果
+
+例如，你用2108-09-1作为搜索词去全文检索。
+
+将会查询到包含2108、09、1的相关文档，其结果就是
+
+2108-04-3的文档也会查出来，尽管你可能只想精确查询在这个时间点的数据。
+
+##### 6.2.2.2 小汇总
+
+1. bool 下面可以有几个逻辑判断
+   1. must
+   2. must_not
+   3. should
+   4. filter
+
+### 1.6.3 批量操作
+
+#### 1.6.3.1 批量查询
+
+批量查询可以在一次查询中，查询任意数量的索引和文档
+
+restAPI：`/_mget`
+
+请求体
+
+```
+POST /_mget
+{
+  "docs":[
+    {
+      "_index":"test",
+      "_id":"1"
+    },
+    {
+      "_index":"kibana_sample_data_logs",
+      "_id":"01mjJG0BpycrE4zBrtaj"
+    }
+    ]
+}
+```
+
+最终返回的数据类似于这样的
+
+```
+{
+  "docs" : [
+    {
+      "_index" : "test",
+      "_type" : "_doc",
+      "_id" : "1",
+      "_version" : 1,
+      "_seq_no" : 8,
+      "_primary_term" : 2,
+      "found" : true,
+      "_source" : {
+        "title" : "my game",
+        "content" : "chase it"
+      }
+    },
+    {
+      "_index" : "kibana_sample_data_logs",
+      "_type" : "_doc",
+      "_id" : "01mjJG0BpycrE4zBrtaj",
+      "_version" : 1,
+      "_seq_no" : 0,
+      "_primary_term" : 1,
+      "found" : true,
+      "_source" : {
+        "agent" : "Mozilla/5.0 (X11; Linux x86_64; rv:6.0a1) Gecko/20110421 Firefox/6.0a1",
+        "bytes" : 6219,
+        "clientip" : "223.87.60.27",
+        "extension" : "deb"
+      }
+    }
+  ]
+}
+```
+
+再举几个例子
+
+1. 查询同一个索引下不同id的数据
+
+   ```
+   POST test/_mget
+   {
+     "docs":[
+       {
+         "_id":"1"
+       },
+       {
+         "_id":"2"
+       }
+       ]
+   }
+   ```
+
+   或者
+
+   ```
+   POST test/_mget
+   {
+     "ids":[1,2]
+   }
+   ```
+
+#### 1.6.3.2 批量增删改操作
+
+restAPI：`POST /_bulk`
+
+这个批量操作可以在一次请求中，执行多个数据操作。
+
+请求体里面的每一行都是一个json串，格式如下
+
+```
+{"action":{metadata}}
+```
+
+除了action是delete只有一行json串外，其他的action操作都要两行json串。
+
+第一行json串是元数据，指定索引，id等信息。
+
+第二行就是实际增加，更新要填的数据
+
+请求体举例：
+
+```
+POST /_bulk
+{"delete":{"_index":"test","_id":"1"}}
+{"create":{"_index":"test","_id":5}}
+{"title":"new title","content":"new content"}
+{"index":{"_index":"bulk-index"}}
+{"name":"new name","age":11}
+{"update":{"_index":"test","_id":"2","retry_on_conflict":3}}
+{"doc":{"content":"updated content"}}
+```
+
+> 这个请求的json格式为什么这么奇怪呢？
+>
+> 这是因为这么设计的话，es可以先按行分割符分割，然后进行数据的处理。
+>
+> 如果换成可读性更好的json数组格式，es需要先将其序列化成json数组，该步骤会拷贝原json数据的一份出来，形成json数组，导致内存占用·翻倍。
+
+值得一提的几个特性
+
+1. json串必须一行一个，不要搞些什么漂亮的格式化什么的，es不认这个
+2. 如果批量执行的操作中间有操作失败，那么操作会跳过这个失败的操作，继续向下执行，失败的日志会放在响应体里面。
 
 
 
+### 1.6.4 脚本
 
+在es中，有一种东西叫做脚本，它可以用来查询或者更新数据。
+
+脚本的语言类型有
+
+1. painless
+2. expression
+3. mustache
+4. java
+
+> 之前的版本还有一种语言类型是Groovy，但是最新版本只能修改配置文件和安装插件来启用它了
+
+**如何使用脚本**
+
+不管脚本被用于哪个API，它们最终的形式都是类似于下面的结构
+
+```
+ "script": {
+    "lang":   "...",  
+    "source" | "id": "...", 
+    "params": { ... } 
+  }
+```
+
+解释：
+
+1. lang 就是脚本语言，默认是painless
+2. source  可以直接写脚本内容，也可以引用一个脚本id
+3. params 传递给脚本的参数
+
+**脚本查询使用举例**
+
+查询语法
+
+```
+GET /test/_search
+{
+  "query": {"match_all": {}},  
+  "script_fields": {
+    "script_field": {
+      "script": {
+        "lang":   "expression",
+        "source": "doc['day'] * multiplier",
+        "params": {
+          "multiplier": 2
+        }
+      }
+    }
+  }
+}
+```
+
+查询test索引下面的所有day字段，并将查询结果通通乘以5返回，返回的字段名起名为`script_field`
+
+> es会将第一次遇到的脚本编译好，放到缓存中。
+>
+> 编译是个资源花费很大的过程，所以如非必要，请不要经常改变脚本。
+>
+> 比如说，对于一些经常改变的变量，不要硬编码在脚本中，而是应该设置成变量，调用时再传递进去
+>
+> 另外，如果短时间编译了太多的脚本，es会抱怨`circuit_breaking_exception`
+>
+> 默认情况下，每分钟最多编译15个内联脚本，如果真的需要短时间编译很很多的脚本，可以更改
+>
+> `script.max_compilations_rate`的值
+
+**删除数据的脚本**
+
+1. 定义删除脚本
+
+   ```
+   POST _scripts/delete-by-days
+   {
+     "script": {
+       "lang": "painless",
+       "source": "ctx.op = ctx._source.day == params.days?'delete':'none'"
+     }
+   } 
+   ```
+
+2. 使用脚本
+
+   ```
+   POST test/_update_by_query
+   {
+     "script":{
+       "id":"delete-by-days"
+       , "params": {
+         "days":5
+       }
+     }
+   }
+   ```
+
+   这个脚本的含义是查询day字段为5的，就全部删除掉
+
+**短脚本使用**
+
+一般的脚本代码，都是写在`script.source` ,其实可以将其他值都设置成默认值，写出一个极简的脚本调用语句。
+
+举例
+
+```
+GET /test/_search
+{
+ 
+  "script_fields": {
+    "xxxx": {
+      "script":"doc['day'].value*2"
+    }
+  }
+}
+```
+
+**使用存储好的脚本**
+
+有的脚本，你想把它存储起来，供多个操作调用，这是可行的，让我们来做到这一点吧。
+
+1. 创建脚本
+
+   ```
+   POST _scripts/calculate-score
+   {
+     "script": {
+       "lang": "painless",
+       "source": "doc['day'].value + params.my_modifier"
+     }
+   } 
+   ```
+
+   > 关于脚本的其他删查操作
+   >
+   > 1. 查  GET _scripts/{脚本ID}
+   > 2. 删  DELETE _scripts/{脚本ID}
+
+2. 在搜索中使用脚本
+
+```
+GET test/_search
+{
+  "query": {
+    "script": {
+      "script": {
+        "id": "calculate-score",
+        "params": {
+          "my_modifier": 2
+        }
+      }
+    }
+  }
+}
+```
+
+> 有一个upset操作可以在更新文档时，判断文档是否存在，如果不存在，不会报错，而是执行另外的操作。
+>
+> 这个就不解释了
+
+
+
+### 1.6.5 DSL校验api
+
+这个api可以校验你写的DSL语法是否正确
+
+请求示例
+
+```
+GET /test/_validate/query?explain
+{
+  "query": {
+    "bool": {
+      "filter": {
+        "bool": {
+          "must_not":{
+            "term":{
+              "title":"My First article"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+这样，一旦你的DSL语法有误，请求这个api就能立即知道错误地方
+
+比如说，上文我不小心把bool写成了boold
+
+那么，这个校验api返回的结果就是酱紫的
+
+```
+{
+  "valid" : false,
+  "error" : "org.elasticsearch.common.ParsingException: no [query] registered for [boold]"
+}
+
+```
 
 
 
@@ -1684,6 +2442,16 @@ PUT /test/_mapping
 
 
 
+## 1.7.2 更新数据时
+
+其实理论上个不会局限于更新数据，只要涉及到post数据传输，都会报这个错误。
+
+其出现的场景是，调用了一个restAPI，传输了一段类json数据，ES报
+
+```
+Compressor detection can only be called on some xcontent bytes or compressed xcontent bytes
+```
+
 
 
 
@@ -1736,7 +2504,7 @@ PUT /test/_mapping
 
 比数据库不知道高哪去了。
 
-## 1.8.2 elastic  shard 和replica 同步
+### 1.8.2 elastic  shard 和replica 同步
 
 elastic的shard和replica之间的同步是异步多线程的执行。
 
@@ -1750,7 +2518,219 @@ elastic的shard和replica之间的同步是异步多线程的执行。
 
 关于里面的实现机制，暂时仍不明朗，但是这个结论，目前应该是没问题的
 
+### 1.8.3 document路由到shard的算法
 
+document路由到shard的算法含义：
+
+一个document，如何查找到它属于哪个primary shard上，
+
+这个如何查找，就是指这个算法。
+
+算法的公式：`hash(routing)% number_of_primary_shards`
+
+翻译：对路由值进行求哈希值，然后对该索引的primary shard数量进行求余
+
+这个路由算法，被es用在插入，查找文档上，以插入文档为例，讲解路由算法的实现
+
+1. 文档插入
+2. 提取本次插入的文档的数据，如果插入请求携带了routing参数，则用参数值作为下一步的routing，否则，用文档的ID作为routing（默认情况下）
+3. 将上一步拿到的routing求哈希值
+4. 将上一步拿到的哈希值和该索引的primary shard数量进行求余，其结果必定介于0~primary shard之间
+5. 用这个求余结果来决定要插入哪一个primary shard 很简单，如果结果是0，那么就插入第0个primary shard
+
+算法的作用：
+
+1. 保证同一个文档，必定是放在同一个primary shard上
+2. 自定义routing，可以自定义自己的数据存放在哪个shard上，对于后面的应用的负载均衡和提高性能，是很有帮助的。
+
+特别的：由于要保证同一个文档，必定是放在同一个primary shard上，所以要求算法公式内，变量只有routing，而`number_of_primary_shards`不能变，所以，这也就是为什么primary shard数量一旦决定了，就不能再改变了
+
+注：
+
+1. 与此概念相关的字段有：`_routing`
+
+2. 有一个设置`index.routing_partition_size`  ,当该设置存在是，路由的公式将变成
+
+   ` (hash(_routing) + hash(_id) % routing_partition_size) % num_primary_shards`
+
+   该设置可以将文档存放的位置精确到分片里面子集
+
+### 1.8.4 es内部增删改查操作
+
+**增删改操作步骤**
+
+步骤
+
+1. 请求发到es任意一个节点，该节点又被称为协调节点
+
+2. 协调节点根据请求数据，利用路由算法算出该文档位于哪个shard，
+
+   并将请求转发给这个shard。
+
+3. 目标shard接受到协调节点的请求后，进行数据操作。
+
+   然后对数据进行replica同步
+
+4. 上面的步骤完成后，通知协调节点工作已经完成
+
+5. 协调节点告诉客户端工作已经完成。
+
+**查步骤**
+
+1. 请求发到es任意一个节点，该节点又被称为协调节点
+
+2. 协调节点根据请求数据，利用路由算法算出该文档位于哪个shard
+
+3. 协调节点使用随机轮询算法，决定请求要由primary shard
+
+   还是由replica shard 处理
+
+4. 协调节点决定目标请求的节点后，由目标节点处理请求数据
+
+   并将数据返回
+
+5. 协调节点将数据返回给客户端
+
+> 注意：来自不可靠的消息
+>
+> 如果查的步骤中，协调节点将请求发给replica shard
+>
+> 后者还在索引ING，就会报告所查的数据不存在。
+>
+> 都说了是不可靠的消息了，新版本不知道有没有修正
+
+**搜索步骤**
+
+1. 请求打到所有的primary shard上面，不过，如果
+
+   primary shard 有replica shard，请求也可以发送到replica shard上面。
+
+2. 所有接受到请求的shard进行搜索
+
+3. 把搜索结果返回给客户端
+
+### 1.8.5 内部的数据结构
+
+简单提一些文档中的嵌套对象，也就是object，在ES底层的数据结构是怎么样的
+
+假设有一个文档是酱紫的
+
+```
+{
+	"name": "Mr liu",
+	"age": 11,
+	"address": {
+		"country": "china",
+		"city": "sz",
+		"province": "guangzhou"
+	}
+}
+```
+
+我们知道
+
+address在ES的数据类型中，会被视为Object
+
+那么在ES的底层数据结构，是怎么样的呢？
+
+答案是
+
+```
+"name": "Mr liu",
+	"age": 11,
+	"address.country": "china",
+	"address.city": "sz",
+	"address.province": "guangzhou"
+	}
+```
+
+### 1.8.6 ES相关度评分算法
+
+所谓相关度评分算法，在ES内的只要作用，就是算出`_score`的值出来的。
+
+而相关度评分算法，主要有三种
+
+1. Term frequency:搜索词分词后的单词，在文档中出现的次数，出现的次数越多，说明该文档对于这个搜索词，就越相关。
+
+   比如说，现在的搜索词是Hello World
+
+   文档1里面Hello，World的单词总共出现了两次
+
+   文档2里面只出现了Hello
+
+   那么显而易见，当然是文档1更相关了。
+
+2. Inverse document frequency：如果对于一个搜索词，文档1和文档2所拥有的数量都是一样的，但是从种类看，文档2所拥有的单词在整个索引里面，更稀缺。
+
+   那么可以认为，文档2更相关。
+
+   比如说，现在的搜索词是Hello World
+
+   文档1里面Hello的单词总共出现了1次
+
+   文档2里面World的单词总共出现了1次
+
+   但是work在整个索引里面，出现的次数远不及Hello，也就是说，他更稀缺。
+
+   那么文档2的相关度会更高。
+
+   一言以蔽之，物以稀为贵
+
+3. Field-length norm:如果文档拥有这个搜索词，且对应的字段长度越短，说明该文档越相关
+
+   比如说，，现在的搜索词是Hello World
+
+   文档1里面Hello的单词总共出现了1次
+
+   文档2里面World的单词总共出现了1次
+
+   但是文档1对应的字段更短，文档2对应的字段更长。
+
+   那么文档1会拥有更高的相关分数
+
+   一言以蔽之，浓缩的才是精华
+
+   
+
+   怎么查看文档相关度算法的详情
+
+   举个栗子
+
+   ```
+   GET /test/_search
+   {
+      "explain": true,
+   	"query": {
+   		"match": {
+   		  "content": "My fourth"
+   		}
+   	}
+   }
+   ```
+
+   只需要在搜索api的请求体里面多加一个参数` "explain": true,`就可以查看相关度分数是如何得出的。
+
+   
+
+   
+
+### 1.8.7 ES正排索引
+
+ ES会对文档中的字段建立倒排索引，以便搜索
+
+但是倒排索引只是方便了搜索，对于聚合，过滤，排序。ES还是得用其他数据结构实现，
+
+这个数据结构，就是正排索引。
+
+> 关于正排索引和倒排索引的数据结构，这里不讲。懒~
+
+总之呢，在推送一个文档到ES中，ES不仅会对这个文档建立倒排索引，也会对其建立正排索引。
+
+而正排索引，当内存充足的时候，可以全部从内存中读取，如若内存不够，只能从硬盘内读取。
+
+
+
+   
 
 ## 1.9 elastic 集群管理
 
@@ -1909,15 +2889,201 @@ elastic的shard和replica之间的同步是异步多线程的执行。
 
    
 
+## 1.9 elastic 分词器
+
+elastic的分词器用于处理全文数据，将其分词，处理，处理后的结果才能建立倒排索引，以便加快查询效率
+
+分词器主要由几部分组成
+
+1. character filter 对文本进行预处理
+
+   比如说去掉html标签，或者将&号转成单词and
+
+2. tokenizer 分词，就是将文本分成一个个单词
+
+   视各种分词器的不同，分词的规则也不同，
+
+   有根据空格进行分词的，也有根据下划线进行分词
+
+3. token filter 进行语义分析。
+
+   可以将复数，各种时态的单词，相似词。替换成原型
+
+   或者把句子中的无实际意义的单词刚掉，比如说to is之流
+
+通过分词器的处理，将长文本进行分析，分析后的结果才能送到倒排索引那里，建立倒排索引
+
+对了，分词器也是有江湖的，主要的说，ES内置了几种分词器
+
+1. standard analyzer: 
+
+   分词策略：空格，`-` 分词
+
+   预处理策略：将括号干掉
+
+   语义分析策略：大小写转化
+
+   这是默认的分词策略
+
+2. Simple analyzer：
+
+   比起前者，分词策略加了一种，就是`_`也会进行分词
+
+   并且预处理策略会将形如`(number)`刚掉
+
+3. whitespace analyzer：顾名思义，只对空白符进行分词
+
+   没有上面的大小写转化，预处理策略
+
+4. language analyzer ：顾名思义，它会根据语义分词，
+
+   比如说to is 之流干掉
+
+   比如大小写转化
+
+   比如相似词语的转化
+
+分词器的一个api
+
+`GET /_analyze`
+
+```
+{
+"analyzer":"standard",
+"text":"Text to analyze"
+}
+```
+
+会演示standard分词器是怎么对
+
+Text to analyze文本进行分词的
+
+```
+GET /test/_analyze
+{
+ "field": "content",
+ "text": ["a dog"]
+}
+```
+
+使用test索引content字段使用的分词器，对文本`a dog`进行分词
+
+### 1.9.1 设置分词器
+
+比如说，为standard 这个分词加点特技，让他能够删除停用词，比如说`a` `is`之类的单词
+
+设置的api如下
+
+```
+PUT /my_index/
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_english_analyzer":{
+          "type":"standard",
+          "stopwords":"_english_"
+        }
+      }
+    }
+  }
+}
+```
+
+这就是新增了一个my_index索引，并且设置了standard分词器，加了新特技，也就是删除停用词`is，a` 之流。
+
+最后起了一个新名字my_english_analyzer。
+
+所以其实内置的分词器不能变更配置，你只能在内置的分词器上，配置自己想要的新特性，从而得到披着新皮的分词器。
+
+设置后的新分词器可以用于mapping上面的分词器上。
+
+
+
+### 1.9.2 自定义分词器
+
+这个就比较高端，你可以自定义自己的分词器。
+
+举个栗子
+
+```
+PUT /my_index
+{
+	"settings": {
+		"analysis": {
+			"char_filter": {
+				"&_to_and": {
+					"type": "mapping",
+					"mappings": ["&=>and", "fuck=>***", "|=>or"]
+				}
+			},
+			"filter": {
+				"my_stopwords": {
+					"type": "stop",
+					"stopwords": ["is", "am","this"]
+				}
+			},
+			"analyzer": {
+				"my_customer_analyzer": {
+					"type": "custom",
+					"char_filter":["&_to_and","html_strip"],
+					"tokenizer":"standard",
+					"filter":["my_stopwords","lowercase"]
+				}
+			}
+		}
+	}
+}
+```
+
+如上所示，我定义了一个分词器，名字叫做my_customer_analyzer
+
+json的组成层次是先定义好分词器的character 和token ，然后再组装成新的分词器。
+
+这个分词器由三个部分组成
+
+1. character filter   文本预处理器，主要是把含有`&`和`|`和`fuck`的字符，转成`and`、`or`、 `***`  
+
+2. tokenizer  分词策略，直接用的是standard，也就是空格和`-`进行分词
+
+3. token filter 语义分析，就是出现`是`  `这个` 无实在意义的字符串会删除掉
+
+   然后所有单词一律转小写
+
+## 1.10 elastic的type内部数据结构
+
+尽管说最新版的elastic已经没有type的概念了，但是万一你接手的是老的elastic项目呢
+
+elastic利用type，把索引里面的相似文档，即大部分字段一致，小部分字段不一致的文档区分开来。
+
+而实际在ES内部，type仅仅只是文档的一个原字段`_type`而已，
+
+每一个index下面的文档，存放的字段都是同样的。
+
+这意味着，你以为把product这个index分成一个goods，一个gift。前者有price字段，后者无price字段。
+
+但是实际在内部存储中，gift的文档还有会有price这个字段的，只不过给的是空值。
+
+所以如果你的index里面，存放的文档字段都是不统一的，那么底层的数据结构就会存储很多空字段。
+
+造成性能损失。
+
+
+
+我觉得这个理论也可以应用于最新版的elastic，并且猜测最新版的数据结构仍然没有改。
+
+虽然最新版已经把type踢出去了，但是还是可以在一个index里面，存储不同字段的文档。
+
+因此数据结构仍然不太可能会有新的变动。
 
 
 
 
 
 
-   
 
-   
+
+
 
 
 
@@ -2437,7 +3603,3 @@ output:
 	        "hostname" => "My-MacBook-Pro.local",
 	         "version" => "6.0.0"
 
-   ```
-
-
-   ```
