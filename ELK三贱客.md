@@ -184,7 +184,7 @@ or  `PUT /customer`
 
 上面的，就是响应数据了
 
-如果你想指定新索引的shard和replica
+*如果你想指定新索引的shard和replica*
 
 则请求如下
 
@@ -633,6 +633,25 @@ es对于删除操作并没有真正把目标从磁盘中物理删除，
 
 当es发现可用磁盘空间不够时，。就会来一波垃圾清除，把这些delete的记录全都物理删除。
 
+**根据条件删除文档**
+
+http://47.107.106.1:9200/index/type/_delete_by_query
+
+```
+
+{
+  "query":{
+    "match":{
+      "field":xxxx
+    }
+  }
+}
+```
+
+
+
+
+
 ### 1.2.10 写一致性
 
 这个机制主要是在数据修改时，指明活跃的shard数量，
@@ -760,7 +779,17 @@ es对于删除操作并没有真正把目标从磁盘中物理删除，
 
    因为修改映射也就意味着已经索引的文档全部失效。
 
-   所以，创建映射的时候要三思而后行
+   所以，创建映射的时候要三思而后行。
+   
+   如果非要更新索引的映射，只能重建索引了，请详看下面的重建索引章节，
+   
+3. 建立索引的最佳实践
+
+   1. 建立索引前，务必要手动建立mapping
+
+   2. 建立索引后，客户端最好使用索引的别名来访问索引
+
+      这两个最佳的实践都有助于减少重建索引事件的发生率以及坑爹率
 
 ### 1.3.2 创建映射的小栗子
 
@@ -934,13 +963,158 @@ PUT /test/_mapping
 
 ```
 
+高级版，新增对象字段的映射
+
+
+
 这样就往test这个索引新增一个字段author_ip的映射类型，对应的数据类型是ip
 
+###　1.3.5 删除映射字段
+
+不可能，死心吧，更新映射字段好像可以。。
+
+### 1.3.5 更新映射字段
+
+只能更新某些映射字段的某些元数据。。。
+
+### 1.3.5  设置mapping不可新添字段
+
+顾名思义，就是在你的index下设置mapping，可以使你的index不能新增字段，让整个索引的字段数控制在一定范围内
+
+使用办法1：在已有index下设置
+
+```
+PUT /my_index/_mapping
+{
+ "dynamic":"strict"
+}
+```
+
+使用办法2：在新增索引的时候同时设置
+
+```
+PUT /my_index/
+{
+ "mappings": {
+   "dynamic":"strict",
+   "properties":{
+     "only this field":{
+       "type":"text"
+     }
+   }
+ }
+}
+```
 
 
 
+### 1.3.6  定制化自己的dynamic mapping策略
+
+**1. 设置字段规则，符合字段名规则的新字段mapping按指定dynamic mapping策略执行**
+
+设置示例
+
+```json
+PUT /my_index
+{
+	"mappings": {
+		"dynamic_templates": [{
+			"en": {
+				"match": "*_en",
+				"match_mapping_type": "string",
+				"mapping": {
+					"type": "text",
+					"analyzer": "english"
+				}
+			}
+		}]
+	}
+}
+```
+
+解释：这样就创建一个dynamic mapping的模板，凡是字段名为`*_en`的新字段，且在json的数据类型为`string`,则建立映射时，ES数据类型默认为Text，并且使用english的分词器
+
+其他的
+
+1. `"en"` 这个的值是给新建的dynamic template起一个名字
+
+**2. 日期格式符合一定格式的字符串，自动映射为日期类型或者不自动映射**
+
+意思是说，新增字段时，如果字符串的格式符合日期的格式符，自动会将该字段的类型识别为日期类型。
+
+这是默认行为。
+
+默认的日期格式符是`yyyy/MM/dd HH:mm:ss Z||yyyy/MM/dd Z`
+
+形如`2015/09/02`这个日期格式就会识别成日期类型
+
+当然，我们可以更改这个默认的日期格式符
+
+修改示例
+
+```
+PUT /my_index
+{
+  "mappings": {
+    "dynamic_date_formats": [" yyyy-MM-dd HH:mm:ss"]
+  }
+}
+```
+
+然后，我们还可以禁止这种默认的日期识别
+
+设置示例
+
+```
+PUT /my_index
+{
+  "mappings": {
+    "date_detection": false
+  }
+}
+```
 
 
+
+### 1.3.7 重建索引
+
+步骤:
+
+1. 新建我们需要的新索引
+2. 通过bulk对旧索引的数据进行批量读取
+3. 对读取的数据批量写入到新索引里面
+4. 结束，如果旧索引没有被其他应用使用了，考虑删除旧索引
+
+### 1.3.7 索引别名
+
+请求api
+
+`PUT /my_index/_alias/alias1`
+
+这个请求就是为my_index设置一个别名alias1
+
+删除索引的别名
+
+```console
+DELETE /twitter/_alias/alias1
+```
+
+这样就将twitter的索引别名alias1删除掉了
+
+替换别名指向的索引
+
+```console
+POST /_aliases
+```
+
+```
+{
+    "actions" : [
+        { "remove" : { "index" : "oldindex", "alias" : "alias1" } },
+        { "add" : { "index" : "newindex", "alias" : "alias1" } }
+    ]
+}
+```
 
 
 
@@ -1246,7 +1420,7 @@ DSL示例
 {
 	"query": {
 		"bool": {
-			"should": [{
+			"must": [{
 				"match": {
 					"host": "cdn.elastic-elastic-elastic.org"
 				}
@@ -1368,6 +1542,39 @@ Text类型的字段无法排序，必须设置这个字段的fielddata=true才�
 raw就是content字段的一个新索引，存放content字段原始的文本
 
 关于怎么建立content字段的raw索引，可以查看映射的那一章
+
+
+
+**脚本排序**
+
+```
+{
+    "from": 0,
+    "query": {
+        "bool": {
+            "must": {
+                "term": {
+                    "field": xxxx
+                }
+            }
+        }
+    },
+    "size": 15,
+    "sort": {
+        "_script": {
+            "script": "Arrays.asList(new String[]{'104999493'}).indexOf(doc['_id'].value)",
+            "type": "number",
+            "order": "desc"
+        },
+        "xxx1": "desc",
+        "xxx2": "asc",
+        "xxx3": "desc",
+        "xx4": "desc"
+    }
+}
+```
+
+先按指定的ID排最前，然后再按其他标准排序
 
 
 
@@ -1827,6 +2034,20 @@ DSL示例
 
 
 
+**用法5：查询热门记录**
+
+举个栗子，你负责电商网站的商品开发，某日接到一个需求，需要显示指定档口的前10个最新上架的商品。
+
+如何用es实现需求：
+
+es针对这种需求，其实开发了一个聚合模式，叫热门聚合。
+
+上文所讲的例子，就是这个聚合的经典应用，现附上es查询语句（伪）
+
+```
+
+```
+
 
 
 
@@ -1949,6 +2170,51 @@ GET /test/_search
    ```
 
    这样会请求下一批数据，并且重置scroll的请求状态，重新保留一分钟
+
+scroll和传统的分页还是有区别的
+
+1. scroll不能排序
+
+2. scroll在其查询会话中，如果数据发生变更。
+
+   scroll将无法获知。对实时性支持贼差
+
+### 1.6.2.2.3 复杂查询
+
+```
+{
+    "size": 5,
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "bool": {
+                        "should": [
+                            {
+                                "term": {
+                                    "field1": 8
+                                }
+                            },
+                            {
+                                "term": {
+                                    "field2": 8
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "term": {
+                        "field3": 42
+                    }
+                }
+            ]
+        }
+    }
+}
+```
+
+`类似  select * from (field1= 8 or field2 = 8) and field3 = 42`
 
 ##### 1.6.2.2.2 小知识
 
@@ -2344,6 +2610,20 @@ GET /test/_validate/query?explain
 
 ```
 
+## 1.6.6 查询任务API
+
+有时候，es服务器会执行一个后台任务，这些任务可能是用户指定的，比如说重新索引
+
+默认情况下，提交这些任务后，API会立即返回，任务则会在后台开始执行。
+
+那么，怎么查询这些任务的执行情况呢？
+
+这就需要这节的API
+
+```
+http://127.0.0.1:9200/_tasks?detailed=true&actions=*reindex
+```
+
 
 
 ## 1.7: 问题
@@ -2440,9 +2720,7 @@ GET /test/_validate/query?explain
 
 这个方式可以自定义自己的version生成方式，而不是es默认的递增。
 
-
-
-## 1.7.2 更新数据时
+###　1.7.2 更新数据时
 
 其实理论上个不会局限于更新数据，只要涉及到post数据传输，都会报这个错误。
 
@@ -3076,15 +3354,125 @@ elastic利用type，把索引里面的相似文档，即大部分字段一致，
 
 因此数据结构仍然不太可能会有新的变动。
 
+## 1.11 倒排索引的结构
+
+倒排索引主要包含以下信息
+
+1. 包含这个关键词的document list
+
+2. 包含这个关键词document的数量
+3. 这个关键词在每个document出现的次数
+4. 这个关键词在document中的次序
+5. 每个document的长度
+6. 包含这个关键词的所有document的平均长度
+
+## 1.12 倒排索引不可变的好处
+
+1. 不需要加锁，因为你根本修改不了倒排索引。
+2. 数据不变，关于倒排索引的数据，可以直接load到内存，提供搜索效率。前提是你的内存足够才行啦
+3. filter cache 可以一直驻留在内存中
+4. 可以压缩，减少内存使用开销
+
+## 1.13 文档写入过程
+
+ES是怎么将一篇文档写入到index呢？
+
+1. 首先接收到新增文档的请求，先将新增的文档保存到buffer，同时记录数据到translog日志文件里面
+
+2. 当时机到时（比如说buffer被装满了）就会将文档写入到index segment里面，这一步被称为commit point
+
+   > 每一次执行都会产生segment file文件。然而文件太多也是不行的
+   >
+   > ES还会对相似的segment file的文件进行合并，然后删除被合并的segment file。
+   >
+   > 这个过程需要一点时间，当然我们也可以手动触发
+   >
+   > 不过我还是要说
+   >
+   > 可以，但没必要
+
+3. index segment准备将新文档数据写入硬盘中，但是由于操作系统的机制，这些数据会先写到os cache里面
+
+4. index segment打开，可以接受搜索请求了
+
+   > 数据从index segmen写入到os cache,并且打开index segment的间隔，被称为refresh
+   >
+   > 默认情况下，refresh的值是1s，这也就是为什么ES生成写入到读取的事件间隔是1s了
+   >
+   > 针对不同的索引，这个间隔也可以变更
+   >
+   > api
+   >
+   > ```
+   > PUT /my_index/_settings
+   > {
+   >   "settings": {
+   >     "refresh_interval": "30s"
+   >   }
+   > }
+   > ```
+   >
+   > 
+
+5. buffer被清空
+
+6. 重复以上行为，os cache的数据会越攒越多，translog的数据也会越攒越多。等translog的数据攒到一定程度。
+
+   触发一个新的操作，将buffer的数据全部写到一个新segment里面，紧接着数据进到os cache。
+
+7. os cache里面的所以数据，被fsync强制刷到磁盘中。
+
+8. translog被清空
+
+9. end
+
+特别的：
+
+1. 第6步后面的操作，即将buffer里面的所有数据刷新到index segment，紧接着数据刷新到os cache。然后所有在os cache的数据都被执行的fsync操作，持久化到硬盘里面。
+
+   这一整个操作，被称为flash
+
+   ES有api，可以使这个flash立即执行，而不用等待某个时机触发。
+
+2. 由于os cache里面的数据要等到translog触发某一事件后，才会持久化到硬盘里面
+
+   那么，如果在这段时间宕机了，cache的数据会丢失吗？
+
+   不会，因为translog里面其实持有上一次清空translog后到最近这段时间以来，更新的数据记录。
+
+   所以数据还是可以恢复
+   
+3. 接上，translog虽然可以恢复丢失的数据，可是要把translog里面的数据先持久化到硬盘里面，也是需要时间。
+   
+   我们可以设置translog数据持久化硬盘的时间间隔。
+   
+   如果允许部分数据丢失，还可以把这段时间调大一点。
+   
+   以获得更好的性能体验
+   
+   > 不能轻信
 
 
 
+## 1.14 文档删除过程
+
+文档被删除时，会生成一个.del文件，记录哪个文档被删除了。
+
+如果有搜索请求过来之时，会判断搜索的结果是否在del文件里面，
+
+也就是说，被删除掉了。从而决定要不要把这个结果返回
+
+更新也同理，但是更新后的搜索请求可能会匹配到同个文档的多个版本，它们大多都被标记为delete，仅有一个文档不被标记为delete，它就是最新的版本了
 
 
 
+## 1.14 安装插件的说
 
+以安装中文分词IK为例
 
+执行`./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.3.0/elasticsearch-analysis-ik-6.3.0.zip`
 
+重启es
 
 
 
