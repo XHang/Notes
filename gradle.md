@@ -39,6 +39,12 @@
 
 这些文件甚至还含有一个脚本，使用单个命令，就可以启用程序
 
+根据项目的不同，它可能会生成不同的文件类型，对于多项目来说，生成的就是tar和zip，但是对lib来说，生成的就是jar，这个就得在`lib\build\libs`里面才能找到了
+
+## 构建项目为jar
+
+命令：``
+
 # 文件解构
 
 ## `build.gradle`
@@ -64,14 +70,29 @@ application {
 repositories {
     gradlePluginPortal() 
 }
+version = '0.1.0'
+
+tasks.named('jar') {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                   'Implementation-Version': project.version)
+    }
+}
+
+java {
+    withSourcesJar()
+}
 ```
 
-| 关键字       | 解释                                                         |
-| ------------ | ------------------------------------------------------------ |
-| plugins      | 子项目应用的插件，本示例仅应用了一个约束性插件，这会从插件门户里面拿来Gradle核心插件(b比如说`application` or `java-library`)以及其他约束性插件或者社区插件来应用配置 |
-| dependencies | 依赖项，这个依赖既可以是外部的，也可以是本项目的             |
-| application  | 一种特殊的插件，应该只在为某个项目配置特定的东西时，写在特定项目的build.gradle。<br />application是一个application插件，它定义了APP项目的主类是`demo.app.App` |
-| repositories | 这声明了一些存储库，如上所示，这使我们可以使用插件门户里面的插件 |
+| 关键字         | 解释                                                         |
+| -------------- | ------------------------------------------------------------ |
+| plugins        | 子项目应用的插件，本示例仅应用了一个约束性插件，这会从插件门户里面拿来Gradle核心插件(b比如说`application` or `java-library`)以及其他约束性插件或者社区插件来应用配置 |
+| dependencies   | 依赖项，这个依赖既可以是外部的，也可以是本项目的             |
+| application    | 一种特殊的插件，应该只在为某个项目配置特定的东西时，写在特定项目的build.gradle。<br />application是一个application插件，它定义了APP项目的主类是`demo.app.App` |
+| repositories   | 这声明了一些存储库，如上所示，这使我们可以使用插件门户里面的插件 |
+| version        | 当打包成jar时，生成的jar文件后面可以携带版本号               |
+| tasks.named... | 这一块代码可以在打jar包时，添加清单文件，也就是META-INF/MANIFEST.MF文件，<br />里面是一些键值对，内容就是上面attributes的内容，当然你可以乱写 |
+| withSourcesJar | 在生成jar包时，也顺带打包源代码                              |
 
 
 
