@@ -1245,7 +1245,11 @@ $ docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300
 
 > 启动elasticsearch时，设置discovery.type=single-node将使elastic以单机模式运行
 
+举例
 
+`docker run  --name consul --net=host  --mount source=consul,target=/consul/data consul agent -client   10.0.75.2 -server -ui  -bind  127.0.0.1 -bootstrap-expect=1`
+
+运行consul镜像，单个节点且自身为leader
 
 ## 12.6 docker exec 命令
 
