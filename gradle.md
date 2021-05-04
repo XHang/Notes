@@ -46,11 +46,57 @@
 
 这是一个gradle构建的脚本，他使用项目自己的gradle进行构建，并且在必要的时候自己下载下来。
 
+因此，你不需要费什么功夫下载gradle来配置开发环境，只需要运行这个脚本就行了
+
 ## 我该怎么添加Wrapper到新项目中
+
+这需要你安装了gradle在你的电脑上，在这种情况下，你可以在gradle的`Build Setup tasks`任务列表中找到`wrapper`任务。
+
+这样就可以在项目目录里面生成`Wrapper`文件了。
+
+> 最好把这个文件添加到版本控制里面，以便其他开发人员可以用到。
+>
+> 只是，某些组织可能不允许提交二进制文件。。
+
+生成的Wrapper文件有几个，分别位于gradle的目录和姓名的根目录中，下面说明这些文件的作用
+
+1. `gradle-wrapper.jar`: 包含下载gradle的代码
+2. `gradle-wrapper.properties`: Wrapper运行时需要用到的配置，但不是全部，比如说，代理相关的配置，就要在其他的配置文件中配置
+3. `gradlew`**,** `gradlew.bat`： Wrapper的执行文件，用于执行构建
+
+生成Wrapper后，可以在找到`gradle/wrapper/gradle-wrapper.properties`
+
+它存储了该项目的gradle的一些相关信息，包含
+
+1. 使用
 
 ## 使用Wrapper来运行项目
 
+没什么好说的，直接就是一顿`gradlew build`就完事了。
+
+官方文档总是在冷饭重炒。
+
+另外，也尽量使用gradlew 来执行构建的一切任务，而不是 原始的gradle
+
 ## 升级Wrapper来适配最新的gradle
+
+你就是想升级获得更多~~bug~~,特性，那怎么办呢？
+
+1. 变更`gradle-wrapper.properties`文件中的`distributionUrl`属性
+
+2. 运行`wrapper`任务，具体的话，就是`gradle wrapper --gradle-version 7.0`
+
+   这样的话，就把Wrapper升级到了gradle 7.0
+
+    不过，像`gradle-version`这样的可选项，还有一大把，比如说
+
+   - **--distribution-type** 后面可以跟bin或者all，all就是把源代码也给你下载下来，你甚至可以debug gradle的内容
+   - **--gradle-distribution-url**  这个比较屌，使用它，就废弃了`--distribution-type`和`gradle-version`这两个选项，因为它已经包含了后两者的内容了，如果你想自己托管gradle的发行版，然后从这个地方下载的话，那这个选项还是挺有用的
+   - **--gradle-distribution-sha256-sum** 验证下载下来的gradle发行版
+
+## 自定义Wrapper
+
+好家伙，
 
 # 任务
    task 是一个工作单元，gradle的构建，就是由多个task组建而成的一个任务链（或者称有向无环图）
@@ -282,6 +328,12 @@ plugins {
 }
 ```
 
+## gradle.properties
+
+设置代理
+
+
+
 # 依赖项
 
 依赖配置一般在build.gradle文件里面
@@ -374,9 +426,61 @@ dependencies {
 
 
 
-# 如何添加依赖
+# 依赖
 
-# 如何刷新依赖
+1. *configuration*：依赖有工作范围，有些依赖只用于编译中，有些依赖只用于运行中
+
+   在grade里面，依赖的工作范围，被称为configuration
+   
+2. Artifact：构建后生成的文件或者目录，通常将这个用于其他项目，或者部署在主机系统上（在这种情况下，Artifact是单个文件）
+   
+   在被其他项目关联的情况下，Artifact是目录，这不用你讲Artifact发布上去
+   
+3. capability： 这个术语指的是一个组件或者多个组件提供的功能。通常通过` module versions.`类似的方式来声明组件具有某种
+   
+   `capability`；一个组件可以提供多个capability，而一个capability也可能被多个组件所提供（这种情况下不能同时使用这些组件，多余）
+   
+4. Component：[module](https://docs.gradle.org/current/userguide/dependency_management_terminology.html#sub:terminology_module).的任意一个单一版本，对于外部库来说，Component指的是库的发行版本
+   
+   在构建中，Component由插件定义，并且代表发版的文件。
+   
+   这里面包含`Artifact`以及描述这个`Component`的一些信息等
+   
+5. Configuration：将特定目标分组在一起命名的依赖项，提供对底层`module`以及`Artifact`的访问
+   
+6. `Dependency`: 不解释
+
+7. Dependency constraint: 它定义了需求，能使项目正常运行而需要添加依赖项的需求
+
+   这个东西可以缩小要使用依赖的版本集，或者缩小传递依赖的链条
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+## 如何添加依赖
+
+## 如何刷新依赖
+
+## gradle将如何下载您的依赖（仓库篇）
+
+就跟maven一样，gradle从仓库中下载您的依赖。
+
+所以，你需要配置一下仓库的地址
+
+
 
 # 问题 
 
